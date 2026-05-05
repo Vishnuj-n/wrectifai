@@ -15,6 +15,7 @@
   --secondary: 210 40% 96.1%;
   --secondary-foreground: 222.2 47.4% 11.2%;
   --radius: 0.5rem;
+  --font-sans: var(--font-plus-jakarta-sans), 'Segoe UI', sans-serif;
 }
 
 .dark {
@@ -35,6 +36,35 @@
   @apply border-border;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   @apply bg-background text-foreground;
+  font-family: var(--font-sans);
+  background:
+    radial-gradient(circle at top left, rgba(26, 86, 219, 0.06), transparent 24%),
+    linear-gradient(180deg, #fbfcff 0%, #f5f8fe 100%);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background: rgba(26, 86, 219, 0.2);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }
