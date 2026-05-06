@@ -1,0 +1,770 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+import {
+  CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  Heart,
+  List,
+  Map,
+  MapPin,
+  ShieldCheck,
+  SlidersHorizontal,
+  Star,
+  Tag,
+  Wrench,
+  X,
+} from 'lucide-react';
+import { Card } from '@/components/common/card';
+import { Button } from '@/components/common/button';
+import { DashboardShell } from '@/components/home/dashboard-shell';
+import { TopNavbar } from '@/components/home/top-navbar';
+import { cn } from '@/utils/cn';
+
+type FilterKey = 'rating' | 'distance' | 'serviceType' | 'responseTime' | 'offers' | 'moreFilters';
+type ViewMode = 'list' | 'map';
+type SortOption = 'best' | 'rating' | 'distance' | 'response';
+
+type Garage = {
+  badge: string;
+  badgeTone: string;
+  name: string;
+  rating: number;
+  reviews: number;
+  location: string;
+  distanceKm: number;
+  responseMins: number;
+  chips: string[];
+  facade: string;
+  tone: string;
+  verified: boolean;
+  image?: string;
+};
+
+const filterPills = [
+  { key: 'rating', label: 'Rating', icon: Star },
+  { key: 'distance', label: 'Distance', icon: MapPin },
+  { key: 'serviceType', label: 'Service Type', icon: Wrench },
+  { key: 'responseTime', label: 'Response Time', icon: Clock3 },
+  { key: 'offers', label: 'Offers', icon: Tag },
+  { key: 'moreFilters', label: 'More Filters', icon: SlidersHorizontal },
+] as const satisfies { key: FilterKey; label: string; icon: typeof Star }[];
+
+const filterOptions: Record<FilterKey, { value: string; label: string }[]> = {
+  rating: [
+    { value: 'all', label: 'Any Rating' },
+    { value: '4.5', label: '4.5 & above' },
+    { value: '4.3', label: '4.3 & above' },
+    { value: '4.0', label: '4.0 & above' },
+  ],
+  distance: [
+    { value: 'all', label: 'Any Distance' },
+    { value: '3', label: 'Under 3 km' },
+    { value: '5', label: 'Under 5 km' },
+    { value: '6+', label: '6 km & above' },
+  ],
+  serviceType: [
+    { value: 'all', label: 'All Services' },
+    { value: 'Inspection', label: 'Inspection' },
+    { value: 'Pickup', label: 'Pickup / Drop' },
+    { value: 'Warranty', label: 'Warranty' },
+    { value: 'Parts', label: 'Original / Genuine Parts' },
+  ],
+  responseTime: [
+    { value: 'all', label: 'Any Response Time' },
+    { value: '30', label: 'Within 30 mins' },
+    { value: '45', label: 'Within 45 mins' },
+    { value: '60', label: 'Within 60 mins' },
+  ],
+  offers: [
+    { value: 'all', label: 'All Offers' },
+    { value: 'Free Inspection', label: 'Free Inspection' },
+    { value: 'Free Pickup', label: 'Free Pickup' },
+    { value: 'Pay After Service', label: 'Pay After Service' },
+    { value: 'Warranty Available', label: 'Warranty Available' },
+  ],
+  moreFilters: [
+    { value: 'all', label: 'All Garages' },
+    { value: 'verified', label: 'Verified Only' },
+    { value: 'top-rated', label: 'Top Rated Badges' },
+    { value: 'warranty', label: 'Has Warranty' },
+    { value: 'pickup', label: 'Has Pickup / Drop' },
+  ],
+};
+
+const sortOptions: { value: SortOption; label: string }[] = [
+  { value: 'best', label: 'Best Match' },
+  { value: 'rating', label: 'Highest Rating' },
+  { value: 'distance', label: 'Nearest First' },
+  { value: 'response', label: 'Fastest Response' },
+];
+
+const garages: Garage[] = [
+  {
+    badge: 'Best Value',
+    badgeTone: 'bg-[#1aa14a]',
+    name: 'QuickPit Service Center',
+    rating: 4.5,
+    reviews: 96,
+    location: 'Madhapur, Hyderabad',
+    distanceKm: 3.1,
+    responseMins: 40,
+    chips: ['1 Month Warranty', 'Free Inspection', 'Free Pickup', 'Pay After Service'],
+    facade: 'QuickPit',
+    tone: 'from-[#0d1118] via-[#43301c] to-[#0b0f16]',
+    verified: true,
+    image: '/assets/garage_1_1778071156220.png',
+  },
+  {
+    badge: 'Most Trusted',
+    badgeTone: 'bg-[#ff8a1f]',
+    name: 'SpeedFix Auto Care',
+    rating: 4.6,
+    reviews: 128,
+    location: 'Kondapur, Hyderabad',
+    distanceKm: 2.2,
+    responseMins: 30,
+    chips: ['Warranty Available', 'Free Pickup', 'Original Parts', 'Pay After Service'],
+    facade: 'SpeedFix',
+    tone: 'from-[#1b2734] via-[#2a3e49] to-[#101721]',
+    verified: true,
+    image: '/assets/garage_2_1778071173295.png',
+  },
+  {
+    badge: 'Top Rated',
+    badgeTone: 'bg-[#1a56db]',
+    name: 'AutoWorks Garage',
+    rating: 4.4,
+    reviews: 110,
+    location: 'Gachibowli, Hyderabad',
+    distanceKm: 4.2,
+    responseMins: 45,
+    chips: ['1 Month Warranty', 'Free Inspection', 'Original Parts', 'Pay After Service'],
+    facade: 'AutoWorks',
+    tone: 'from-[#151820] via-[#32271c] to-[#11141c]',
+    verified: true,
+    image: '/assets/garage_3_1778071191282.png',
+  },
+  {
+    badge: '',
+    badgeTone: '',
+    name: 'Five Star Automotive',
+    rating: 4.3,
+    reviews: 78,
+    location: 'Banjara Hills, Hyderabad',
+    distanceKm: 5.2,
+    responseMins: 50,
+    chips: ['Free Inspection', 'Pay After Service', 'Free Pickup', '1 Month Warranty'],
+    facade: 'Five Star',
+    tone: 'from-[#161616] via-[#353535] to-[#12151c]',
+    verified: true,
+    image: '/assets/garage_4_1778071611328.png',
+  },
+  {
+    badge: '',
+    badgeTone: '',
+    name: 'Royal Motor Service',
+    rating: 4.2,
+    reviews: 64,
+    location: 'Jubilee Hills, Hyderabad',
+    distanceKm: 3.8,
+    responseMins: 35,
+    chips: ['1 Month Warranty', 'AC Service Expert', 'Free Pickup', 'Quality Parts'],
+    facade: 'ROYAL MOTOR',
+    tone: 'from-[#20222a] via-[#4a3026] to-[#1b1d24]',
+    verified: true,
+    image: '/assets/garage_5_1778071628253.png',
+  },
+  {
+    badge: '',
+    badgeTone: '',
+    name: 'PitStop Car Care',
+    rating: 4.1,
+    reviews: 58,
+    location: 'Kukatpally, Hyderabad',
+    distanceKm: 4.9,
+    responseMins: 40,
+    chips: ['Free Inspection', 'Quick Service', 'Pay After Service', '1 Month Warranty'],
+    facade: 'PitStop',
+    tone: 'from-[#11141d] via-[#2f3640] to-[#0d1118]',
+    verified: true,
+    image: '/assets/garage_1_1778071156220.png',
+  },
+  {
+    badge: '',
+    badgeTone: '',
+    name: 'Galaxy Auto Garage',
+    rating: 4.3,
+    reviews: 92,
+    location: 'Miyapur, Hyderabad',
+    distanceKm: 3.6,
+    responseMins: 55,
+    chips: ['1 Month Warranty', 'Pick & Drop', 'Genuine Parts', 'Free Inspection'],
+    facade: 'Galaxy Auto',
+    tone: 'from-[#1a2027] via-[#2d353d] to-[#0f131b]',
+    verified: true,
+    image: '/assets/garage_2_1778071173295.png',
+  },
+  {
+    badge: '',
+    badgeTone: '',
+    name: 'TorquePlus Service Hub',
+    rating: 4.2,
+    reviews: 71,
+    location: 'Ameerpet, Hyderabad',
+    distanceKm: 6.1,
+    responseMins: 60,
+    chips: ['Warranty Available', 'Genuine Parts', 'Pick & Drop', 'Pay After Service'],
+    facade: 'TorquePlus',
+    tone: 'from-[#151922] via-[#25394a] to-[#10151d]',
+    verified: true,
+    image: '/assets/garage_3_1778071191282.png',
+  },
+  {
+    badge: 'Top Rated',
+    badgeTone: 'bg-[#1a56db]',
+    name: 'Metro Auto Bay',
+    rating: 4.7,
+    reviews: 142,
+    location: 'Hitech City, Hyderabad',
+    distanceKm: 2.8,
+    responseMins: 25,
+    chips: ['Free Inspection', 'Warranty Available', 'Free Pickup', 'Quick Service'],
+    facade: 'Metro Auto',
+    tone: 'from-[#17202e] via-[#22415e] to-[#0c1220]',
+    verified: true,
+    image: '/assets/garage_4_1778071611328.png',
+  },
+  {
+    badge: '',
+    badgeTone: '',
+    name: 'Urban Garage Works',
+    rating: 4.0,
+    reviews: 53,
+    location: 'Begumpet, Hyderabad',
+    distanceKm: 5.8,
+    responseMins: 55,
+    chips: ['Pay After Service', 'Free Pickup', 'Quality Parts', 'AC Service Expert'],
+    facade: 'Urban Works',
+    tone: 'from-[#211d20] via-[#3e3840] to-[#17161a]',
+    verified: false,
+    image: '/assets/garage_5_1778071628253.png',
+  },
+  {
+    badge: 'Most Trusted',
+    badgeTone: 'bg-[#ff8a1f]',
+    name: 'Prime Service Point',
+    rating: 4.6,
+    reviews: 119,
+    location: 'Secunderabad, Hyderabad',
+    distanceKm: 4.4,
+    responseMins: 35,
+    chips: ['Original Parts', 'Pay After Service', 'Free Inspection', 'Pick & Drop'],
+    facade: 'Prime Service',
+    tone: 'from-[#20252a] via-[#3b3028] to-[#11161c]',
+    verified: true,
+    image: '/assets/garage_1_1778071156220.png',
+  },
+  {
+    badge: '',
+    badgeTone: '',
+    name: 'CarNest Workshop',
+    rating: 4.1,
+    reviews: 61,
+    location: 'Manikonda, Hyderabad',
+    distanceKm: 6.4,
+    responseMins: 48,
+    chips: ['1 Month Warranty', 'Free Pickup', 'Inspection', 'Genuine Parts'],
+    facade: 'CarNest',
+    tone: 'from-[#131922] via-[#253647] to-[#11161c]',
+    verified: false,
+    image: '/assets/garage_2_1778071173295.png',
+  },
+];
+
+function formatDistance(distanceKm: number) {
+  return `${distanceKm.toFixed(1)} km away`;
+}
+
+function formatResponse(responseMins: number) {
+  return `${responseMins} mins response`;
+}
+
+function FilterMenu({
+  label,
+  icon: Icon,
+  options,
+  value,
+  open,
+  onOpen,
+  onClose,
+  onSelect,
+}: {
+  label: string;
+  icon: typeof Star;
+  options: { value: string; label: string }[];
+  value: string;
+  open: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+  onSelect: (value: string) => void;
+}) {
+  const selected = options.find((option) => option.value === value) ?? options[0];
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={open ? onClose : onOpen}
+        className={cn(
+          'flex h-10 items-center gap-3 rounded-[12px] border border-[#dbe6ff] bg-white px-4 text-[14px] font-semibold text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)] transition-colors',
+          open && 'border-[#bfd1ff] bg-[#f8fbff]'
+        )}
+      >
+        <Icon className="h-4 w-4 text-[#1a56db]" />
+        <span>{selected.value === 'all' ? label : selected.label}</span>
+        <ChevronDown className="h-4 w-4 text-[#6173a1]" />
+      </button>
+      {open ? (
+        <div className="absolute left-0 top-[46px] z-20 min-w-[220px] rounded-[14px] border border-[#dbe6ff] bg-white p-2 shadow-[0_18px_40px_rgba(30,58,138,0.14)]">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                onSelect(option.value);
+                onClose();
+              }}
+              className={cn(
+                'flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[14px] font-medium transition-colors',
+                option.value === value
+                  ? 'bg-[#eef4ff] text-[#1a56db]'
+                  : 'text-[#17307a] hover:bg-[#f8fbff]'
+              )}
+            >
+              <span>{option.label}</span>
+              {option.value === value ? <CheckCircle2 className="h-4 w-4 fill-[#1a56db] text-[#1a56db]" /> : null}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function GarageCard({
+  badge,
+  badgeTone,
+  name,
+  rating,
+  reviews,
+  location,
+  distanceKm,
+  responseMins,
+  chips,
+  facade,
+  tone,
+  verified,
+  image,
+  compact = false,
+}: Garage & { compact?: boolean }) {
+  return (
+    <Card className="overflow-hidden rounded-[18px] border-[#e7eefc] shadow-[0_14px_34px_rgba(21,48,122,0.08)]">
+      <div className={cn('relative bg-gradient-to-r', tone, compact ? 'h-[110px]' : 'h-[128px]')}>
+        {image && <img src={image} alt={name} className="absolute inset-0 h-full w-full object-cover" />}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(5,8,17,0.4))]" />
+        {badge ? (
+          <div className={cn('absolute left-4 top-3 rounded-[10px] px-3 py-1 text-[13px] font-bold text-white', badgeTone)}>
+            {badge}
+          </div>
+        ) : null}
+        <div className="absolute right-4 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#1a56db] shadow-md">
+          <Heart className="h-5 w-5" />
+        </div>
+        <div className="absolute inset-x-4 bottom-4 flex items-end justify-between">
+          <div className="text-[14px] font-bold tracking-[0.01em] text-white/92">{facade}</div>
+          <div className="flex gap-2 opacity-85">
+            <div className="h-8 w-10 rounded bg-white/10" />
+            <div className="h-8 w-12 rounded bg-white/10" />
+            <div className="h-8 w-8 rounded bg-white/10" />
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4">
+        <div className="flex items-center gap-2">
+          <h3 className="text-[18px] font-bold tracking-[-0.03em] text-[#17307a]">{name}</h3>
+          {verified ? <CheckCircle2 className="h-4 w-4 fill-[#1a56db] text-[#1a56db]" /> : null}
+        </div>
+
+        <div className="mt-2 flex items-center gap-3 text-[13px] text-[#6173a1]">
+          <div className="flex shrink-0 items-center gap-1.5">
+            <Star className="h-4 w-4 fill-[#ff9f1a] text-[#ff9f1a]" />
+            <span className="font-semibold text-[#f28c28]">{rating.toFixed(1)}</span>
+            <span>({reviews})</span>
+          </div>
+          <span className="shrink-0 text-[#9aa8c6]">•</span>
+          <span className="min-w-0 truncate">{location}</span>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-5 text-[13px] font-semibold text-[#17307a]">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-[#1a56db]" />
+            {formatDistance(distanceKm)}
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock3 className="h-4 w-4 text-[#1a56db]" />
+            {formatResponse(responseMins)}
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          {chips.map((chip) => (
+            <span key={chip} className="rounded-full bg-[#e9f8ef] px-3 py-1.5 text-[12px] font-semibold text-[#238453]">
+              {chip}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-[#eef3ff] pt-4">
+          <div className="flex min-w-0 items-start gap-2 text-[#6173a1]">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#1a56db]" />
+            <div className="min-w-0 text-[10px] font-medium leading-[1.3]">
+              <div className="truncate">No upfront payment &#8226;</div>
+              <div className="truncate">Final quote after inspection</div>
+            </div>
+          </div>
+          <Button type="button" variant="outline" className="h-9 shrink-0 rounded-[10px] px-4 text-[13px]">
+            Book Appointment
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function GaragesContent() {
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [sortBy, setSortBy] = useState<SortOption>('best');
+  const [page, setPage] = useState(1);
+  const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
+  const [sortOpen, setSortOpen] = useState(false);
+  const [filters, setFilters] = useState<Record<FilterKey, string>>({
+    rating: 'all',
+    distance: 'all',
+    serviceType: 'all',
+    responseTime: 'all',
+    offers: 'all',
+    moreFilters: 'all',
+  });
+
+  const filteredGarages = useMemo(() => {
+    const filtered = garages.filter((garage) => {
+      if (filters.rating !== 'all' && garage.rating < Number(filters.rating)) {
+        return false;
+      }
+      if (filters.distance === '3' && garage.distanceKm >= 3) {
+        return false;
+      }
+      if (filters.distance === '5' && garage.distanceKm >= 5) {
+        return false;
+      }
+      if (filters.distance === '6+' && garage.distanceKm < 6) {
+        return false;
+      }
+      if (filters.serviceType === 'Inspection' && !garage.chips.some((chip) => chip.includes('Inspection'))) {
+        return false;
+      }
+      if (filters.serviceType === 'Pickup' && !garage.chips.some((chip) => chip.includes('Pickup') || chip.includes('Drop'))) {
+        return false;
+      }
+      if (filters.serviceType === 'Warranty' && !garage.chips.some((chip) => chip.includes('Warranty'))) {
+        return false;
+      }
+      if (filters.serviceType === 'Parts' && !garage.chips.some((chip) => chip.includes('Parts'))) {
+        return false;
+      }
+      if (filters.responseTime !== 'all' && garage.responseMins > Number(filters.responseTime)) {
+        return false;
+      }
+      if (filters.offers !== 'all' && !garage.chips.includes(filters.offers)) {
+        return false;
+      }
+      if (filters.moreFilters === 'verified' && !garage.verified) {
+        return false;
+      }
+      if (filters.moreFilters === 'top-rated' && garage.badge !== 'Top Rated') {
+        return false;
+      }
+      if (filters.moreFilters === 'warranty' && !garage.chips.some((chip) => chip.includes('Warranty'))) {
+        return false;
+      }
+      if (filters.moreFilters === 'pickup' && !garage.chips.some((chip) => chip.includes('Pickup') || chip.includes('Drop'))) {
+        return false;
+      }
+      return true;
+    });
+
+    return filtered.sort((a, b) => {
+      if (sortBy === 'rating') {
+        return b.rating - a.rating;
+      }
+      if (sortBy === 'distance') {
+        return a.distanceKm - b.distanceKm;
+      }
+      if (sortBy === 'response') {
+        return a.responseMins - b.responseMins;
+      }
+      return b.rating * 10 + b.reviews / 100 - (a.rating * 10 + a.reviews / 100);
+    });
+  }, [filters, sortBy]);
+
+  const itemsPerPage = viewMode === 'map' ? 6 : 8;
+  const totalPages = Math.max(1, Math.ceil(filteredGarages.length / itemsPerPage));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedGarages = filteredGarages.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const pageButtons = useMemo(() => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+    if (currentPage <= 3) {
+      return [1, 2, 3, 'ellipsis', totalPages] as const;
+    }
+    if (currentPage >= totalPages - 2) {
+      return [1, 'ellipsis', totalPages - 2, totalPages - 1, totalPages] as const;
+    }
+    return [1, 'ellipsis', currentPage, 'ellipsis-2', totalPages] as const;
+  }, [currentPage, totalPages]);
+
+  const startIndex = filteredGarages.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, filteredGarages.length);
+
+  const resetPageAndSetFilter = (key: FilterKey, value: string) => {
+    setFilters((current) => ({ ...current, [key]: value }));
+    setPage(1);
+  };
+
+  return (
+    <div className="space-y-6 pb-6">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div>
+          <h1 className="text-[22px] font-bold tracking-[-0.03em] text-[#17307a]">View All Garages</h1>
+          <p className="mt-1.5 text-[16px] font-medium text-[#4f67a2]">
+            Showing {filteredGarages.length} garages near <span className="font-bold text-[#1a56db]">Hyderabad</span>
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4 xl:justify-end">
+          <div className="flex items-center rounded-[13px] border border-[#dbe6ff] bg-white p-1 shadow-[0_8px_20px_rgba(30,58,138,0.04)]">
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode('list');
+                setPage(1);
+              }}
+              className={cn(
+                'flex h-9 items-center gap-2 rounded-[10px] px-4 text-[14px] font-semibold transition-colors',
+                viewMode === 'list' ? 'bg-[#1a56db] text-white' : 'text-[#17307a]'
+              )}
+            >
+              <List className="h-4 w-4" />
+              List View
+            </button>
+            <button
+              type="button"
+              disabled
+              onClick={() => {
+                setViewMode('map');
+                setPage(1);
+              }}
+              className={cn(
+                'flex h-9 items-center gap-2 rounded-[10px] px-4 text-[14px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+                viewMode === 'map' ? 'bg-[#1a56db] text-white' : 'text-[#17307a]'
+              )}
+            >
+              <Map className="h-4 w-4" />
+              Map View
+            </button>
+          </div>
+
+          <div className="relative flex items-center gap-3">
+            <span className="text-[14px] font-semibold text-[#17307a]">Sort By:</span>
+            <button
+              type="button"
+              onClick={() => {
+                setSortOpen((current) => !current);
+                setOpenFilter(null);
+              }}
+              className="flex h-10 items-center gap-3 rounded-[12px] border border-[#dbe6ff] bg-white px-4 text-[14px] font-semibold text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)]"
+            >
+              {sortOptions.find((option) => option.value === sortBy)?.label}
+              <ChevronDown className="h-4 w-4 text-[#6173a1]" />
+            </button>
+            {sortOpen ? (
+              <div className="absolute right-0 top-[46px] z-20 min-w-[190px] rounded-[14px] border border-[#dbe6ff] bg-white p-2 shadow-[0_18px_40px_rgba(30,58,138,0.14)]">
+                {sortOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setSortBy(option.value);
+                      setSortOpen(false);
+                      setPage(1);
+                    }}
+                    className={cn(
+                      'flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[14px] font-medium transition-colors',
+                      option.value === sortBy ? 'bg-[#eef4ff] text-[#1a56db]' : 'text-[#17307a] hover:bg-[#f8fbff]'
+                    )}
+                  >
+                    <span>{option.label}</span>
+                    {option.value === sortBy ? <CheckCircle2 className="h-4 w-4 fill-[#1a56db] text-[#1a56db]" /> : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 flex flex-wrap gap-3">
+        {filterPills.map(({ key, label, icon }) => (
+          <FilterMenu
+            key={key}
+            label={label}
+            icon={icon}
+            options={filterOptions[key]}
+            value={filters[key]}
+            open={openFilter === key}
+            onOpen={() => {
+              setOpenFilter(key);
+              setSortOpen(false);
+            }}
+            onClose={() => setOpenFilter(null)}
+            onSelect={(value) => resetPageAndSetFilter(key, value)}
+          />
+        ))}
+
+        {Object.entries(filters).some(([, value]) => value !== 'all') ? (
+          <button
+            type="button"
+            onClick={() => {
+              setFilters({
+                rating: 'all',
+                distance: 'all',
+                serviceType: 'all',
+                responseTime: 'all',
+                offers: 'all',
+                moreFilters: 'all',
+              });
+              setPage(1);
+              setOpenFilter(null);
+              setSortOpen(false);
+            }}
+            className="flex h-10 items-center gap-2 rounded-[12px] border border-[#ffd2d2] bg-white px-4 text-[14px] font-semibold text-[#d14343] shadow-[0_8px_20px_rgba(30,58,138,0.04)]"
+          >
+            <X className="h-4 w-4" />
+            Clear Filters
+          </button>
+        ) : null}
+      </div>
+
+      {viewMode === 'map' ? (
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-2">
+            {paginatedGarages.map((garage) => (
+              <GarageCard key={garage.name} {...garage} compact />
+            ))}
+          </div>
+          <Card className="sticky top-0 flex min-h-[720px] flex-col overflow-hidden rounded-[18px] border-[#e7eefc] bg-[linear-gradient(180deg,#edf5ff_0%,#dfefff_100%)] shadow-[0_14px_34px_rgba(21,48,122,0.08)]">
+            <div className="border-b border-[#d9e6ff] px-5 py-4">
+              <h3 className="text-[18px] font-bold text-[#17307a]">Map View</h3>
+              <p className="mt-1 text-[14px] text-[#6173a1]">Garage markers update from current filters.</p>
+            </div>
+            <div className="relative flex-1 overflow-hidden bg-[radial-gradient(circle_at_20%_25%,rgba(83,143,255,0.22),transparent_18%),radial-gradient(circle_at_72%_38%,rgba(26,86,219,0.18),transparent_20%),linear-gradient(180deg,#f4f8ff_0%,#e4efff_100%)]">
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(145,170,221,0.18)_1px,transparent_1px),linear-gradient(rgba(145,170,221,0.18)_1px,transparent_1px)] bg-[size:42px_42px]" />
+              {paginatedGarages.map((garage, index) => (
+                <div
+                  key={garage.name}
+                  className="absolute flex h-10 w-10 items-center justify-center rounded-full bg-[#1a56db] text-white shadow-[0_10px_20px_rgba(26,86,219,0.24)]"
+                  style={{
+                    left: `${18 + (index % 2) * 38 + Math.floor(index / 2) * 6}%`,
+                    top: `${14 + (index % 3) * 22}%`,
+                  }}
+                >
+                  <MapPin className="h-5 w-5 fill-white" />
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      ) : (
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          {paginatedGarages.map((garage) => (
+            <GarageCard key={garage.name} {...garage} />
+          ))}
+        </div>
+      )}
+
+      <div className="flex flex-col gap-4 pt-4 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            disabled={currentPage === 1}
+            className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-[#dbe6ff] bg-white text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)] disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          {pageButtons.map((entry, index) =>
+            entry === 'ellipsis' || entry === 'ellipsis-2' ? (
+              <div
+                key={`${entry}-${index}`}
+                className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-[#dbe6ff] bg-white text-[15px] font-semibold text-[#6173a1]"
+              >
+                ...
+              </div>
+            ) : (
+              <button
+                key={entry}
+                type="button"
+                onClick={() => setPage(entry)}
+                className={cn(
+                  'flex h-10 w-10 items-center justify-center rounded-[12px] border text-[15px] font-semibold',
+                  entry === currentPage
+                    ? 'border-[#1a56db] bg-[#1a56db] text-white shadow-[0_10px_20px_rgba(26,86,219,0.18)]'
+                    : 'border-[#dbe6ff] bg-white text-[#6173a1]'
+                )}
+              >
+                {entry}
+              </button>
+            )
+          )}
+          <button
+            type="button"
+            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            disabled={currentPage === totalPages}
+            className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-[#dbe6ff] bg-white text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)] disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="text-[15px] font-medium text-[#4f67a2]">
+          Showing {startIndex} - {endIndex} of {filteredGarages.length} garages
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function GaragesPage() {
+  return (
+    <DashboardShell header={<TopNavbar />}>
+      <GaragesContent />
+    </DashboardShell>
+  );
+}
