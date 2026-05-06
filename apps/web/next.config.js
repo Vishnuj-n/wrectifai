@@ -1,14 +1,13 @@
-//@ts-check
-
-const { composePlugins, withNx } = require('@nx/next');
-
-/**
- * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
- **/
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  nx: {},
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+    ],
+  },
 };
 
-const plugins = [withNx];
-
-module.exports = composePlugins(...plugins)(nextConfig);
+module.exports = nextConfig;
