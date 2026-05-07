@@ -550,7 +550,7 @@ function GaragesContent() {
 
   return (
     <div className="space-y-6 pb-6">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h1 className="text-[22px] font-bold tracking-[-0.03em] text-[#17307a]">View All Garages</h1>
           <p className="mt-1.5 text-[16px] font-medium text-[#4f67a2]">
@@ -558,7 +558,7 @@ function GaragesContent() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 xl:justify-end">
+        <div className="flex flex-wrap items-center gap-4 lg:justify-end">
           <div className="flex items-center rounded-[13px] border border-[#dbe6ff] bg-white p-1 shadow-[0_8px_20px_rgba(30,58,138,0.04)]">
             <button
               type="button"
@@ -673,8 +673,8 @@ function GaragesContent() {
       </div>
 
       {viewMode === 'map' ? (
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-2">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-2">
             {paginatedGarages.map((garage) => (
               <GarageCard key={garage.name} {...garage} compact />
             ))}
@@ -702,14 +702,14 @@ function GaragesContent() {
           </Card>
         </div>
       ) : (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {paginatedGarages.map((garage) => (
             <GarageCard key={garage.name} {...garage} />
           ))}
         </div>
       )}
 
-      <div className="flex flex-col gap-4 pt-4 xl:flex-row xl:items-center xl:justify-between">
+      <div className="flex flex-col gap-4 pt-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-2">
           <button
             type="button"

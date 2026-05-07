@@ -19,7 +19,19 @@ export function TopNavbar() {
 
   return (
     <header className="flex flex-col gap-3 lg:flex-row lg:items-center">
-      <div className="flex h-10 w-fit items-center gap-3 rounded-[14px] border border-[#dbe6ff] bg-white px-4 text-[15px] font-semibold text-[#17307a] shadow-sm">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event('toggle-mobile-sidebar'))}
+          className="flex h-10 w-10 items-center justify-center rounded-[14px] border border-[#dbe6ff] bg-white text-[#1a56db] shadow-sm lg:hidden"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+            <line x1="4" x2="20" y1="12" y2="12" />
+            <line x1="4" x2="20" y1="6" y2="6" />
+            <line x1="4" x2="20" y1="18" y2="18" />
+          </svg>
+        </button>
+        <div className="flex h-10 w-fit items-center gap-3 rounded-[14px] border border-[#dbe6ff] bg-white px-4 text-[15px] font-semibold text-[#17307a] shadow-sm">
         <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#eef4ff]">
           <svg
             viewBox="0 0 24 24"
@@ -34,6 +46,7 @@ export function TopNavbar() {
         </div>
         Hyderabad
         <ChevronDown className="h-4 w-4 text-[#17307a]" />
+      </div>
       </div>
 
       <form className="relative flex-1" onSubmit={handleSubmit}>

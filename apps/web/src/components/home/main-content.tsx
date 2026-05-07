@@ -137,7 +137,7 @@ function CategoriesModal({
             <h3 className="text-[18px] font-bold tracking-[-0.03em] text-[#17307a]">
               Top Categories
             </h3>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-7">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
               {categoryItems.map(({ label, icon: Icon }) => (
                 <Card
                   key={label}
@@ -346,7 +346,7 @@ function CategoryGrid({
           View All (8)
         </button>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-7">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7">
         {items.map(({ label, icon: Icon }) => (
           <HoverComingSoon key={label}>
             <Card className="flex h-[140px] w-full cursor-default flex-col items-center justify-center gap-3 rounded-[14px] px-3 py-4 text-center shadow-[0_8px_20px_rgba(20,44,112,0.05)]">
