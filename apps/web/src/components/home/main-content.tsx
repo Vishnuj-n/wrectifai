@@ -509,7 +509,7 @@ function SeasonalDeals({
 
   return (
     <section id="seasonal-deals">
-      <SectionHeader title="Seasonal Care Combo Deals" linkLabel="View All Deals" href="/offers" />
+      <SectionHeader title="Seasonal Care Combo Deals" linkLabel="View All Deals" href="/deals" />
       <div className="relative">
         <div
           ref={scrollRef}

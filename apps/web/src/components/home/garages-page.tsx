@@ -458,6 +458,7 @@ function GaragesContent() {
   const [sortBy, setSortBy] = useState<SortOption>('best');
   const [page, setPage] = useState(1);
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const [filters, setFilters] = useState<Record<FilterKey, string>>({
     rating: 'all',
@@ -555,6 +556,22 @@ function GaragesContent() {
     setPage(1);
   };
 
+  const clearFilters = () => {
+    setFilters({
+      rating: 'all',
+      distance: 'all',
+      serviceType: 'all',
+      responseTime: 'all',
+      offers: 'all',
+      moreFilters: 'all',
+    });
+    setPage(1);
+    setOpenFilter(null);
+    setSortOpen(false);
+  };
+
+  const activeFiltersCount = Object.values(filters).filter((v) => v !== 'all').length;
+
   return (
     <div className="space-y-6 pb-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -637,8 +654,9 @@ function GaragesContent() {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3">
-        {filterPills.map(({ key, label, icon }, index) => (
+      {/* Desktop Filters (Hidden on Mobile) */}
+      <div className="mt-6 hidden lg:flex lg:flex-wrap gap-3">
+        {filterPills.map(({ key, label, icon }) => (
           <FilterMenu
             key={key}
             label={label}
@@ -646,7 +664,7 @@ function GaragesContent() {
             options={filterOptions[key]}
             value={filters[key]}
             open={openFilter === key}
-            align={index % 3 === 2 ? 'right' : 'left'}
+            align="left"
             onOpen={() => {
               setOpenFilter(key);
               setSortOpen(false);
@@ -656,28 +674,105 @@ function GaragesContent() {
           />
         ))}
 
-        {Object.entries(filters).some(([, value]) => value !== 'all') ? (
+        {activeFiltersCount > 0 ? (
           <button
             type="button"
-            onClick={() => {
-              setFilters({
-                rating: 'all',
-                distance: 'all',
-                serviceType: 'all',
-                responseTime: 'all',
-                offers: 'all',
-                moreFilters: 'all',
-              });
-              setPage(1);
-              setOpenFilter(null);
-              setSortOpen(false);
-            }}
+            onClick={clearFilters}
             className="flex h-10 items-center gap-2 rounded-[12px] border border-[#ffd2d2] bg-white px-4 text-[14px] font-semibold text-[#d14343] shadow-[0_8px_20px_rgba(30,58,138,0.04)]"
           >
             <X className="h-4 w-4" />
             Clear Filters
           </button>
         ) : null}
+      </div>
+
+      {/* Mobile Filters Dropdown (Hidden on Desktop) */}
+      <div className="mt-6 block lg:hidden relative">
+        <button
+          type="button"
+          onClick={() => {
+            setMobileFiltersOpen((curr) => !curr);
+            setSortOpen(false);
+          }}
+          className={cn(
+            "flex h-11 w-full items-center justify-between rounded-[14px] border border-[#dbe6ff] bg-white px-4 text-[14px] font-semibold text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)]",
+            mobileFiltersOpen && "border-[#bfd1ff] bg-[#f8fbff]"
+          )}
+        >
+          <div className="flex items-center gap-2.5">
+            <SlidersHorizontal className="h-4 w-4 text-[#1a56db]" />
+            Filters {activeFiltersCount > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1a56db] text-[10px] font-bold text-white">{activeFiltersCount}</span>}
+          </div>
+          <ChevronDown className={cn("h-4 w-4 text-[#6173a1] transition-transform", mobileFiltersOpen && "rotate-180")} />
+        </button>
+
+        {mobileFiltersOpen && (
+          <div className="absolute left-0 right-0 top-[54px] z-30 flex flex-col gap-5 rounded-[18px] border border-[#dbe6ff] bg-white p-5 shadow-[0_24px_50px_rgba(30,58,138,0.16)]">
+            <div className="flex items-center justify-between border-b border-[#eef3ff] pb-3">
+              <span className="text-[16px] font-bold tracking-[-0.02em] text-[#17307a]">All Filters</span>
+              {activeFiltersCount > 0 && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="flex items-center gap-1.5 text-[13px] font-bold text-[#d14343]"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Clear All
+                </button>
+              )}
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {filterPills.map(({ key, label, icon: Icon }) => (
+                <div key={key} className="space-y-2">
+                  <label className="flex items-center gap-2 text-[13px] font-bold text-[#17307a]">
+                    <Icon className="h-4 w-4 text-[#6173a1]" />
+                    {label}
+                  </label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setOpenFilter(openFilter === key ? null : key)}
+                      className={cn(
+                        "flex h-11 w-full items-center justify-between rounded-[12px] border px-3.5 text-[13px] font-semibold transition-colors",
+                        openFilter === key 
+                          ? "border-[#1a56db] bg-[#f2f6ff] text-[#1a56db]" 
+                          : "border-[#e3eaf9] bg-[#f8fbff] text-[#17307a]"
+                      )}
+                    >
+                      <span className="truncate">{filterOptions[key].find(o => o.value === filters[key])?.label ?? filterOptions[key][0].label}</span>
+                      <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", openFilter === key ? "text-[#1a56db] rotate-180" : "text-[#6173a1]")} />
+                    </button>
+                    
+                    {openFilter === key && (
+                      <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-40 flex flex-col rounded-[14px] border border-[#dbe6ff] bg-white p-2 shadow-[0_18px_40px_rgba(30,58,138,0.14)]">
+                        {filterOptions[key].map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              resetPageAndSetFilter(key, option.value);
+                              setOpenFilter(null);
+                            }}
+                            className={cn(
+                              "flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium transition-colors",
+                              option.value === filters[key]
+                                ? "bg-[#eef4ff] text-[#1a56db]"
+                                : "text-[#17307a] hover:bg-[#f8fbff]"
+                            )}
+                          >
+                            <span className="truncate">{option.label}</span>
+                            {option.value === filters[key] && <CheckCircle2 className="h-4 w-4 shrink-0 fill-[#1a56db] text-[#1a56db]" />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {viewMode === 'map' ? (
@@ -717,8 +812,9 @@ function GaragesContent() {
         </div>
       )}
 
-      <div className="flex flex-col gap-4 pt-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-2">
+      <div className="grid gap-4 pt-4 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+        <div className="hidden lg:block" />
+        <div className="flex items-center justify-center gap-2">
           <button
             type="button"
             onClick={() => setPage((current) => Math.max(1, current - 1))}
@@ -761,7 +857,7 @@ function GaragesContent() {
           </button>
         </div>
 
-        <div className="text-[15px] font-medium text-[#4f67a2]">
+        <div className="text-center text-[15px] font-medium text-[#4f67a2] lg:text-right">
           Showing {startIndex} - {endIndex} of {filteredGarages.length} garages
         </div>
       </div>
