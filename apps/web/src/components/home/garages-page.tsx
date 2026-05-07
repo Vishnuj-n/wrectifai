@@ -311,6 +311,7 @@ function FilterMenu({
   onOpen: () => void;
   onClose: () => void;
   onSelect: (value: string) => void;
+  align?: 'left' | 'right';
 }) {
   const selected = options.find((option) => option.value === value) ?? options[0];
 
@@ -320,16 +321,21 @@ function FilterMenu({
         type="button"
         onClick={open ? onClose : onOpen}
         className={cn(
-          'flex h-10 items-center gap-3 rounded-[12px] border border-[#dbe6ff] bg-white px-4 text-[14px] font-semibold text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)] transition-colors',
+          'flex h-10 w-full items-center justify-center sm:justify-start gap-1.5 sm:gap-3 rounded-[12px] border border-[#dbe6ff] bg-white px-2 sm:px-4 text-[12px] sm:text-[14px] font-semibold text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)] transition-colors',
           open && 'border-[#bfd1ff] bg-[#f8fbff]'
         )}
       >
-        <Icon className="h-4 w-4 text-[#1a56db]" />
-        <span>{selected.value === 'all' ? label : selected.label}</span>
-        <ChevronDown className="h-4 w-4 text-[#6173a1]" />
+        <Icon className="h-4 w-4 shrink-0 text-[#1a56db]" />
+        <span className="truncate">{selected.value === 'all' ? label : selected.label}</span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-[#6173a1]" />
       </button>
       {open ? (
-        <div className="absolute left-0 top-[46px] z-20 min-w-[220px] rounded-[14px] border border-[#dbe6ff] bg-white p-2 shadow-[0_18px_40px_rgba(30,58,138,0.14)]">
+        <div 
+          className={cn(
+            "absolute top-[46px] z-20 min-w-[200px] sm:min-w-[220px] rounded-[14px] border border-[#dbe6ff] bg-white p-2 shadow-[0_18px_40px_rgba(30,58,138,0.14)]",
+            align === 'right' ? "right-0" : "left-0"
+          )}
+        >
           {options.map((option) => (
             <button
               key={option.value}
@@ -630,8 +636,8 @@ function GaragesContent() {
         </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        {filterPills.map(({ key, label, icon }) => (
+      <div className="mt-6 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+        {filterPills.map(({ key, label, icon }, index) => (
           <FilterMenu
             key={key}
             label={label}
@@ -639,6 +645,7 @@ function GaragesContent() {
             options={filterOptions[key]}
             value={filters[key]}
             open={openFilter === key}
+            align={index % 3 === 2 ? 'right' : 'left'}
             onOpen={() => {
               setOpenFilter(key);
               setSortOpen(false);

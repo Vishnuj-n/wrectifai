@@ -4,6 +4,7 @@ import { FormEvent, useState } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
 import { Input } from '@/components/common/input';
 import { topNavIcons } from '@/components/home/data';
+import { cn } from '@/utils/cn';
 
 export function TopNavbar() {
   const [query, setQuery] = useState('');
@@ -18,12 +19,12 @@ export function TopNavbar() {
   };
 
   return (
-    <header className="flex flex-col gap-3 lg:flex-row lg:items-center">
-      <div className="flex items-center gap-3">
+    <header className="flex flex-wrap items-center gap-3 lg:flex-nowrap lg:gap-4">
+      <div className="order-1 flex items-center gap-2 sm:gap-3">
         <button
           type="button"
           onClick={() => window.dispatchEvent(new Event('toggle-mobile-sidebar'))}
-          className="flex h-10 w-10 items-center justify-center rounded-[14px] border border-[#dbe6ff] bg-white text-[#1a56db] shadow-sm lg:hidden"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] border border-[#dbe6ff] bg-white text-[#1a56db] shadow-sm lg:hidden"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
             <line x1="4" x2="20" y1="12" y2="12" />
@@ -31,25 +32,52 @@ export function TopNavbar() {
             <line x1="4" x2="20" y1="18" y2="18" />
           </svg>
         </button>
-        <div className="flex h-10 w-fit items-center gap-3 rounded-[14px] border border-[#dbe6ff] bg-white px-4 text-[15px] font-semibold text-[#17307a] shadow-sm">
-        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#eef4ff]">
-          <svg
-            viewBox="0 0 24 24"
-            className="h-4 w-4 text-[#1a56db]"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M12 21s-6-4.35-6-11a6 6 0 1 1 12 0c0 6.65-6 11-6 11Z" />
-            <circle cx="12" cy="10" r="2.5" />
-          </svg>
+        <div className="flex h-10 w-fit shrink-0 items-center gap-2 sm:gap-3 rounded-[14px] border border-[#dbe6ff] bg-white px-3 sm:px-4 text-[14px] sm:text-[15px] font-semibold text-[#17307a] shadow-sm">
+          <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-[#eef4ff]">
+            <svg
+              viewBox="0 0 24 24"
+              className="h-3 w-3 sm:h-4 sm:w-4 text-[#1a56db]"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M12 21s-6-4.35-6-11a6 6 0 1 1 12 0c0 6.65-6 11-6 11Z" />
+              <circle cx="12" cy="10" r="2.5" />
+            </svg>
+          </div>
+          <span className="hidden min-[360px]:inline">Hyderabad</span>
+          <span className="inline min-[360px]:hidden">Hyd</span>
+          <ChevronDown className="h-4 w-4 text-[#17307a]" />
         </div>
-        Hyderabad
-        <ChevronDown className="h-4 w-4 text-[#17307a]" />
-      </div>
       </div>
 
-      <form className="relative flex-1" onSubmit={handleSubmit}>
+      <div className="order-2 ml-auto flex items-center gap-1.5 sm:gap-2 lg:order-3 lg:ml-0">
+        {topNavIcons.map(({ icon: Icon, badge, label }) => (
+          <div
+            key={label}
+            aria-label={label}
+            className={cn(
+              "relative h-9 w-9 lg:h-10 lg:w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#17307a] shadow-sm ring-1 ring-[#e5ecfb]",
+              label !== 'Notifications' ? "hidden lg:flex" : "flex"
+            )}
+          >
+            <Icon className="h-4 w-4 lg:h-[18px] lg:w-[18px]" />
+            {badge ? (
+              <span className="absolute right-0 top-0 lg:right-1 flex h-4 lg:h-5 min-w-4 lg:min-w-5 items-center justify-center rounded-full bg-[#ff2f44] px-1 text-[9px] lg:text-[10px] font-bold text-white">
+                {badge}
+              </span>
+            ) : null}
+          </div>
+        ))}
+
+        <div className="ml-0 flex h-9 lg:h-10 shrink-0 items-center gap-2 rounded-full border border-[#dbe6ff] bg-white p-0.5 lg:py-1 lg:pl-1.5 lg:pr-3 lg:ml-1">
+          <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="Rahul" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full object-cover" />
+          <span className="hidden text-[15px] font-semibold text-[#17307a] lg:block">Hi, Rahul</span>
+          <ChevronDown className="hidden h-4 w-4 text-[#17307a] lg:block" />
+        </div>
+      </div>
+
+      <form className="relative order-3 w-full lg:order-2 lg:flex-1 lg:w-auto" onSubmit={handleSubmit}>
         <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7aa5]" />
         <Input
           value={query}
@@ -59,29 +87,6 @@ export function TopNavbar() {
           aria-label="Search for services, parts, garages"
         />
       </form>
-
-      <div className="flex flex-wrap items-center gap-2 lg:self-auto">
-        {topNavIcons.map(({ icon: Icon, badge, label }) => (
-          <div
-            key={label}
-            aria-label={label}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#17307a] shadow-sm ring-1 ring-[#e5ecfb]"
-          >
-            <Icon className="h-[18px] w-[18px]" />
-            {badge ? (
-              <span className="absolute right-1 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#ff2f44] px-1 text-[10px] font-bold text-white">
-                {badge}
-              </span>
-            ) : null}
-          </div>
-        ))}
-
-        <div className="ml-0 flex items-center gap-2 rounded-full border border-[#dbe6ff] bg-white py-1 pl-1.5 pr-3 lg:ml-1">
-          <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="Rahul" className="flex h-8 w-8 items-center justify-center rounded-full object-cover" />
-          <span className="text-[15px] font-semibold text-[#17307a]">Hi, Rahul</span>
-          <ChevronDown className="h-4 w-4 text-[#17307a]" />
-        </div>
-      </div>
     </header>
   );
 }
