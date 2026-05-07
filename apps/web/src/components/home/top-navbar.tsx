@@ -11,11 +11,6 @@ export function TopNavbar() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    window.dispatchEvent(
-      new CustomEvent('dashboard-search', {
-        detail: query.trim(),
-      })
-    );
   };
 
   return (
@@ -81,7 +76,15 @@ export function TopNavbar() {
         <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7aa5]" />
         <Input
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => {
+            const newQuery = event.target.value;
+            setQuery(newQuery);
+            window.dispatchEvent(
+              new CustomEvent('dashboard-search', {
+                detail: newQuery.trim(),
+              })
+            );
+          }}
           className="h-10 rounded-[14px] pl-11 pr-4"
           placeholder="Search for services, parts, garages..."
           aria-label="Search for services, parts, garages"

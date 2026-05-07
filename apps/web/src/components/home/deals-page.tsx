@@ -11,6 +11,7 @@ import {
   ClipboardList,
   Filter,
   Gauge,
+  Percent,
   RotateCcw,
   ShieldCheck,
   SlidersHorizontal,
@@ -694,20 +695,121 @@ function DealCard({ deal }: { deal: DealItem }) {
   );
 }
 
+type FilterKey = 'category' | 'offerType' | 'price' | 'discount';
+
+const filterPills = [
+  { key: 'category', label: 'Category', icon: Tag },
+  { key: 'offerType', label: 'Offer Type', icon: Snowflake },
+  { key: 'price', label: 'Price Range', icon: ClipboardList },
+  { key: 'discount', label: 'Discount', icon: Percent },
+] as const;
+
+const filterOptions: Record<FilterKey, { label: string; value: string }[]> = {
+  category: [
+    { label: 'All Categories', value: 'all' },
+    { label: 'Car Care', value: 'Car Care' },
+    { label: 'Service', value: 'Service' },
+    { label: 'Parts & Accessories', value: 'Parts & Accessories' },
+    { label: 'Tyres', value: 'Tyres' },
+    { label: 'Batteries', value: 'Batteries' },
+    { label: 'Combo Deals', value: 'Combo Deals' },
+  ],
+  offerType: [
+    { label: 'All Offers', value: 'all' },
+    { label: 'Combo Offers Only', value: 'combo' },
+  ],
+  price: [
+    { label: 'Any Price', value: 'all' },
+    { label: 'Under \u20B92,000', value: 'under2000' },
+  ],
+  discount: [
+    { label: 'Any Discount', value: 'all' },
+    { label: '30%+ Discount', value: 'highDiscount' },
+  ],
+};
+
+function FilterMenu({
+  label,
+  icon: Icon,
+  options,
+  value,
+  open,
+  onOpen,
+  onClose,
+  onSelect,
+  align,
+}: {
+  label: string;
+  icon: LucideIcon;
+  options: { value: string; label: string }[];
+  value: string;
+  open: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+  onSelect: (value: string) => void;
+  align?: 'left' | 'right';
+}) {
+  const selected = options.find((option) => option.value === value) ?? options[0];
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={open ? onClose : onOpen}
+        className={cn(
+          'flex h-10 w-full items-center justify-center sm:justify-start gap-1.5 sm:gap-3 rounded-[12px] border border-[#dbe6ff] bg-white px-2 sm:px-4 text-[12px] sm:text-[14px] font-semibold text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)] transition-colors',
+          open && 'border-[#bfd1ff] bg-[#f8fbff]'
+        )}
+      >
+        <Icon className="h-4 w-4 shrink-0 text-[#1a56db]" />
+        <span className="truncate">{selected.value === 'all' ? label : selected.label}</span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-[#6173a1]" />
+      </button>
+      {open ? (
+        <div 
+          className={cn(
+            "absolute top-[46px] z-20 min-w-[200px] sm:min-w-[220px] rounded-[14px] border border-[#dbe6ff] bg-white p-2 shadow-[0_18px_40px_rgba(30,58,138,0.14)]",
+            align === 'right' ? "right-0" : "left-0"
+          )}
+        >
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                onSelect(option.value);
+                onClose();
+              }}
+              className={cn(
+                'flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[14px] font-medium transition-colors',
+                option.value === value
+                  ? 'bg-[#eef4ff] text-[#1a56db]'
+                  : 'text-[#17307a] hover:bg-[#f8fbff]'
+              )}
+            >
+              <span>{option.label}</span>
+              {option.value === value ? <Check className="h-4 w-4 text-[#1a56db]" strokeWidth={3} /> : null}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function DealsPageContent() {
-  const [activeFilter, setActiveFilter] = useState<DealCategory>('All Deals');
+  const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
+  const [filters, setFilters] = useState<Record<FilterKey, string>>({
+    category: 'all',
+    offerType: 'all',
+    price: 'all',
+    discount: 'all',
+  });
   const [sortBy, setSortBy] = useState<SortOption>('Most Relevant');
-  const [comboOnly, setComboOnly] = useState(false);
-  const [under2000Only, setUnder2000Only] = useState(false);
-  const [highDiscountOnly, setHighDiscountOnly] = useState(false);
-  const [showMoreFilters, setShowMoreFilters] = useState(false);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [mobileCategoryOpen, setMobileCategoryOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const pageSize = 9;
-  const filtersRef = useRef<HTMLDivElement>(null);
   const sortRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -718,9 +820,6 @@ function DealsPageContent() {
     };
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (filtersRef.current && !filtersRef.current.contains(event.target as Node)) {
-        setShowMoreFilters(false);
-      }
       if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
         setSortOpen(false);
       }
@@ -738,10 +837,12 @@ function DealsPageContent() {
   const filteredDeals = useMemo(() => {
     let nextDeals = deals.filter((deal) => {
       const matchesFilter =
-        activeFilter === 'All Deals' ? true : deal.categories.includes(activeFilter);
-      const matchesCombo = comboOnly ? deal.isCombo : true;
-      const matchesBudget = under2000Only ? deal.numericPrice <= 2000 : true;
-      const matchesDiscount = highDiscountOnly ? deal.discountPercent >= 30 : true;
+        filters.category === 'all'
+          ? true
+          : deal.categories.includes(filters.category as Exclude<DealCategory, 'All Deals'>);
+      const matchesCombo = filters.offerType === 'combo' ? deal.isCombo : true;
+      const matchesBudget = filters.price === 'under2000' ? deal.numericPrice <= 2000 : true;
+      const matchesDiscount = filters.discount === 'highDiscount' ? deal.discountPercent >= 30 : true;
       const matchesSearch = searchTerm
         ? [deal.title, deal.badge, ...deal.bullets].join(' ').toLowerCase().includes(searchTerm)
         : true;
@@ -772,7 +873,7 @@ function DealsPageContent() {
     });
 
     return nextDeals;
-  }, [activeFilter, comboOnly, highDiscountOnly, searchTerm, sortBy, under2000Only]);
+  }, [filters, searchTerm, sortBy]);
 
   const totalPages = Math.max(1, Math.ceil(filteredDeals.length / pageSize));
 
@@ -804,320 +905,115 @@ function DealsPageContent() {
   const fromDeal = filteredDeals.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const toDeal = Math.min(currentPage * pageSize, filteredDeals.length);
 
-  const resetExtraFilters = () => {
-    setActiveFilter('All Deals');
-    setComboOnly(false);
-    setUnder2000Only(false);
-    setHighDiscountOnly(false);
+  const clearFilters = () => {
+    setFilters({
+      category: 'all',
+      offerType: 'all',
+      price: 'all',
+      discount: 'all',
+    });
     setCurrentPage(1);
+    setOpenFilter(null);
+    setSortOpen(false);
   };
 
-  const activeFiltersCount = (activeFilter !== 'All Deals' ? 1 : 0) + (comboOnly ? 1 : 0) + (under2000Only ? 1 : 0) + (highDiscountOnly ? 1 : 0);
+  const activeFiltersCount = Object.values(filters).filter((v) => v !== 'all').length;
 
   return (
     <div className="space-y-5 pb-6">
       <section className="rounded-[24px] border border-white/80 bg-[radial-gradient(circle_at_top,#fff5e9_0%,rgba(255,255,255,0.96)_22%,#ffffff_100%)] px-5 py-5 shadow-[0_16px_40px_rgba(22,48,112,0.06)] sm:px-6">
         <div className="flex flex-col gap-3">
-          <div>
-            <h1 className="text-[22px] font-bold tracking-[-0.04em] text-[#17307a] sm:text-[24px]">
-              View All Deals
-            </h1>
-            <p className="mt-1 text-[15px] font-medium text-[#536891]">
-              Great offers on car care, parts &amp; services
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-            {/* Desktop Filters (Hidden on Mobile) */}
-            <div className="hidden lg:flex w-full gap-2 sm:flex-wrap xl:flex-1">
-              {dealFilters.map((filter) => (
-                <div key={filter.label} className="shrink-0">
-                  <FilterChip
-                    label={filter.label}
-                    icon={filter.icon}
-                    active={activeFilter === filter.label}
-                    onClick={(label) => {
-                      setActiveFilter(label);
-                      setCurrentPage(1);
-                    }}
-                  />
-                </div>
-              ))}
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h1 className="text-[22px] font-bold tracking-[-0.04em] text-[#17307a] sm:text-[24px]">
+                View All Deals
+              </h1>
+              <p className="mt-1 text-[15px] font-medium text-[#536891]">
+                Great offers on car care, parts &amp; services
+              </p>
             </div>
 
-            {/* Desktop Action Row (Hidden on Mobile) */}
-            <div className="hidden lg:flex flex-wrap items-center justify-between gap-3 px-1 sm:px-0 xl:shrink-0">
-              <div className="relative" ref={filtersRef}>
+            <div className="relative flex items-center gap-3 lg:justify-end shrink-0">
+              <span className="text-[14px] font-semibold text-[#17307a]">Sort By:</span>
+              <div className="relative" ref={sortRef}>
                 <button
                   type="button"
-                  onClick={() => setShowMoreFilters((current) => !current)}
+                  onClick={() => setSortOpen((curr) => !curr)}
                   className={cn(
-                    'inline-flex h-9 items-center gap-2 rounded-[11px] border px-4 text-[13px] font-semibold transition-colors',
-                    comboOnly || under2000Only || highDiscountOnly
-                      ? 'border-[#c8d7ff] bg-[#f2f6ff] text-[#1f5cff]'
-                      : 'border-[#e3eaf9] bg-white text-[#233b7a] hover:bg-[#f7faff]'
+                    "flex h-10 min-w-[140px] sm:min-w-[172px] items-center justify-between rounded-[11px] border px-3 sm:px-4 text-[12px] sm:text-[13px] font-semibold transition-colors bg-white border-[#dbe6ff] text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)]",
+                    sortOpen && "border-[#bfd0ff] bg-[#f8fbff] text-[#1a56db]"
                   )}
                 >
-                  <Filter className="h-4 w-4" />
-                  More Filters
+                  <span className="truncate">{sortBy}</span>
+                  <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", sortOpen ? "rotate-180 text-[#1a56db]" : "text-[#6f80a8]")} />
                 </button>
 
-                {showMoreFilters ? (
-                  <div className="absolute left-0 top-[calc(100%+10px)] z-20 w-[260px] rounded-[16px] border border-[#e3eaf9] bg-white p-4 shadow-[0_18px_40px_rgba(21,47,112,0.12)]">
-                    <div className="mb-3 flex items-center justify-between">
-                      <div className="text-[14px] font-bold text-[#17307a]">Filter deals</div>
+                {sortOpen && (
+                  <div className="absolute right-0 top-[46px] z-20 min-w-[190px] rounded-[14px] border border-[#dbe6ff] bg-white p-2 shadow-[0_18px_40px_rgba(30,58,138,0.14)]">
+                    {[
+                      'Most Relevant',
+                      'Price: Low to High',
+                      'Price: High to Low',
+                      'Highest Discount',
+                      'Most Used',
+                    ].map((option) => (
                       <button
+                        key={option}
                         type="button"
-                        onClick={resetExtraFilters}
-                        className="inline-flex items-center gap-1 text-[12px] font-semibold text-[#4a66b1]"
+                        onClick={() => {
+                          setSortBy(option as SortOption);
+                          setCurrentPage(1);
+                          setSortOpen(false);
+                        }}
+                        className={cn(
+                          "flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[14px] font-medium transition-colors",
+                          sortBy === option
+                            ? "bg-[#eef4ff] text-[#1a56db]"
+                            : "text-[#17307a] hover:bg-[#f8fbff]"
+                        )}
                       >
-                        <RotateCcw className="h-3.5 w-3.5" />
-                        Reset
+                        <span className="truncate">{option}</span>
+                        {sortBy === option && <Check className="h-4 w-4 shrink-0 text-[#1a56db]" strokeWidth={3} />}
                       </button>
-                    </div>
-                    <div className="space-y-3">
-                      {[
-                        ['Combo offers only', comboOnly, setComboOnly],
-                        ['Under \u20B92,000', under2000Only, setUnder2000Only],
-                        ['30%+ discount', highDiscountOnly, setHighDiscountOnly],
-                      ].map(([label, checked, setter]) => (
-                        <label
-                          key={label as string}
-                          className="flex cursor-pointer items-center justify-between gap-3 rounded-[12px] bg-[#f8faff] px-3 py-2.5 text-[13px] font-semibold text-[#29417a]"
-                        >
-                          <span>{label as string}</span>
-                          <input
-                            type="checkbox"
-                            checked={checked as boolean}
-                            onChange={(event) => {
-                              (setter as (value: boolean) => void)(event.target.checked);
-                              setCurrentPage(1);
-                            }}
-                            className="h-4 w-4 rounded border-[#c9d7f7] text-[#1f5cff] focus:ring-[#bfd0ff]"
-                          />
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <span className="hidden text-[14px] font-semibold text-[#26408a] min-[360px]:inline">Sort By:</span>
-                <div className="relative" ref={sortRef}>
-                  <button
-                    type="button"
-                    onClick={() => setSortOpen((curr) => !curr)}
-                    className={cn(
-                      "flex h-10 min-w-[140px] sm:min-w-[172px] items-center justify-between rounded-[11px] border px-3 sm:px-4 text-[12px] sm:text-[13px] font-semibold transition-colors",
-                      sortOpen ? "border-[#bfd0ff] bg-[#f8fbff] text-[#1a56db]" : "border-[#e3eaf9] bg-white text-[#233b7a]"
-                    )}
-                  >
-                    <span className="truncate">{sortBy}</span>
-                    <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", sortOpen ? "rotate-180 text-[#1a56db]" : "text-[#6f80a8]")} />
-                  </button>
-
-                  {sortOpen && (
-                    <div className="absolute right-0 top-[calc(100%+8px)] z-40 flex w-[220px] flex-col rounded-[14px] border border-[#dbe6ff] bg-white p-2 shadow-[0_18px_40px_rgba(30,58,138,0.14)]">
-                      {[
-                        'Most Relevant',
-                        'Price: Low to High',
-                        'Price: High to Low',
-                        'Highest Discount',
-                        'Most Used',
-                      ].map((option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => {
-                            setSortBy(option as SortOption);
-                            setCurrentPage(1);
-                            setSortOpen(false);
-                          }}
-                          className={cn(
-                            "flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium transition-colors",
-                            sortBy === option
-                              ? "bg-[#eef4ff] text-[#1a56db]"
-                              : "text-[#17307a] hover:bg-[#f8fbff]"
-                          )}
-                        >
-                          <span className="truncate">{option}</span>
-                          {sortBy === option && <Check className="h-4 w-4 shrink-0 text-[#1a56db]" strokeWidth={3} />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile Action Row (Hidden on Desktop) */}
-            <div className="flex lg:hidden flex-wrap items-center gap-3">
-              <div className="relative flex-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileFiltersOpen((curr) => !curr);
-                    setSortOpen(false);
-                  }}
-                  className={cn(
-                    "flex h-11 w-full items-center justify-between rounded-[14px] border border-[#dbe6ff] bg-white px-4 text-[14px] font-semibold text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)]",
-                    mobileFiltersOpen && "border-[#bfd1ff] bg-[#f8fbff]"
-                  )}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <SlidersHorizontal className="h-4 w-4 text-[#1a56db]" />
-                    Filters {activeFiltersCount > 0 && <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#1a56db] text-[10px] font-bold text-white">{activeFiltersCount}</span>}
-                  </div>
-                  <ChevronDown className={cn("h-4 w-4 text-[#6173a1] transition-transform", mobileFiltersOpen && "rotate-180")} />
-                </button>
-
-                {mobileFiltersOpen && (
-                  <div className="absolute left-0 right-0 top-[54px] z-30 flex flex-col gap-5 rounded-[18px] border border-[#dbe6ff] bg-white p-5 shadow-[0_24px_50px_rgba(30,58,138,0.16)]">
-                    <div className="flex items-center justify-between border-b border-[#eef3ff] pb-3">
-                      <span className="text-[16px] font-bold tracking-[-0.02em] text-[#17307a]">All Filters</span>
-                      {activeFiltersCount > 0 && (
-                        <button
-                          type="button"
-                          onClick={resetExtraFilters}
-                          className="flex items-center gap-1.5 text-[13px] font-bold text-[#d14343]"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                          Clear All
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="space-y-4">
-                      {/* Category Filter */}
-                      <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-[13px] font-bold text-[#17307a]">
-                          <Tag className="h-4 w-4 text-[#6173a1]" />
-                          Category
-                        </label>
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={() => setMobileCategoryOpen(!mobileCategoryOpen)}
-                            className={cn(
-                              "flex h-11 w-full items-center justify-between rounded-[12px] border px-3.5 text-[13px] font-semibold transition-colors",
-                              mobileCategoryOpen ? "border-[#1a56db] bg-[#f2f6ff] text-[#1a56db]" : "border-[#e3eaf9] bg-[#f8fbff] text-[#17307a]"
-                            )}
-                          >
-                            <span className="truncate">{activeFilter}</span>
-                            <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", mobileCategoryOpen ? "text-[#1a56db] rotate-180" : "text-[#6173a1]")} />
-                          </button>
-                          
-                          {mobileCategoryOpen && (
-                            <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-40 flex flex-col rounded-[14px] border border-[#dbe6ff] bg-white p-2 shadow-[0_18px_40px_rgba(30,58,138,0.14)]">
-                              {dealFilters.map((filter) => (
-                                <button
-                                  key={filter.label}
-                                  type="button"
-                                  onClick={() => {
-                                    setActiveFilter(filter.label);
-                                    setCurrentPage(1);
-                                    setMobileCategoryOpen(false);
-                                  }}
-                                  className={cn(
-                                    "flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium transition-colors",
-                                    activeFilter === filter.label ? "bg-[#eef4ff] text-[#1a56db]" : "text-[#17307a] hover:bg-[#f8fbff]"
-                                  )}
-                                >
-                                  <span className="truncate">{filter.label}</span>
-                                  {activeFilter === filter.label && <Check className="h-4 w-4 shrink-0 text-[#1a56db]" strokeWidth={3} />}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Extra Filters */}
-                      <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-[13px] font-bold text-[#17307a]">
-                          <Filter className="h-4 w-4 text-[#6173a1]" />
-                          Extra Filters
-                        </label>
-                        <div className="flex flex-col gap-1 rounded-[12px] border border-[#e3eaf9] bg-[#f8fbff] p-3">
-                          {[
-                            ['Combo offers only', comboOnly, setComboOnly],
-                            ['Under \u20B92,000', under2000Only, setUnder2000Only],
-                            ['30%+ discount', highDiscountOnly, setHighDiscountOnly],
-                          ].map(([label, checked, setter]) => (
-                            <label
-                              key={label as string}
-                              className="flex cursor-pointer items-center justify-between gap-3 rounded-[8px] px-2 py-2 text-[13px] font-semibold text-[#29417a]"
-                            >
-                              <span>{label as string}</span>
-                              <input
-                                type="checkbox"
-                                checked={checked as boolean}
-                                onChange={(event) => {
-                                  (setter as (value: boolean) => void)(event.target.checked);
-                                  setCurrentPage(1);
-                                }}
-                                className="h-4 w-4 rounded border-[#c9d7f7] text-[#1f5cff] focus:ring-[#bfd0ff]"
-                              />
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 )}
               </div>
-
-              <div className="flex items-center gap-3">
-                <div className="relative" ref={sortRef}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSortOpen((curr) => !curr);
-                      setMobileFiltersOpen(false);
-                    }}
-                    className={cn(
-                      "flex h-11 min-w-[130px] items-center justify-between rounded-[14px] border px-3 sm:px-4 text-[13px] font-semibold transition-colors",
-                      sortOpen ? "border-[#bfd0ff] bg-[#f8fbff] text-[#1a56db]" : "border-[#dbe6ff] bg-white text-[#17307a]"
-                    )}
-                  >
-                    <span className="truncate">{sortBy}</span>
-                    <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", sortOpen ? "rotate-180 text-[#1a56db]" : "text-[#6f80a8]")} />
-                  </button>
-
-                  {sortOpen && (
-                    <div className="absolute right-0 top-[calc(100%+8px)] z-40 flex w-[220px] flex-col rounded-[14px] border border-[#dbe6ff] bg-white p-2 shadow-[0_18px_40px_rgba(30,58,138,0.14)]">
-                      {[
-                        'Most Relevant',
-                        'Price: Low to High',
-                        'Price: High to Low',
-                        'Highest Discount',
-                        'Most Used',
-                      ].map((option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => {
-                            setSortBy(option as SortOption);
-                            setCurrentPage(1);
-                            setSortOpen(false);
-                          }}
-                          className={cn(
-                            "flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium transition-colors",
-                            sortBy === option
-                              ? "bg-[#eef4ff] text-[#1a56db]"
-                              : "text-[#17307a] hover:bg-[#f8fbff]"
-                          )}
-                        >
-                          <span className="truncate">{option}</span>
-                          {sortBy === option && <Check className="h-4 w-4 shrink-0 text-[#1a56db]" strokeWidth={3} />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+            {filterPills.map(({ key, label, icon }, index) => (
+              <FilterMenu
+                key={key}
+                label={label}
+                icon={icon}
+                options={filterOptions[key]}
+                value={filters[key]}
+                open={openFilter === key}
+                align={index % 3 === 2 ? 'right' : 'left'}
+                onOpen={() => {
+                  setOpenFilter(key);
+                  setSortOpen(false);
+                }}
+                onClose={() => setOpenFilter(null)}
+                onSelect={(value) => {
+                  setFilters((prev) => ({ ...prev, [key]: value }));
+                  setCurrentPage(1);
+                }}
+              />
+            ))}
+
+            {activeFiltersCount > 0 ? (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="flex h-10 items-center justify-center sm:justify-start gap-2 rounded-[12px] border border-[#ffd2d2] bg-white px-4 text-[12px] sm:text-[14px] font-semibold text-[#d14343] shadow-[0_8px_20px_rgba(30,58,138,0.04)]"
+              >
+                <X className="h-4 w-4" />
+                Clear Filters
+              </button>
+            ) : null}
           </div>
 
           <div className="flex items-center gap-2 rounded-[12px] border border-[#deefe2] bg-[#f3fbf5] px-4 py-3 text-[14px] font-semibold text-[#21834c]">
@@ -1146,7 +1042,7 @@ function DealsPageContent() {
             Try another category, remove a filter, or reset the search.
           </p>
           <div className="mt-4">
-            <Button variant="outline" onClick={resetExtraFilters}>
+            <Button variant="outline" onClick={clearFilters}>
               Reset filters
             </Button>
           </div>
