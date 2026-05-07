@@ -302,6 +302,7 @@ function FilterMenu({
   onOpen,
   onClose,
   onSelect,
+  align,
 }: {
   label: string;
   icon: typeof Star;
