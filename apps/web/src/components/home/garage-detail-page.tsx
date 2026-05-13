@@ -116,7 +116,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
       {/* Back Button */}
       <button
         onClick={onBack}
-        className="group inline-flex items-center gap-1.5 text-[14px] font-bold text-[#1a56db] transition-colors hover:text-[#0b43c4]"
+        className="group inline-flex items-center gap-1.5 text-[12px] font-bold text-[#1a56db] transition-colors hover:text-[#0b43c4]"
       >
         <ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
         Back to Garages
@@ -139,14 +139,14 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
             
             {/* Banner Overlay Info */}
             <div className="absolute inset-x-5 bottom-5 flex items-end justify-between text-white">
-              <span className="text-[16.5px] font-bold tracking-[0.02em] text-white/95 drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
+              <span className="text-[14.5px] font-bold tracking-[0.02em] text-white/95 drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
                 {garage.facade}
               </span>
             </div>
 
             {/* Badge & Favorite Button */}
             {garage.badge && (
-              <span className="absolute left-4 top-4 rounded-[10px] bg-[#1aa14a] px-3.5 py-1.5 text-[12px] font-bold text-white shadow-lg">
+              <span className="absolute left-4 top-4 rounded-[10px] bg-[#1aa14a] px-3.5 py-1.5 text-[11px] font-bold text-white shadow-lg">
                 {garage.badge}
               </span>
             )}
@@ -168,7 +168,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
             <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
               <div className="space-y-3.5 md:max-w-[65%]">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-[22px] font-extrabold tracking-[-0.03em] text-[#17307a] sm:text-[25px]">
+                  <h1 className="text-[18px] font-extrabold tracking-[-0.03em] text-[#17307a] sm:text-[20px]">
                     {garage.name}
                   </h1>
                   {garage.verified && (
@@ -176,7 +176,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2.5 text-[13px] font-semibold text-[#536891]">
+                <div className="flex flex-wrap items-center gap-2.5 text-[11.5px] font-semibold text-[#536891]">
                   <div className="flex items-center gap-1">
                     <Star className="h-4.5 w-4.5 fill-[#ff9f1a] text-[#ff9f1a]" />
                     <span className="text-[#f28c28]">{garage.rating.toFixed(1)}</span>
@@ -193,15 +193,15 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
 
                 {/* Response / Time Pills */}
                 <div className="flex flex-wrap gap-2.5 pt-1.5">
-                  <div className="flex items-center gap-2 rounded-full bg-[#f0f4ff] px-3.5 py-1.5 text-[11px] font-bold text-[#1a56db]">
+                  <div className="flex items-center gap-2 rounded-full bg-[#f0f4ff] px-3.5 py-1.5 text-[10px] font-bold text-[#1a56db]">
                     <Clock className="h-4 w-4" />
                     <span>{garage.responseMins} mins response time</span>
                   </div>
-                  <div className="flex items-center gap-2 rounded-full bg-[#eefbf3] px-3.5 py-1.5 text-[11px] font-bold text-[#228453]">
+                  <div className="flex items-center gap-2 rounded-full bg-[#eefbf3] px-3.5 py-1.5 text-[10px] font-bold text-[#228453]">
                     <Clock className="h-4 w-4" />
                     <span>Open until 10:00 PM</span>
                   </div>
-                  <div className="flex items-center gap-2 rounded-full bg-[#fdf5ed] px-3.5 py-1.5 text-[11px] font-bold text-[#f28c28]">
+                  <div className="flex items-center gap-2 rounded-full bg-[#fdf5ed] px-3.5 py-1.5 text-[10px] font-bold text-[#f28c28]">
                     <Shield className="h-4 w-4" />
                     <span>20+ years in service</span>
                   </div>
@@ -209,14 +209,14 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
 
                 {/* Adaptive Description */}
                 <div className="space-y-2 pt-3">
-                  <p className="text-[13px] font-medium leading-[1.6] text-[#42526e]">
+                  <p className="text-[11.5px] font-medium leading-[1.6] text-[#42526e]">
                     {garage.name} is a trusted car service and repair center in {garage.location}. 
                     We offer a wide range of services with certified mechanics, modern equipment and 
                     a customer-first approach. {isExpanded && "Our facility handles everything from scheduled maintenance to complex diagnostics, ensuring absolute precision and absolute satisfaction."}
                   </p>
                   <button
                     onClick={() => setIsExpanded(!isExpanded)}
-                    className="inline-flex items-center gap-1 text-[12px] font-bold text-[#1a56db] hover:underline"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#1a56db] hover:underline"
                   >
                     <span>{isExpanded ? 'Show Less' : 'Read More'}</span>
                     <ChevronRight className={cn("h-3.5 w-3.5 transition-transform", isExpanded && "rotate-90")} />
@@ -226,7 +226,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
 
               {/* Highlights Subcard */}
               <div className="flex-1 rounded-[18px] border border-[#e2eefc] bg-[#f8fbff] p-5 md:max-w-[32%]">
-                <h3 className="text-[14px] font-bold text-[#17307a] mb-4">Garage Highlights</h3>
+                <h3 className="text-[12.5px] font-bold text-[#17307a] mb-4">Garage Highlights</h3>
                 <ul className="space-y-3">
                   {[
                     { label: 'Certified Technicians', icon: Wrench },
@@ -235,7 +235,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
                     { label: 'Transparent Pricing', icon: Tag },
                     { label: '4000+ Happy Customers', icon: Star },
                   ].map((hl, index) => (
-                    <li key={index} className="flex items-center gap-3 text-[12px] font-bold text-[#42548a]">
+                    <li key={index} className="flex items-center gap-3 text-[11px] font-bold text-[#42548a]">
                       <hl.icon className="h-4 w-4 shrink-0 text-[#1a56db]" />
                       <span className="truncate">{hl.label}</span>
                     </li>
@@ -247,7 +247,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
 
           {/* Services Offered */}
           <section className="space-y-3.5">
-            <h2 className="text-[16.5px] font-bold text-[#17307a]">Services Offered</h2>
+            <h2 className="text-[14.5px] font-bold text-[#17307a]">Services Offered</h2>
             <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
               {servicesOffered.map((svc, index) => (
                 <div
@@ -257,7 +257,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
                   <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f0f4ff] text-[#1a56db] mb-3">
                     <svc.icon className="h-5 w-5" />
                   </div>
-                  <span className="text-[12px] font-bold text-[#17307a]">{svc.name}</span>
+                  <span className="text-[11px] font-bold text-[#17307a]">{svc.name}</span>
                 </div>
               ))}
             </div>
@@ -265,7 +265,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
 
           {/* Why Choose Us */}
           <section className="space-y-3.5">
-            <h2 className="text-[16.5px] font-bold text-[#17307a]">Why Choose {garage.name}?</h2>
+            <h2 className="text-[14.5px] font-bold text-[#17307a]">Why Choose {garage.name}?</h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {[
                 { title: '1 Month Warranty', desc: 'On all repairs and services', icon: Shield },
@@ -281,8 +281,8 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e2f7e9] text-[#21834c] mb-3">
                     <item.icon className="h-5 w-5" />
                   </div>
-                  <h4 className="text-[12px] font-bold text-[#17307a]">{item.title}</h4>
-                  <p className="mt-1 text-[10px] font-medium leading-[1.3] text-[#536891]">{item.desc}</p>
+                  <h4 className="text-[11px] font-bold text-[#17307a]">{item.title}</h4>
+                  <p className="mt-1 text-[9.5px] font-medium leading-[1.3] text-[#536891]">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -290,11 +290,11 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
 
           {/* Customer Reviews */}
           <section className="space-y-4">
-            <h2 className="text-[16.5px] font-bold text-[#17307a]">Customer Reviews ({garage.reviews})</h2>
+            <h2 className="text-[14.5px] font-bold text-[#17307a]">Customer Reviews ({garage.reviews})</h2>
             <div className="grid gap-4 md:grid-cols-[200px_1fr_1fr]">
               {/* Overall Rating Card */}
               <div className="flex flex-col items-center justify-center rounded-[20px] border border-[#e2eefc] bg-white p-6 text-center">
-                <span className="text-[47px] font-extrabold tracking-tight text-[#17307a]">
+                <span className="text-[38px] font-extrabold tracking-tight text-[#17307a]">
                   {garage.rating.toFixed(1)}
                 </span>
                 <div className="flex items-center gap-0.5 my-1.5">
@@ -308,8 +308,8 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
                     />
                   ))}
                 </div>
-                <span className="text-[14px] font-bold text-[#228453]">Excellent</span>
-                <span className="mt-1 text-[11px] font-semibold text-[#8a99ad]">{garage.reviews} reviews</span>
+                <span className="text-[12px] font-bold text-[#228453]">Excellent</span>
+                <span className="mt-1 text-[10px] font-semibold text-[#8a99ad]">{garage.reviews} reviews</span>
               </div>
 
               {/* Progress Bars Card */}
@@ -321,7 +321,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
                   { stars: 2, pct: '3%', count: '3' },
                   { stars: 1, pct: '2%', count: '1' },
                 ].map((row) => (
-                  <div key={row.stars} className="flex items-center gap-3 text-[11px] font-bold text-[#536891]">
+                  <div key={row.stars} className="flex items-center gap-3 text-[10px] font-bold text-[#536891]">
                     <span className="w-2.5 text-right">{row.stars}</span>
                     <Star className="h-3.5 w-3.5 fill-[#cbd4e6] text-[#cbd4e6]" />
                     <div className="h-2 flex-1 rounded-full bg-[#f0f4ff] overflow-hidden">
@@ -338,18 +338,18 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
                 <div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#eef4ff] text-[12px] font-bold text-[#1a56db]">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#eef4ff] text-[11px] font-bold text-[#1a56db]">
                         {reviews[reviewPage].avatar}
                       </div>
                       <div>
-                        <div className="text-[12px] font-bold text-[#17307a]">{reviews[reviewPage].name}</div>
-                        <div className="flex items-center gap-1 text-[10px] font-medium text-[#228453]">
+                        <div className="text-[11px] font-bold text-[#17307a]">{reviews[reviewPage].name}</div>
+                        <div className="flex items-center gap-1 text-[9.5px] font-medium text-[#228453]">
                           <CheckCircle2 className="h-3 w-3 fill-[#228453] text-white" />
                           <span>{reviews[reviewPage].status}</span>
                         </div>
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold text-[#8a99ad]">{reviews[reviewPage].date}</span>
+                    <span className="text-[9.5px] font-bold text-[#8a99ad]">{reviews[reviewPage].date}</span>
                   </div>
 
                   <div className="flex items-center gap-0.5 mt-2.5">
@@ -364,7 +364,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
                     ))}
                   </div>
 
-                  <p className="mt-2.5 text-[12px] font-medium leading-[1.5] text-[#536891]">
+                  <p className="mt-2.5 text-[11px] font-medium leading-[1.5] text-[#536891]">
                     "{reviews[reviewPage].text}"
                   </p>
                 </div>
@@ -392,8 +392,8 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
           {/* Appointment Booking Widget */}
           <Card className="rounded-[24px] border-[#e7eefc] bg-white p-5 shadow-[0_16px_40px_rgba(21,48,122,0.06)] space-y-5">
             <div>
-              <h3 className="text-[16.5px] font-bold text-[#17307a]">Book Appointment</h3>
-              <p className="text-[12px] font-semibold text-[#8a99ad] mt-1">Choose a date and time that works for you</p>
+              <h3 className="text-[14.5px] font-bold text-[#17307a]">Book Appointment</h3>
+              <p className="text-[11px] font-semibold text-[#8a99ad] mt-1">Choose a date and time that works for you</p>
             </div>
 
             {/* Appointment Dates Carousel */}
@@ -409,13 +409,13 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
                       : "border-[#e2eefc] bg-white text-[#17307a] hover:bg-[#f8fbff]"
                   )}
                 >
-                  <span className={cn("text-[10px] font-bold", selectedDate === d.date ? "text-white/80" : "text-[#8a99ad]")}>
+                  <span className={cn("text-[9px] font-bold", selectedDate === d.date ? "text-white/80" : "text-[#8a99ad]")}>
                     {d.day}
                   </span>
-                  <span className="text-[16.5px] font-extrabold tracking-tight mt-1 leading-[1]">
+                  <span className="text-[14.5px] font-extrabold tracking-tight mt-1 leading-[1]">
                     {d.date}
                   </span>
-                  <span className={cn("text-[9px] font-bold mt-1 uppercase tracking-wider", selectedDate === d.date ? "text-white/80" : "text-[#8a99ad]")}>
+                  <span className={cn("text-[8px] font-bold mt-1 uppercase tracking-wider", selectedDate === d.date ? "text-white/80" : "text-[#8a99ad]")}>
                     {d.month.slice(0,3)}
                   </span>
                 </button>
@@ -424,14 +424,14 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
 
             {/* Available Slots */}
             <div className="space-y-3">
-              <span className="text-[12px] font-bold text-[#17307a]">Available Slots</span>
+              <span className="text-[11px] font-bold text-[#17307a]">Available Slots</span>
               <div className="grid grid-cols-3 gap-2">
                 {timeSlots.map((slot) => (
                   <button
                     key={slot}
                     onClick={() => setSelectedSlot(slot)}
                     className={cn(
-                      "flex items-center justify-center h-10 rounded-[10px] border text-[11px] font-bold tracking-tight transition-all",
+                      "flex items-center justify-center h-10 rounded-[10px] border text-[10px] font-bold tracking-tight transition-all",
                       selectedSlot === slot
                         ? "border-[#1a56db] bg-[#1a56db] text-white shadow-md"
                         : "border-[#e2eefc] bg-white text-[#17307a] hover:bg-[#f8fbff]"
@@ -447,11 +447,11 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
             <div className="space-y-3 pt-2">
               <Button
                 onClick={handleBookAppointment}
-                className="w-full h-12 rounded-[14px] text-[14px] font-bold bg-[#1a56db] text-white hover:bg-[#0b43c4] shadow-lg transition-transform hover:scale-[1.01]"
+                className="w-full h-12 rounded-[14px] text-[12px] font-bold bg-[#1a56db] text-white hover:bg-[#0b43c4] shadow-lg transition-transform hover:scale-[1.01]"
               >
                 Continue Booking
               </Button>
-              <div className="flex flex-col gap-1.5 text-[11px] font-bold text-[#8a99ad] items-center justify-center pt-1 border-t border-[#eef3ff]">
+              <div className="flex flex-col gap-1.5 text-[10px] font-bold text-[#8a99ad] items-center justify-center pt-1 border-t border-[#eef3ff]">
                 <div className="flex items-center gap-1.5">
                   <Check className="h-4 w-4 text-[#228453]" strokeWidth={3} />
                   <span>No upfront payment</span>
@@ -465,14 +465,14 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
           </Card>
           {/* Trust & Safety */}
           <Card className="rounded-[24px] border-[#e7eefc] bg-white p-5 shadow-[0_16px_40px_rgba(21,48,122,0.06)] space-y-4">
-            <h3 className="text-[14.5px] font-bold text-[#17307a]">Trust & Safety</h3>
+            <h3 className="text-[12.5px] font-bold text-[#17307a]">Trust & Safety</h3>
             <ul className="space-y-3.5">
               {[
                 'Background Verified',
                 '100% Secure Transactions',
                 'Customer Data Protected',
               ].map((item, index) => (
-                <li key={index} className="flex items-center gap-3 text-[12px] font-bold text-[#228453]">
+                <li key={index} className="flex items-center gap-3 text-[11px] font-bold text-[#228453]">
                   <Check className="h-4.5 w-4.5 shrink-0" strokeWidth={3} />
                   <span>{item}</span>
                 </li>
@@ -489,8 +489,8 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
             <Check className="h-5 w-5" strokeWidth={3} />
           </div>
           <div>
-            <div className="text-[13px] font-bold text-[#17307a]">Appointment Confirmed!</div>
-            <div className="text-[11px] font-semibold text-[#536891]">
+            <div className="text-[12px] font-bold text-[#17307a]">Appointment Confirmed!</div>
+            <div className="text-[10px] font-semibold text-[#536891]">
               For May {selectedDate} at {selectedSlot} with {garage.name}
             </div>
           </div>

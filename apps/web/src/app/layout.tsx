@@ -9,6 +9,11 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata = {
   title: 'WrectifAI',
   description: 'WrectifAI automotive services platform',
+  icons: {
+    icon: '/Logo_noBg.png',
+    shortcut: '/Logo_noBg.png',
+    apple: '/Logo_noBg.png',
+  },
 };
 
 export default function RootLayout({

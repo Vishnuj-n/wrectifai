@@ -38,7 +38,7 @@ export function Sidebar({
 
       <div className={cn(
         "flex items-center justify-between pt-1",
-        collapsed ? "mb-0" : "mb-1"
+        collapsed ? "mb-3.5" : "mb-1"
       )}>
         <Link
           href="/"

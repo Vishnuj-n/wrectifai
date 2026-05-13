@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { DashboardShell } from '@/components/home/dashboard-shell';
 import {
@@ -51,14 +52,24 @@ const dashboardImageSources = Array.from(
 function DashboardLoader() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f6f8fe] px-6">
-      <div className="flex flex-col items-center gap-4 rounded-[24px] border border-[#e3ebff] bg-white px-8 py-7 shadow-[0_24px_70px_rgba(16,35,86,0.08)]">
-        <div className="relative h-12 w-12">
-          <div className="absolute inset-0 rounded-full border-4 border-[#d9e5ff]" />
-          <div className="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-[#1a56db] border-r-[#1a56db]" />
+      <div className="flex flex-col items-center gap-5 rounded-[24px] border border-[#e3ebff] bg-white px-9 py-8 shadow-[0_24px_70px_rgba(16,35,86,0.08)]">
+        <div className="relative flex h-[86px] w-[150px] items-center justify-center overflow-hidden rounded-[20px] bg-[linear-gradient(180deg,#f8fbff_0%,#eef4ff_100%)]">
+          <div className="absolute inset-x-5 bottom-4 h-[3px] rounded-full bg-[#d6e3ff]" />
+          <div className="absolute inset-x-6 bottom-4 h-[3px] animate-pulse rounded-full bg-[linear-gradient(90deg,#1a56db_0%,#7da8ff_50%,#1a56db_100%)] opacity-75" />
+          <div className="relative animate-[bounce_1.6s_ease-in-out_infinite]">
+            <Image
+              src="/New_small_logo.png"
+              alt="WrectifAI"
+              width={72}
+              height={72}
+              priority
+              className="h-[46px] w-auto object-contain drop-shadow-[0_10px_18px_rgba(26,86,219,0.18)]"
+            />
+          </div>
         </div>
         <div className="text-center">
-          <div className="text-[16px] font-semibold text-[#17307a]">Loading dashboard</div>
-          <div className="mt-1 text-[12px] text-[#6173a1]">Preparing images and sections...</div>
+          <div className="text-[16px] font-semibold text-[#17307a]">Loading Wrectifai</div>
+          <div className="mt-1 text-[12px] text-[#6173a1]">Preparing dashboard visuals...</div>
         </div>
       </div>
     </main>

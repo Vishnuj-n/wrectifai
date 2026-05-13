@@ -186,7 +186,14 @@ function CategoriesModal({
                     </div>
                   )}
                   <div className="max-w-[124px] text-[10.5px] font-medium leading-[1.35] text-[#17307a]">
-                    {label}
+                    {label === 'Vehicle Protection & Safety' ? (
+                      <>
+                        <span className="block whitespace-nowrap">Vehicle Protection</span>
+                        <span className="block">&amp; Safety</span>
+                      </>
+                    ) : (
+                      label
+                    )}
                   </div>
                 </Card>
               ))}
@@ -227,11 +234,33 @@ function HeroBanner() {
   const [imageIndex, setImageIndex] = useState(0);
 
   const bannerImages = [
-    'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1600661653561-629509216228?auto=format&fit=crop&w=600&q=80',
+    {
+      src: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=600&q=80',
+      name: 'Chevrolet Camaro',
+      model: '2SS Coupe',
+      year: '2024',
+    },
+    {
+      src: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=600&q=80',
+      name: 'Ford Mustang',
+      model: 'GT Fastback',
+      year: '2023',
+    },
+    {
+      src: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=600&q=80',
+      name: 'BMW 3 Series',
+      model: '330i M Sport',
+      year: '2024',
+    },
+    {
+      src: 'https://images.unsplash.com/photo-1600661653561-629509216228?auto=format&fit=crop&w=600&q=80',
+      name: 'Audi e-tron GT',
+      model: 'Quattro',
+      year: '2024',
+    },
   ];
+
+  const activeBanner = bannerImages[imageIndex];
 
   const nextImage = () => setImageIndex((i) => (i + 1) % bannerImages.length);
   const prevImage = () => setImageIndex((i) => (i - 1 + bannerImages.length) % bannerImages.length);
@@ -261,42 +290,44 @@ function HeroBanner() {
       <div className="absolute right-0 top-0 bottom-0 hidden lg:block w-[35%] xl:w-[42%] overflow-hidden rounded-r-[inherit] z-20">
         <div className="group relative h-full w-full">
           <img
-            src={bannerImages[imageIndex]}
+            src={activeBanner.src}
             alt="Diagnose Car"
             className="h-full w-full object-cover"
           />
-          
-          {/* Consolidated Floating Controller */}
-          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full bg-black/40 px-3.5 py-2 backdrop-blur-md border border-white/10 transition-opacity">
-            <button
-              type="button"
-              onClick={prevImage}
-              aria-label="Previous image"
-              className="flex h-5 w-5 items-center justify-center text-white/80 transition-colors hover:text-white"
-            >
-              <ChevronLeft className="h-4.5 w-4.5" />
-            </button>
-            
-            <div className="flex gap-1.5 px-1">
-              {bannerImages.map((_, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    'h-1.5 rounded-full transition-all duration-300', 
-                    i === imageIndex ? 'bg-white w-3' : 'bg-white/30 w-1.5'
-                  )}
-                />
-              ))}
-            </div>
 
-            <button
-              type="button"
-              onClick={nextImage}
-              aria-label="Next image"
-              className="flex h-5 w-5 items-center justify-center text-white/80 transition-colors hover:text-white"
-            >
-              <ChevronRight className="h-4.5 w-4.5" />
-            </button>
+          <button
+            type="button"
+            onClick={prevImage}
+            aria-label="Previous image"
+            className="absolute left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/38 text-white/85 backdrop-blur-md transition-colors hover:bg-black/52 hover:text-white"
+          >
+            <ChevronLeft className="h-4.5 w-4.5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={nextImage}
+            aria-label="Next image"
+            className="absolute right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/38 text-white/85 backdrop-blur-md transition-colors hover:bg-black/52 hover:text-white"
+          >
+            <ChevronRight className="h-4.5 w-4.5" />
+          </button>
+
+          <div className="absolute bottom-0 left-0 right-0 border-t border-white/12 bg-[linear-gradient(180deg,rgba(9,16,38,0.08),rgba(9,16,38,0.46))] px-4 py-3 backdrop-blur-md">
+            <div className="grid grid-cols-3 gap-3 text-white">
+              <div className="min-w-0">
+                <div className="text-[9px] font-medium uppercase tracking-[0.08em] text-white/62">Name</div>
+                <div className="mt-0.5 truncate text-[11px] font-semibold text-white">{activeBanner.name}</div>
+              </div>
+              <div className="min-w-0">
+                <div className="text-[9px] font-medium uppercase tracking-[0.08em] text-white/62">Model</div>
+                <div className="mt-0.5 truncate text-[11px] font-semibold text-white">{activeBanner.model}</div>
+              </div>
+              <div className="min-w-0">
+                <div className="text-[9px] font-medium uppercase tracking-[0.08em] text-white/62">Year</div>
+                <div className="mt-0.5 truncate text-[11px] font-semibold text-white">{activeBanner.year}</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -573,45 +604,55 @@ function SeasonalDeals({
           ref={scrollRef}
           className="flex gap-4 overflow-x-auto pb-2 pr-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {deals.map((deal, index) => (
-            <Card key={deal.title} className="w-[344px] shrink-0 overflow-hidden p-0">
-              <div className="grid min-h-[124px] grid-cols-[1.08fr_0.92fr]">
-                <div className="p-4 pb-3">
-                  <div
-                    className={cn(
-                      'text-[11.5px] font-bold',
-                      index === 0
-                        ? 'text-[#ff3b30]'
-                        : index === 1
-                          ? 'text-[#238453]'
-                          : 'text-[#1a56db]'
-                    )}
+          {deals.map((deal) => {
+            const DealIcon = deal.icon;
+            return (
+              <Card
+                key={deal.title}
+                style={{ backgroundColor: deal.bgColor }}
+                className="w-[344px] shrink-0 overflow-hidden border border-[#e5e9f2]/50 p-0 shadow-[0_3px_10px_-1px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_4px_12px_-1px_rgba(0,0,0,0.05)] hover:-translate-y-0.5"
+              >
+                <div className="grid min-h-[124px] grid-cols-[1.2fr_0.8fr]">
+                  <div className="p-4 pb-3 relative z-10 flex flex-col justify-between">
+                    <div>
+                      <div className={cn('flex items-center gap-1.5 text-[11.5px] font-bold', deal.textColor)}>
+                        {DealIcon ? <DealIcon className="h-4 w-4 shrink-0" /> : null}
+                        {deal.title}
+                      </div>
+                      <p className="mt-2 max-w-[175px] text-[11px] leading-[1.45] font-semibold text-[#2d4179]">{deal.subtitle}</p>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-end gap-2">
+                      <span className={cn('text-[21px] font-bold leading-none', deal.textColor)}>{deal.price}</span>
+                      <span className="pb-1 text-[11.5px] font-medium text-[#8a96b8] line-through">{deal.strikePrice}</span>
+                      <Badge tone="lightGreen" className="mb-0.5 px-1.5 text-[9.5px]">
+                        {deal.discount}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div 
+                    className="relative h-full w-full overflow-hidden select-none"
+                    style={{ backgroundColor: deal.bgColor }}
                   >
-                    {deal.title}
-                  </div>
-                  <p className="mt-1.5 max-w-[172px] text-[11.5px] leading-5 text-[#42537e]">{deal.subtitle}</p>
-                  <div className="mt-3 flex flex-wrap items-end gap-2">
-                    <span className="text-[21px] font-bold leading-none text-[#ff3b30]">{deal.price}</span>
-                    <span className="pb-1 text-[12px] text-[#8a96b8] line-through">{deal.strikePrice}</span>
-                    <Badge tone="lightGreen" className="mb-1">
-                      {deal.discount}
-                    </Badge>
+                    {deal.image ? (
+                      <>
+                        <img
+                          src={deal.image}
+                          alt={deal.title}
+                          className="h-full w-full object-cover object-center mix-blend-multiply"
+                        />
+                        <div 
+                          className="absolute inset-y-0 left-0 w-24 pointer-events-none"
+                          style={{
+                            background: `linear-gradient(to right, ${deal.bgColor} 0%, ${deal.bgColor}e0 25%, ${deal.bgColor}00 100%)`
+                          }}
+                        />
+                      </>
+                    ) : null}
                   </div>
                 </div>
-                <div className={cn('relative bg-gradient-to-br', deal.imageTone)}>
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.45),transparent_28%)]" />
-                  <div className="absolute inset-x-8 bottom-4 h-5 rounded-full bg-black/20 blur-xl" />
-                  {deal.image ? (
-                    <img
-                      src={deal.image}
-                      alt={deal.title}
-                      className="absolute bottom-3 right-3 h-[88px] w-[124px] rounded-[14px] object-cover shadow-2xl"
-                    />
-                  ) : null}
-                </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
         <button
           type="button"
@@ -642,13 +683,21 @@ function CareTips({
           className="flex gap-3 overflow-x-auto pr-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {tips.map(({ title, icon: Icon, image }, index) => (
-            <Card key={title} className="grid min-h-[78px] w-[188px] shrink-0 grid-cols-[1fr_72px] items-center overflow-hidden p-0">
+            <Card key={title} className="grid min-h-[78px] w-[188px] shrink-0 grid-cols-[1fr_72px] items-center overflow-hidden p-0 border border-[#e5e9f2]/50 shadow-[0_3px_10px_-1px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_4px_12px_-1px_rgba(0,0,0,0.05)] hover:-translate-y-0.5">
               <div className="p-4 py-3">
                 <p className="text-[10.5px] font-semibold leading-5 text-[#17307a]">{title}</p>
               </div>
               <div className="relative h-full overflow-hidden">
                 {image ? (
-                  <img src={image} alt={title} className="absolute inset-0 h-full w-full object-cover" />
+                  <>
+                    <img src={image} alt={title} className="absolute inset-0 h-full w-full object-cover" />
+                    <div
+                      className="absolute inset-y-0 left-0 w-10 pointer-events-none"
+                      style={{
+                        background: 'linear-gradient(to right, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.72) 34%, rgba(255,255,255,0) 100%)',
+                      }}
+                    />
+                  </>
                 ) : (
                   <div
                     className={cn(

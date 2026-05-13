@@ -324,7 +324,7 @@ function FilterMenu({
         type="button"
         onClick={open ? onClose : onOpen}
         className={cn(
-          'flex h-10 w-full items-center justify-center sm:justify-start gap-1.5 sm:gap-3 rounded-[12px] border border-[#dbe6ff] bg-white px-2 sm:px-4 text-[11px] sm:text-[13px] font-semibold text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)] transition-colors',
+          'flex h-[34px] w-full items-center justify-center sm:justify-start gap-1.5 sm:gap-2 rounded-[10px] border border-[#dbe6ff] bg-white px-2 sm:px-3 text-[10.5px] sm:text-[11.5px] font-semibold text-[#17307a] shadow-[0_6px_15px_rgba(30,58,138,0.03)] transition-colors',
           open && 'border-[#bfd1ff] bg-[#f8fbff]'
         )}
       >
@@ -335,7 +335,7 @@ function FilterMenu({
       {open ? (
         <div 
           className={cn(
-            "absolute top-[46px] z-20 min-w-[200px] sm:min-w-[220px] rounded-[14px] border border-[#dbe6ff] bg-white p-2 shadow-[0_18px_40px_rgba(30,58,138,0.14)]",
+            "absolute top-[39px] z-20 min-w-[200px] sm:min-w-[220px] rounded-[12px] border border-[#dbe6ff] bg-white p-2 shadow-[0_16px_36px_rgba(30,58,138,0.11)]",
             align === 'right' ? "right-0" : "left-0"
           )}
         >
@@ -348,7 +348,7 @@ function FilterMenu({
                 onClose();
               }}
               className={cn(
-                'flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium transition-colors',
+                'flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[12px] font-medium transition-colors',
                 option.value === value
                   ? 'bg-[#eef4ff] text-[#1a56db]'
                   : 'text-[#17307a] hover:bg-[#f8fbff]'
@@ -390,7 +390,7 @@ function GarageCard({
         {image && <img src={image} alt={name} className="absolute inset-0 h-full w-full object-cover" />}
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(5,8,17,0.4))]" />
         {badge ? (
-          <div className={cn('absolute left-4 top-3 rounded-[10px] px-3 py-1 text-[12px] font-bold text-white', badgeTone)}>
+          <div className={cn('absolute left-4 top-3 rounded-[10px] px-3 py-1 text-[11px] font-bold text-white', badgeTone)}>
             {badge}
           </div>
         ) : null}
@@ -398,7 +398,7 @@ function GarageCard({
           <Heart className="h-5 w-5" />
         </div>
         <div className="absolute inset-x-4 bottom-4 flex items-end justify-between">
-          <div className="text-[13px] font-bold tracking-[0.01em] text-white/92">{facade}</div>
+          <div className="text-[11.5px] font-bold tracking-[0.01em] text-white/92">{facade}</div>
           <div className="flex gap-2 opacity-85">
             <div className="h-8 w-10 rounded bg-white/10" />
             <div className="h-8 w-12 rounded bg-white/10" />
@@ -409,11 +409,11 @@ function GarageCard({
 
       <div className="p-4">
         <div className="flex items-center gap-2">
-          <h3 className="text-[16.5px] font-bold tracking-[-0.03em] text-[#17307a]">{name}</h3>
+          <h3 className="text-[14.5px] font-bold tracking-[-0.03em] text-[#17307a]">{name}</h3>
           {verified ? <CheckCircle2 className="h-4 w-4 fill-[#1a56db] text-[#1a56db]" /> : null}
         </div>
 
-        <div className="mt-2 flex items-center gap-3 text-[12px] text-[#6173a1]">
+        <div className="mt-2 flex items-center gap-3 text-[11px] text-[#6173a1]">
           <div className="flex shrink-0 items-center gap-1.5">
             <Star className="h-4 w-4 fill-[#ff9f1a] text-[#ff9f1a]" />
             <span className="font-semibold text-[#f28c28]">{rating.toFixed(1)}</span>
@@ -423,7 +423,7 @@ function GarageCard({
           <span className="min-w-0 truncate">{location}</span>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-5 text-[12px] font-semibold text-[#17307a]">
+        <div className="mt-4 flex flex-wrap items-center gap-5 text-[11.5px] font-semibold text-[#17307a]">
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-[#1a56db]" />
             {formatDistance(distanceKm)}
@@ -436,7 +436,7 @@ function GarageCard({
 
         <div className="mt-4 flex flex-wrap gap-2">
           {chips.map((chip) => (
-            <span key={chip} className="rounded-full bg-[#e9f8ef] px-3 py-1.5 text-[11px] font-semibold text-[#238453]">
+            <span key={chip} className="rounded-full bg-[#e9f8ef] px-3 py-1.5 text-[10px] font-semibold text-[#238453]">
               {chip}
             </span>
           ))}
@@ -450,8 +450,8 @@ function GarageCard({
               <div className="truncate">Final quote after inspection</div>
             </div>
           </div>
-          <Button type="button" variant="outline" className="h-9 shrink-0 rounded-[10px] px-4 text-[12px]">
-            Book Appointment
+          <Button type="button" variant="outline" className="h-8 shrink-0 rounded-[9px] px-2.5 text-[11px] font-semibold">
+            Book Now
           </Button>
         </div>
       </div>
@@ -591,14 +591,14 @@ function GaragesContent() {
     <div className="space-y-6 pb-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-[20px] font-bold tracking-[-0.03em] text-[#17307a]">View All Garages</h1>
-          <p className="mt-1.5 text-[14.5px] font-medium text-[#4f67a2]">
+          <h1 className="text-[17.5px] font-bold tracking-[-0.03em] text-[#17307a]">View All Garages</h1>
+          <p className="mt-1.5 text-[12.5px] font-medium text-[#4f67a2]">
             Showing {filteredGarages.length} garages near <span className="font-bold text-[#1a56db]">Hyderabad</span>
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-4 lg:justify-end">
-          <div className="flex items-center rounded-[13px] border border-[#dbe6ff] bg-white p-1 shadow-[0_8px_20px_rgba(30,58,138,0.04)]">
+          <div className="flex items-center rounded-[11px] border border-[#dbe6ff]/90 bg-white p-0.5 shadow-[0_6px_15px_rgba(30,58,138,0.03)]">
             <button
               type="button"
               onClick={() => {
@@ -606,7 +606,7 @@ function GaragesContent() {
                 setPage(1);
               }}
               className={cn(
-                'flex h-9 items-center gap-2 rounded-[10px] px-4 text-[13px] font-semibold transition-colors',
+                'flex h-[30px] items-center gap-1.5 rounded-[8px] px-3 text-[11px] font-semibold transition-colors',
                 viewMode === 'list' ? 'bg-[#1a56db] text-white' : 'text-[#17307a]'
               )}
             >
@@ -621,7 +621,7 @@ function GaragesContent() {
                 setPage(1);
               }}
               className={cn(
-                'flex h-9 items-center gap-2 rounded-[10px] px-4 text-[13px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+                'flex h-[30px] items-center gap-1.5 rounded-[8px] px-3 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50',
                 viewMode === 'map' ? 'bg-[#1a56db] text-white' : 'text-[#17307a]'
               )}
             >
@@ -631,20 +631,20 @@ function GaragesContent() {
           </div>
 
           <div className="relative flex items-center gap-3">
-            <span className="text-[13px] font-semibold text-[#17307a]">Sort By:</span>
+            <span className="text-[12px] font-semibold text-[#17307a]">Sort By:</span>
             <button
               type="button"
               onClick={() => {
                 setSortOpen((current) => !current);
                 setOpenFilter(null);
               }}
-              className="flex h-10 items-center gap-3 rounded-[12px] border border-[#dbe6ff] bg-white px-4 text-[13px] font-semibold text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)]"
+              className="flex h-[34px] items-center gap-2 rounded-[10px] border border-[#dbe6ff] bg-white px-3 text-[11.5px] font-semibold text-[#17307a] shadow-[0_6px_15px_rgba(30,58,138,0.03)]"
             >
               {sortOptions.find((option) => option.value === sortBy)?.label}
               <ChevronDown className="h-4 w-4 text-[#6173a1]" />
             </button>
             {sortOpen ? (
-              <div className="absolute right-0 top-[46px] z-20 min-w-[190px] rounded-[14px] border border-[#dbe6ff] bg-white p-2 shadow-[0_18px_40px_rgba(30,58,138,0.14)]">
+              <div className="absolute right-0 top-[39px] z-20 min-w-[190px] rounded-[12px] border border-[#dbe6ff] bg-white p-2 shadow-[0_16px_36px_rgba(30,58,138,0.11)]">
                 {sortOptions.map((option) => (
                   <button
                     key={option.value}
@@ -655,7 +655,7 @@ function GaragesContent() {
                       setPage(1);
                     }}
                     className={cn(
-                      'flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium transition-colors',
+                      'flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[12px] font-medium transition-colors',
                       option.value === sortBy ? 'bg-[#eef4ff] text-[#1a56db]' : 'text-[#17307a] hover:bg-[#f8fbff]'
                     )}
                   >
@@ -693,7 +693,7 @@ function GaragesContent() {
           <button
             type="button"
             onClick={clearFilters}
-            className="flex h-10 items-center gap-2 rounded-[12px] border border-[#ffd2d2] bg-white px-4 text-[13px] font-semibold text-[#d14343] shadow-[0_8px_20px_rgba(30,58,138,0.04)]"
+            className="flex h-[34px] items-center gap-2 rounded-[10px] border border-[#ffd2d2] bg-white px-3 text-[11.5px] font-semibold text-[#d14343] shadow-[0_6px_15px_rgba(30,58,138,0.03)]"
           >
             <X className="h-4 w-4" />
             Clear Filters
@@ -715,8 +715,8 @@ function GaragesContent() {
           </div>
           <Card className="sticky top-0 flex min-h-[720px] flex-col overflow-hidden rounded-[18px] border-[#e7eefc] bg-[linear-gradient(180deg,#edf5ff_0%,#dfefff_100%)] shadow-[0_14px_34px_rgba(21,48,122,0.08)]">
             <div className="border-b border-[#d9e6ff] px-5 py-4">
-              <h3 className="text-[16.5px] font-bold text-[#17307a]">Map View</h3>
-              <p className="mt-1 text-[13px] text-[#6173a1]">Garage markers update from current filters.</p>
+              <h3 className="text-[14.5px] font-bold text-[#17307a]">Map View</h3>
+              <p className="mt-1 text-[11.5px] text-[#6173a1]">Garage markers update from current filters.</p>
             </div>
             <div className="relative flex-1 overflow-hidden bg-[radial-gradient(circle_at_20%_25%,rgba(83,143,255,0.22),transparent_18%),radial-gradient(circle_at_72%_38%,rgba(26,86,219,0.18),transparent_20%),linear-gradient(180deg,#f4f8ff_0%,#e4efff_100%)]">
               <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(145,170,221,0.18)_1px,transparent_1px),linear-gradient(rgba(145,170,221,0.18)_1px,transparent_1px)] bg-[size:42px_42px]" />
@@ -763,7 +763,7 @@ function GaragesContent() {
             entry === 'ellipsis' || entry === 'ellipsis-2' ? (
               <div
                 key={`${entry}-${index}`}
-                className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-[#dbe6ff] bg-white text-[14px] font-semibold text-[#6173a1]"
+                className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-[#dbe6ff] bg-white text-[12px] font-semibold text-[#6173a1]"
               >
                 ...
               </div>
@@ -773,7 +773,7 @@ function GaragesContent() {
                 type="button"
                 onClick={() => setPage(entry)}
                 className={cn(
-                  'flex h-10 w-10 items-center justify-center rounded-[12px] border text-[14px] font-semibold',
+                  'flex h-10 w-10 items-center justify-center rounded-[12px] border text-[12px] font-semibold',
                   entry === currentPage
                     ? 'border-[#1a56db] bg-[#1a56db] text-white shadow-[0_10px_20px_rgba(26,86,219,0.18)]'
                     : 'border-[#dbe6ff] bg-white text-[#6173a1]'
@@ -793,7 +793,7 @@ function GaragesContent() {
           </button>
         </div>
 
-        <div className="text-center text-[14px] font-medium text-[#4f67a2] lg:text-right">
+        <div className="text-center text-[12.5px] font-medium text-[#4f67a2] lg:text-right">
           Showing {startIndex} - {endIndex} of {filteredGarages.length} garages
         </div>
       </div>
