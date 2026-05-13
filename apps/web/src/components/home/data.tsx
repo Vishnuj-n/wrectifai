@@ -60,21 +60,21 @@ export const navItems: NavItem[] = [
 ];
 
 export const categoryItems = [
-  { label: 'Repair Services', icon: Wrench, href: '#garages' },
-  { label: 'Maintenance', icon: Fuel, href: '#maintenance' },
-  { label: 'Parts & Components', icon: Settings, href: '#offers' },
-  { label: 'Tyres & Wheels', icon: Disc3, href: '#garages' },
-  { label: 'Car Care & Detailing', icon: Sparkles, href: '#tips' },
-  { label: 'Insurance', icon: ShieldCheck, href: '#offers' },
-  { label: 'Accessories & Upgrades', icon: CarFront, href: '#offers' },
+  { label: 'Repair Services', icon: Wrench, href: '#garages', image: '/assets/repair-services.png' },
+  { label: 'Maintenance', icon: Fuel, href: '#maintenance', image: '/assets/maintenance.svg' },
+  { label: 'Parts & Components', icon: Settings, href: '#offers', image: '/assets/Parts and components.png' },
+  { label: 'Tyres & Wheels', icon: Disc3, href: '#garages', image: '/assets/tyres_and_wheels.png' },
+  { label: 'Car Care & Detailing', icon: Sparkles, href: '#tips', image: '/assets/car-care.svg' },
+  { label: 'Insurance', icon: ShieldCheck, href: '#offers', image: '/assets/isurance.svg' },
+  { label: 'Accessories & Upgrades', icon: CarFront, href: '#offers', image: '/assets/Accessories.png' },
 ];
 
 export const maintenanceItems = [
-  { label: 'Engine Oil Change', due: 'Due in 1,500 KM', icon: Fuel, href: '#garages' },
-  { label: 'AC Checkup', due: 'Due in 20 Days', icon: Snowflake, href: '#garages' },
-  { label: 'Brake Inspection', due: 'Due in 15 Days', icon: Disc3, href: '#garages' },
-  { label: 'Tyre Rotation', due: 'Due in 3,000 KM', icon: Truck, href: '#garages' },
-  { label: 'Battery Check', due: 'Due in 30 Days', icon: BatteryCharging, href: '#garages' },
+  { label: 'Engine Oil Change', due: 'Due in 1,500 KM', icon: Fuel, href: '#garages', image: '/assets/Engine_oil.png' },
+  { label: 'AC Checkup', due: 'Due in 20 Days', icon: Snowflake, href: '#garages', image: '/assets/new_ac.png' },
+  { label: 'Brake Inspection', due: 'Due in 15 Days', icon: Disc3, href: '#garages', image: '/assets/Brake_inspection.png' },
+  { label: 'Tyre Rotation', due: 'Due in 3,000 KM', icon: Truck, href: '#garages', image: '/assets/Tyre_rotataion.png' },
+  { label: 'Battery Check', due: 'Due in 30 Days', icon: BatteryCharging, href: '#garages', image: '/assets/Battery_Check.png' },
 ];
 
 export const garages = [
@@ -365,19 +365,7 @@ export const promoItems = [
     href: '#garages',
     image: '/assets/ac_vent_1778070688367.png',
   },
-  {
-    eyebrow: 'TYRE CARE OFFER',
-    title: 'Wheel Alignment + Tyre Rotation',
-    price: '\u20B91,499',
-    strikePrice: '\u20B91,999',
-    discount: '25% OFF',
-    accent: 'text-[#238453]',
-    fill: 'from-[#eef9f3] to-[#f9fcff]',
-    icon: Disc3,
-    href: '#garages',
-    image: '/assets/tyre_gauge_1778070752781.png',
-  },
-];
+  ];
 
 export const topNavIcons: IconLink[] = [
   { icon: Bell, badge: '3', href: '#overview', label: 'Notifications' },

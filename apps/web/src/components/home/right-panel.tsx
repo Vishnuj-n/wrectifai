@@ -7,10 +7,10 @@ function OverviewPanel() {
   return (
     <Card id="overview" className="p-4">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-[18px] font-bold tracking-[-0.03em] text-[#17307a]">
+        <h2 className="text-[14.5px] font-semibold tracking-[-0.03em] text-[#17307a]">
           My Overview
         </h2>
-        <div className="flex h-9 items-center gap-2 rounded-[10px] border border-[#dbe6ff] px-3 text-[13px] font-semibold text-[#17307a]">
+        <div className="flex h-9 items-center gap-2 rounded-[10px] border border-[#dbe6ff] px-3 text-[11.5px] font-semibold text-[#17307a]">
           This Month
           <ChevronDown className="h-4 w-4" />
         </div>
@@ -28,13 +28,13 @@ function OverviewPanel() {
               <Icon className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-medium text-[#6f7ea6]">{title}</p>
+              <p className="text-[12px] font-medium text-[#6f7ea6]">{title}</p>
               <div className="mt-1 flex items-end gap-2">
-                <span className="text-[17px] font-bold text-[#17307a]">{value}</span>
+                <span className="text-[14.5px] font-semibold text-[#17307a]">{value}</span>
               </div>
-              <p className="mt-1 text-[13px] text-[#6f7ea6]">{description}</p>
+              <p className="mt-1 text-[11px] text-[#6f7ea6]">{description}</p>
             </div>
-            <span className="self-center text-[13px] font-semibold text-[#1a56db]">{cta}</span>
+            <span className="self-center text-[11.5px] font-semibold text-[#1a56db]">{cta}</span>
           </div>
         ))}
       </div>
@@ -47,12 +47,12 @@ function EmergencyHelp() {
     <Card id="emergency" className="p-4 border-[#fff0f0] bg-[#fffbfa]">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-[18px] font-bold tracking-[-0.03em] text-[#ff3b30]">
-            Emergency Help
-          </h2>
-          <p className="mt-1 text-[13px] font-medium text-[#6f7ea6]">Quick assistance, anytime</p>
+        <h2 className="text-[14.5px] font-semibold tracking-[-0.03em] text-[#ff3b30]">
+          Emergency Help
+        </h2>
+          <p className="mt-1 text-[11px] font-normal text-[#6f7ea6]">Quick assistance, anytime</p>
         </div>
-        <div className="rounded-full bg-[#ffeeee] px-3 py-1 text-[13px] font-bold text-[#ff3b30]">
+        <div className="rounded-full bg-[#ffeeee] px-3 py-1 text-[11.5px] font-bold text-[#ff3b30]">
           24/7
         </div>
       </div>
@@ -66,7 +66,7 @@ function EmergencyHelp() {
             <div className="text-[#1a56db]">
               <Icon className="h-7 w-7 stroke-[1.5]" />
             </div>
-            <span className="max-w-[64px] pb-2 text-[12px] font-semibold leading-tight text-[#17307a]">
+            <span className="max-w-[64px] pb-2 text-[10.5px] font-medium leading-tight text-[#17307a]">
               {title}
             </span>
           </div>
@@ -94,14 +94,14 @@ function OfferCard({
     <Card className={cn('overflow-hidden border-0 p-0 shadow-none', `bg-gradient-to-r ${fill}`)}>
       <div className="grid min-h-[138px] grid-cols-[1.18fr_0.82fr] items-center">
         <div className="p-4 pr-0">
-          <p className={cn('text-[13px] font-bold uppercase tracking-[0.02em]', accent)}>{eyebrow}</p>
-          <p className="mt-2 text-[14px] font-semibold leading-6 text-[#42537e]">{title}</p>
+          <p className={cn('text-[11px] font-bold uppercase tracking-[0.02em]', accent)}>{eyebrow}</p>
+          <p className="mt-2 text-[12px] font-semibold leading-6 text-[#42537e]">{title}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className={cn('text-[13px] font-bold', accent)}>Starting</span>
-            <span className={cn('text-[17px] font-bold leading-none', accent)}>{price}</span>
-            <span className="text-[12px] font-medium text-[#8a96b8] line-through">{strikePrice}</span>
+            <span className={cn('text-[11px] font-bold', accent)}>Starting</span>
+            <span className={cn('text-[14.5px] font-bold leading-none', accent)}>{price}</span>
+            <span className="text-[10.5px] font-medium text-[#8a96b8] line-through">{strikePrice}</span>
             {isGreen && (
-              <div className="rounded-full bg-[#e6f4ea] px-2 py-0.5 text-[11px] font-bold text-[#238453]">
+              <div className="rounded-full bg-[#e6f4ea] px-2 py-0.5 text-[10px] font-bold text-[#238453]">
                 {discount}
               </div>
             )}
@@ -111,12 +111,12 @@ function OfferCard({
           {!isGreen && (
             <div
               className={cn(
-                'absolute right-3 top-3 z-10 flex flex-col items-center justify-center rounded-[8px] px-2 py-1 text-[12px] font-bold leading-3 text-white shadow-md',
+                'absolute right-3 top-3 z-10 flex flex-col items-center justify-center rounded-[8px] px-2 py-1 text-[11px] font-bold leading-3 text-white shadow-md',
                 isRed ? 'bg-[#ff3b30]' : 'bg-[#1a56db]'
               )}
             >
               <span>{discount.split(' ')[0]}</span>
-              <span className="text-[10px] font-semibold">{discount.split(' ')[1]}</span>
+              <span className="text-[9.5px] font-semibold">{discount.split(' ')[1]}</span>
             </div>
           )}
           {image ? (
@@ -136,10 +136,10 @@ function OffersPanel() {
   return (
     <Card id="offers" className="p-4 border-[#f0f4ff] bg-white">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-[18px] font-bold tracking-[-0.03em] text-[#17307a]">
+        <h2 className="text-[14.5px] font-semibold tracking-[-0.03em] text-[#17307a]">
           Offers &amp; Promos
         </h2>
-        <span className="cursor-pointer text-[13px] font-bold text-[#1a56db] hover:underline">
+        <span className="cursor-pointer text-[11.5px] font-bold text-[#1a56db] hover:underline">
           View All Offers
         </span>
       </div>

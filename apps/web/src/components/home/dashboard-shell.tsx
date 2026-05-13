@@ -61,7 +61,7 @@ export function DashboardShell({
             <div
               className={cn(
                 'grid gap-4 lg:items-start lg:gap-4',
-                aside ? 'xl:grid-cols-[minmax(0,1fr)_300px] lg:grid-cols-1' : 'lg:grid-cols-1'
+                aside ? 'lg:grid-cols-[minmax(0,1fr)_300px]' : 'lg:grid-cols-1'
               )}
             >
               <div className="min-w-0">{children}</div>

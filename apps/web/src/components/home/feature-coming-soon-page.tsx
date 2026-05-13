@@ -23,15 +23,15 @@ function FeatureHeader({ title }: { title: string }) {
             </svg>
           </button>
           <div>
-            <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#7a8ab4]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#7a8ab4]">
               WrectifAI Workspace
             </p>
-            <h1 className="mt-1 text-[28px] font-bold tracking-[-0.04em] text-[#17307a]">
+            <h1 className="mt-1 text-[25px] font-bold tracking-[-0.04em] text-[#17307a]">
               {title}
             </h1>
           </div>
         </div>
-        <div className="flex items-center gap-2 rounded-[14px] bg-[#f4f7ff] px-4 py-3 text-[14px] font-medium text-[#45639d]">
+        <div className="flex items-center gap-2 rounded-[14px] bg-[#f4f7ff] px-4 py-3 text-[13px] font-medium text-[#45639d]">
           <LayoutPanelLeft className="h-4 w-4 text-[#1a56db]" />
           Sidebar stays consistent across every page.
         </div>
@@ -61,10 +61,10 @@ function FeatureAside() {
           <div className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-[#eef4ff] text-[#1a56db] shadow-[0_10px_24px_rgba(26,86,219,0.12)]">
             <Icon className="h-5 w-5" />
           </div>
-          <h2 className="mt-4 text-[18px] font-bold tracking-[-0.03em] text-[#17307a]">
+          <h2 className="mt-4 text-[16.5px] font-bold tracking-[-0.03em] text-[#17307a]">
             {title}
           </h2>
-          <p className="mt-2 text-[14px] leading-6 text-[#5d6f9f]">{text}</p>
+          <p className="mt-2 text-[13px] leading-6 text-[#5d6f9f]">{text}</p>
         </Card>
       ))}
     </aside>
@@ -88,13 +88,13 @@ export function FeatureComingSoonPage({
             </div>
 
             <div className="space-y-3">
-              <p className="text-[13px] font-semibold uppercase tracking-[0.18em] text-[#6f82b2]">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#6f82b2]">
                 Feature Status
               </p>
-              <h2 className="text-[34px] font-bold tracking-[-0.04em] text-[#17307a] sm:text-[42px]">
+              <h2 className="text-[30px] font-bold tracking-[-0.04em] text-[#17307a] sm:text-[36px]">
                 Coming Soon
               </h2>
-              <p className="max-w-xl text-[16px] leading-7 text-[#5d6f9f]">
+              <p className="max-w-xl text-[14.5px] leading-7 text-[#5d6f9f]">
                 {description}
               </p>
             </div>

@@ -599,7 +599,7 @@ function FilterChip({
       type="button"
       onClick={() => onClick(label)}
       className={cn(
-        'inline-flex h-9 items-center gap-2 rounded-[11px] border px-4 text-[13px] font-semibold transition-colors',
+        'inline-flex h-9 items-center gap-2 rounded-[11px] border px-4 text-[12px] font-semibold transition-colors',
         active
           ? 'border-[#1f5cff] bg-[#1f5cff] text-white shadow-[0_10px_22px_rgba(31,92,255,0.22)]'
           : 'border-[#e3eaf9] bg-white text-[#233b7a] hover:bg-[#f7faff]'
@@ -625,19 +625,19 @@ function DealCard({ deal }: { deal: DealItem }) {
         <div className="px-4 pb-3 pt-3.5">
           <div
             className={cn(
-              'flex items-center gap-2 text-[12px] font-extrabold tracking-[0.02em]',
+              'flex items-center gap-2 text-[11px] font-extrabold tracking-[0.02em]',
               deal.badgeColor
             )}
           >
             <DealIcon className="h-4 w-4" strokeWidth={2.2} />
             <span>{deal.badge}</span>
           </div>
-          <h3 className="mt-2 text-[16px] font-bold leading-[1.35] tracking-[-0.03em] text-[#17307a]">
+          <h3 className="mt-2 text-[14.5px] font-bold leading-[1.35] tracking-[-0.03em] text-[#17307a]">
             {deal.title}
           </h3>
           <ul className="mt-3 space-y-1.5">
             {deal.bullets.map((bullet) => (
-              <li key={bullet} className="flex items-start gap-2 text-[13px] leading-5 text-[#46608f]">
+              <li key={bullet} className="flex items-start gap-2 text-[12px] leading-5 text-[#46608f]">
                 <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#1f8a48]" strokeWidth={2.6} />
                 <span>{bullet}</span>
               </li>
@@ -659,15 +659,15 @@ function DealCard({ deal }: { deal: DealItem }) {
       <div className="border-t border-[#edf2fb] bg-white/78 px-4 pb-3 pt-2.5 backdrop-blur-sm">
         <div className="flex flex-wrap items-end gap-2">
           {deal.pricePrefix ? (
-            <span className="pb-0.5 text-[13px] font-semibold text-[#35539c]">{deal.pricePrefix}</span>
+            <span className="pb-0.5 text-[12px] font-semibold text-[#35539c]">{deal.pricePrefix}</span>
           ) : null}
-          <span className={cn('text-[18px] font-extrabold tracking-[-0.03em]', deal.accent)}>
+          <span className={cn('text-[16.5px] font-extrabold tracking-[-0.03em]', deal.accent)}>
             {deal.displayPrice}
           </span>
           {deal.strikePrice ? (
             <span
               className={cn(
-                'pb-0.5 text-[13px] font-semibold',
+                'pb-0.5 text-[12px] font-semibold',
                 deal.strikePriceLineThrough ? 'text-[#8998b8] line-through' : 'text-[#35539c]'
               )}
             >
@@ -675,18 +675,18 @@ function DealCard({ deal }: { deal: DealItem }) {
             </span>
           ) : null}
           {deal.discountLabel ? (
-            <span className="rounded-full bg-[#e8f8ec] px-2 py-1 text-[11px] font-bold text-[#259450]">
+            <span className="rounded-full bg-[#e8f8ec] px-2 py-1 text-[10px] font-bold text-[#259450]">
               {deal.discountLabel}
             </span>
           ) : null}
         </div>
 
         <div className="mt-3 flex items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-4 text-[12px] font-medium text-[#6b7da5]">
+          <div className="flex flex-wrap items-center gap-4 text-[11px] font-medium text-[#6b7da5]">
             <span>Valid till {deal.validTill}</span>
             <span>Used {deal.usedCount}</span>
           </div>
-          <Button variant="outline" size="sm" className="rounded-[10px] px-3.5 text-[12px] font-bold text-[#1f5cff]">
+          <Button variant="outline" size="sm" className="rounded-[10px] px-3.5 text-[11px] font-bold text-[#1f5cff]">
             View Details
           </Button>
         </div>
@@ -757,7 +757,7 @@ function FilterMenu({
         type="button"
         onClick={open ? onClose : onOpen}
         className={cn(
-          'flex h-10 w-full items-center justify-center sm:justify-start gap-1.5 sm:gap-3 rounded-[12px] border border-[#dbe6ff] bg-white px-2 sm:px-4 text-[12px] sm:text-[14px] font-semibold text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)] transition-colors',
+          'flex h-10 w-full items-center justify-center sm:justify-start gap-1.5 sm:gap-3 rounded-[12px] border border-[#dbe6ff] bg-white px-2 sm:px-4 text-[11px] sm:text-[13px] font-semibold text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)] transition-colors',
           open && 'border-[#bfd1ff] bg-[#f8fbff]'
         )}
       >
@@ -781,7 +781,7 @@ function FilterMenu({
                 onClose();
               }}
               className={cn(
-                'flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[14px] font-medium transition-colors',
+                'flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium transition-colors',
                 option.value === value
                   ? 'bg-[#eef4ff] text-[#1a56db]'
                   : 'text-[#17307a] hover:bg-[#f8fbff]'
@@ -925,22 +925,22 @@ function DealsPageContent() {
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h1 className="text-[22px] font-bold tracking-[-0.04em] text-[#17307a] sm:text-[24px]">
+              <h1 className="text-[20px] font-bold tracking-[-0.04em] text-[#17307a] sm:text-[22px]">
                 View All Deals
               </h1>
-              <p className="mt-1 text-[15px] font-medium text-[#536891]">
+              <p className="mt-1 text-[14px] font-medium text-[#536891]">
                 Great offers on car care, parts &amp; services
               </p>
             </div>
 
             <div className="relative flex items-center gap-3 lg:justify-end shrink-0">
-              <span className="text-[14px] font-semibold text-[#17307a]">Sort By:</span>
+              <span className="text-[13px] font-semibold text-[#17307a]">Sort By:</span>
               <div className="relative" ref={sortRef}>
                 <button
                   type="button"
                   onClick={() => setSortOpen((curr) => !curr)}
                   className={cn(
-                    "flex h-10 min-w-[140px] sm:min-w-[172px] items-center justify-between rounded-[11px] border px-3 sm:px-4 text-[12px] sm:text-[13px] font-semibold transition-colors bg-white border-[#dbe6ff] text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)]",
+                    "flex h-10 min-w-[140px] sm:min-w-[172px] items-center justify-between rounded-[11px] border px-3 sm:px-4 text-[11px] sm:text-[12px] font-semibold transition-colors bg-white border-[#dbe6ff] text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)]",
                     sortOpen && "border-[#bfd0ff] bg-[#f8fbff] text-[#1a56db]"
                   )}
                 >
@@ -966,7 +966,7 @@ function DealsPageContent() {
                           setSortOpen(false);
                         }}
                         className={cn(
-                          "flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[14px] font-medium transition-colors",
+                          "flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium transition-colors",
                           sortBy === option
                             ? "bg-[#eef4ff] text-[#1a56db]"
                             : "text-[#17307a] hover:bg-[#f8fbff]"
@@ -1008,7 +1008,7 @@ function DealsPageContent() {
               <button
                 type="button"
                 onClick={clearFilters}
-                className="flex h-10 items-center justify-center sm:justify-start gap-2 rounded-[12px] border border-[#ffd2d2] bg-white px-4 text-[12px] sm:text-[14px] font-semibold text-[#d14343] shadow-[0_8px_20px_rgba(30,58,138,0.04)]"
+                className="flex h-10 items-center justify-center sm:justify-start gap-2 rounded-[12px] border border-[#ffd2d2] bg-white px-4 text-[11px] sm:text-[13px] font-semibold text-[#d14343] shadow-[0_8px_20px_rgba(30,58,138,0.04)]"
               >
                 <X className="h-4 w-4" />
                 Clear Filters
@@ -1016,7 +1016,7 @@ function DealsPageContent() {
             ) : null}
           </div>
 
-          <div className="flex items-center gap-2 rounded-[12px] border border-[#deefe2] bg-[#f3fbf5] px-4 py-3 text-[14px] font-semibold text-[#21834c]">
+          <div className="flex items-center gap-2 rounded-[12px] border border-[#deefe2] bg-[#f3fbf5] px-4 py-3 text-[13px] font-semibold text-[#21834c]">
             <ShieldCheck className="h-4 w-4" />
             Save more on services, parts and combos from trusted garages and partners.
           </div>
@@ -1024,7 +1024,7 @@ function DealsPageContent() {
       </section>
 
       {searchTerm ? (
-        <div className="rounded-[16px] border border-[#e4ecff] bg-white px-4 py-3 text-[14px] font-medium text-[#4f67a2] shadow-[0_8px_20px_rgba(20,44,112,0.04)]">
+        <div className="rounded-[16px] border border-[#e4ecff] bg-white px-4 py-3 text-[13px] font-medium text-[#4f67a2] shadow-[0_8px_20px_rgba(20,44,112,0.04)]">
           Showing deals for <span className="font-bold text-[#1a56db]">{searchTerm}</span>
         </div>
       ) : null}
@@ -1037,8 +1037,8 @@ function DealsPageContent() {
         </section>
       ) : (
         <Card className="rounded-[20px] border-[#e3eaf9] px-6 py-10 text-center shadow-[0_12px_28px_rgba(22,48,112,0.05)]">
-          <div className="text-[20px] font-bold text-[#17307a]">No deals match these filters</div>
-          <p className="mt-2 text-[14px] text-[#6477a1]">
+          <div className="text-[18.5px] font-bold text-[#17307a]">No deals match these filters</div>
+          <p className="mt-2 text-[13px] text-[#6477a1]">
             Try another category, remove a filter, or reset the search.
           </p>
           <div className="mt-4">
@@ -1067,12 +1067,12 @@ function DealsPageContent() {
 
             return (
               <div key={page} className="flex items-center gap-2">
-                {showGap ? <span className="px-1 text-[13px] font-semibold text-[#7c8db2]">...</span> : null}
+                {showGap ? <span className="px-1 text-[12px] font-semibold text-[#7c8db2]">...</span> : null}
                 <button
                   type="button"
                   onClick={() => setCurrentPage(page)}
                   className={cn(
-                    'flex h-9 w-9 items-center justify-center rounded-[10px] border text-[13px] font-semibold',
+                    'flex h-9 w-9 items-center justify-center rounded-[10px] border text-[12px] font-semibold',
                     currentPage === page
                       ? 'border-[#3d5afe] bg-[#eef3ff] font-bold text-[#3156f5]'
                       : 'border-[#dbe6ff] bg-white text-[#4d6295]'
@@ -1094,7 +1094,7 @@ function DealsPageContent() {
           </button>
         </div>
 
-        <div className="text-center text-[14px] font-medium text-[#6a7ca4] lg:text-right">
+        <div className="text-center text-[13px] font-medium text-[#6a7ca4] lg:text-right">
           Showing <span className="font-bold text-[#26408a]">{fromDeal} - {toDeal}</span> of{' '}
           <span className="font-bold text-[#26408a]">{filteredDeals.length} deals</span>
         </div>

@@ -27,11 +27,11 @@ export function TopNavbar() {
             <line x1="4" x2="20" y1="18" y2="18" />
           </svg>
         </button>
-        <div className="flex h-10 w-fit shrink-0 items-center gap-2 sm:gap-3 rounded-[14px] border border-[#dbe6ff] bg-white px-3 sm:px-4 text-[14px] sm:text-[15px] font-semibold text-[#17307a] shadow-sm">
-          <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-[#eef4ff]">
+        <div className="order-1 flex h-10 shrink-0 items-center gap-4 rounded-lg border border-[#dbe6ff] bg-white px-3 text-[13px] font-semibold text-[#17307a] lg:w-[140px]">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#eef4ff]">
             <svg
               viewBox="0 0 24 24"
-              className="h-3 w-3 sm:h-4 sm:w-4 text-[#1a56db]"
+              className="h-3 w-3 text-[#1a56db]"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -40,13 +40,12 @@ export function TopNavbar() {
               <circle cx="12" cy="10" r="2.5" />
             </svg>
           </div>
-          <span className="hidden min-[360px]:inline">Hyderabad</span>
-          <span className="inline min-[360px]:hidden">Hyd</span>
+          <span>Hyderabad</span>
           <ChevronDown className="h-4 w-4 text-[#17307a]" />
         </div>
       </div>
 
-      <div className="order-2 ml-auto flex items-center gap-1.5 sm:gap-2 lg:order-3 lg:ml-0">
+      <div className="order-3 ml-auto flex items-center gap-1.5 sm:gap-2">
         {topNavIcons.map(({ icon: Icon, badge, label }) => (
           <div
             key={label}
@@ -58,21 +57,21 @@ export function TopNavbar() {
           >
             <Icon className="h-4 w-4 lg:h-[18px] lg:w-[18px]" />
             {badge ? (
-              <span className="absolute right-0 top-0 lg:right-1 flex h-4 lg:h-5 min-w-4 lg:min-w-5 items-center justify-center rounded-full bg-[#ff2f44] px-1 text-[9px] lg:text-[10px] font-bold text-white">
+              <span className="absolute right-0 top-0 lg:right-1 flex h-4 lg:h-5 min-w-4 lg:min-w-5 items-center justify-center rounded-full bg-[#ff2f44] px-1 text-[9px] lg:text-[9.5px] font-bold text-white">
                 {badge}
               </span>
             ) : null}
           </div>
         ))}
 
-        <div className="ml-0 flex h-9 lg:h-10 shrink-0 items-center gap-2 rounded-full border border-[#dbe6ff] bg-white p-0.5 lg:py-1 lg:pl-1.5 lg:pr-3 lg:ml-1">
+        <div className="ml-1 flex h-9 lg:h-10 shrink-0 items-center gap-2 rounded-full border border-[#dbe6ff] bg-white p-0.5 lg:py-1 lg:pl-1.5 lg:pr-3">
           <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="Rahul" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full object-cover" />
-          <span className="hidden text-[15px] font-semibold text-[#17307a] lg:block">Hi, Rahul</span>
+          <span className="hidden text-[13px] font-semibold text-[#17307a] lg:block">Hi, Rahul</span>
           <ChevronDown className="hidden h-4 w-4 text-[#17307a] lg:block" />
         </div>
       </div>
 
-      <form className="relative order-3 w-full lg:order-2 lg:flex-1 lg:w-auto" onSubmit={handleSubmit}>
+      <form className="relative order-3 w-[360px] lg:order-2 lg:ml-9 lg:w-[420px]" onSubmit={handleSubmit}>
         <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7aa5]" />
         <Input
           value={query}
@@ -85,7 +84,7 @@ export function TopNavbar() {
               })
             );
           }}
-          className="h-10 rounded-[14px] pl-11 pr-4"
+          className="h-10 rounded-lg pl-11 pr-4"
           placeholder="Search for services, parts, garages..."
           aria-label="Search for services, parts, garages"
         />
