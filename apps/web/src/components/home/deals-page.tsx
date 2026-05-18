@@ -9,17 +9,20 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
-  Filter,
   Gauge,
+  Home,
   Percent,
-  RotateCcw,
+  Search,
   ShieldCheck,
   SlidersHorizontal,
   Snowflake,
+  Sun,
+  CloudRain,
   Tag,
   Wrench,
   X,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/common/button';
 import { Card } from '@/components/common/card';
@@ -63,6 +66,7 @@ type DealItem = {
   image: string;
   imageClassName: string;
   cardTint: string;
+  bgColor: string;
   imageGlow: string;
   accent: string;
   categories: Exclude<DealCategory, 'All Deals'>[];
@@ -70,22 +74,23 @@ type DealItem = {
   relevance: number;
 };
 
-const dealFilters: { label: DealCategory; icon: LucideIcon }[] = [
-  { label: 'All Deals', icon: Tag },
-  { label: 'Car Care', icon: CarFront },
-  { label: 'Service', icon: Wrench },
-  { label: 'Parts & Accessories', icon: ShieldCheck },
-  { label: 'Tyres', icon: Gauge },
-  { label: 'Batteries', icon: Battery },
-  { label: 'Combo Deals', icon: Snowflake },
+const dealFilters: { label: DealCategory | 'More Filters'; displayLabel: string; icon?: LucideIcon }[] = [
+  { label: 'All Deals', displayLabel: 'All Deals' },
+  { label: 'Car Care', displayLabel: 'Car Care', icon: CarFront },
+  { label: 'Service', displayLabel: 'Service', icon: Wrench },
+  { label: 'Parts & Accessories', displayLabel: 'Parts & Accessories', icon: ShieldCheck },
+  { label: 'Tyres', displayLabel: 'Tyres', icon: Gauge },
+  { label: 'Batteries', displayLabel: 'Batteries', icon: Battery },
+  { label: 'Combo Deals', displayLabel: 'Combo Deals', icon: Percent },
+  { label: 'More Filters', displayLabel: 'More Filters', icon: SlidersHorizontal },
 ];
 
-const deals: DealItem[] = [
+const baseDeals: DealItem[] = [
   {
     id: 'summer-care-combo',
     badge: 'SUMMER CARE COMBO',
     badgeColor: 'text-[#ff7a00]',
-    icon: Snowflake,
+    icon: Sun,
     title: 'Coolant + AC + Engine Oil Combo',
     bullets: ['Improves engine cooling', 'Enhances AC performance', 'Extends engine life'],
     displayPrice: '\u20B92,999',
@@ -97,9 +102,10 @@ const deals: DealItem[] = [
     validTill: '30 Apr 2025',
     usedCount: '1.2K times',
     usedCountValue: 1200,
-    image: '/assets/summer_combo_1778070704538.png',
+    image: '/assets/summner_car.png',
     imageClassName: 'h-[148px] w-[178px] object-contain',
     cardTint: 'from-[#fffaf0] via-[#fffaf5] to-[#fff4e7]',
+    bgColor: '#fff7ed',
     imageGlow: 'bg-[radial-gradient(circle_at_75%_45%,rgba(255,160,64,0.28),transparent_36%)]',
     accent: 'text-[#f04f23]',
     categories: ['Car Care', 'Service', 'Combo Deals'],
@@ -110,7 +116,7 @@ const deals: DealItem[] = [
     id: 'monsoon-care-combo',
     badge: 'MONSOON CARE COMBO',
     badgeColor: 'text-[#1c9b6e]',
-    icon: Snowflake,
+    icon: CloudRain,
     title: 'Wiper Blades + Tyres + Checkup Combo',
     bullets: ['Clear visibility in rain', 'Better grip on wet roads', 'Comprehensive vehicle check'],
     displayPrice: '\u20B91,999',
@@ -122,9 +128,10 @@ const deals: DealItem[] = [
     validTill: '15 May 2025',
     usedCount: '986 times',
     usedCountValue: 986,
-    image: '/assets/wiper_blade_1778070781712.png',
+    image: '/assets/monsooncare.png',
     imageClassName: 'h-[150px] w-[182px] object-cover rounded-[20px]',
     cardTint: 'from-[#f3fffb] via-[#f7fffd] to-[#eef8ff]',
+    bgColor: '#f0fdf4',
     imageGlow: 'bg-[radial-gradient(circle_at_72%_42%,rgba(80,178,202,0.26),transparent_38%)]',
     accent: 'text-[#178e56]',
     categories: ['Service', 'Tyres', 'Combo Deals'],
@@ -147,9 +154,10 @@ const deals: DealItem[] = [
     validTill: '31 May 2025',
     usedCount: '754 times',
     usedCountValue: 754,
-    image: '/assets/winter_combo_1778070734722.png',
+    image: '/assets/wintercombo.png',
     imageClassName: 'h-[146px] w-[180px] object-contain',
     cardTint: 'from-[#f7fbff] via-[#fbfdff] to-[#eef4ff]',
+    bgColor: '#eff6ff',
     imageGlow: 'bg-[radial-gradient(circle_at_76%_48%,rgba(112,147,255,0.22),transparent_36%)]',
     accent: 'text-[#2050ff]',
     categories: ['Batteries', 'Service', 'Combo Deals'],
@@ -165,15 +173,15 @@ const deals: DealItem[] = [
     bullets: ['Enhanced braking safety', 'Smoother performance', 'Expert inspection included'],
     displayPrice: '28% OFF',
     numericPrice: 1299,
-    strikePrice: 'Starting \u20B91,299',
     strikePriceLineThrough: false,
     discountPercent: 28,
     validTill: '20 Apr 2025',
     usedCount: '1.1K times',
     usedCountValue: 1100,
-    image: '/assets/brake_disc_1778070670609.png',
-    imageClassName: 'h-[146px] w-[170px] object-contain',
+    image: '/assets/Brake care.png',
+    imageClassName: 'h-[146px] w-[176px] object-contain',
     cardTint: 'from-[#fff6f6] via-[#fffaf9] to-[#fff5f4]',
+    bgColor: '#fff5f5',
     imageGlow: 'bg-[radial-gradient(circle_at_76%_42%,rgba(255,96,96,0.16),transparent_34%)]',
     accent: 'text-[#ff2f1d]',
     categories: ['Service', 'Parts & Accessories'],
@@ -197,9 +205,10 @@ const deals: DealItem[] = [
     validTill: '25 Apr 2025',
     usedCount: '893 times',
     usedCountValue: 893,
-    image: '/assets/ac_vent_1778070688367.png',
+    image: '/assets/Ac service.png',
     imageClassName: 'h-[148px] w-[176px] object-contain',
     cardTint: 'from-[#f4f8ff] via-[#f8fbff] to-[#eff4ff]',
+    bgColor: '#f0f7ff',
     imageGlow: 'bg-[radial-gradient(circle_at_74%_45%,rgba(105,139,255,0.18),transparent_36%)]',
     accent: 'text-[#2250df]',
     categories: ['Car Care', 'Service'],
@@ -213,17 +222,17 @@ const deals: DealItem[] = [
     icon: Gauge,
     title: 'Buy 3 Tyres, Get 1 Free',
     bullets: ['Premium tyre brands', 'Better road grip & safety', 'Long lasting performance'],
-    displayPrice: '3+1',
+    displayPrice: '3+1 FREE',
     numericPrice: 3,
-    strikePrice: 'FREE',
     strikePriceLineThrough: false,
     discountPercent: 25,
     validTill: '10 May 2025',
     usedCount: '642 times',
     usedCountValue: 642,
-    image: '/assets/tyre_gauge_1778070752781.png',
+    image: '/assets/Tyre_special offer.png',
     imageClassName: 'h-[150px] w-[178px] object-contain',
     cardTint: 'from-[#fff8ed] via-[#fffdf8] to-[#fff6e7]',
+    bgColor: '#fff8eb',
     imageGlow: 'bg-[radial-gradient(circle_at_74%_42%,rgba(255,190,62,0.18),transparent_36%)]',
     accent: 'text-[#ff7b00]',
     categories: ['Tyres', 'Combo Deals'],
@@ -246,9 +255,10 @@ const deals: DealItem[] = [
     validTill: '18 Apr 2025',
     usedCount: '512 times',
     usedCountValue: 512,
-    image: 'https://www.amaron.in/cdn/shop/files/Amaron_PRO_12V_60AH.png?v=1713878174&width=600',
+    image: '/assets/Battery.png',
     imageClassName: 'h-[146px] w-[170px] object-contain',
     cardTint: 'from-[#faf5ff] via-[#fdfbff] to-[#f7f0ff]',
+    bgColor: '#faf5ff',
     imageGlow: 'bg-[radial-gradient(circle_at_74%_42%,rgba(165,108,255,0.18),transparent_36%)]',
     accent: 'text-[#7d2ee6]',
     categories: ['Batteries', 'Parts & Accessories'],
@@ -271,9 +281,10 @@ const deals: DealItem[] = [
     validTill: '22 Apr 2025',
     usedCount: '721 times',
     usedCountValue: 721,
-    image: 'https://images.unsplash.com/photo-1607861716497-e65ab29fc7ac?auto=format&fit=crop&w=600&q=80',
-    imageClassName: 'h-[150px] w-[182px] object-cover rounded-[22px]',
+    image: '/assets/Detailing deal.png',
+    imageClassName: 'h-[150px] w-[182px] object-contain',
     cardTint: 'from-[#f3fff7] via-[#f9fff9] to-[#eefcf3]',
+    bgColor: '#f0fdf4',
     imageGlow: 'bg-[radial-gradient(circle_at_76%_46%,rgba(105,205,145,0.18),transparent_36%)]',
     accent: 'text-[#179556]',
     categories: ['Car Care', 'Service'],
@@ -296,9 +307,10 @@ const deals: DealItem[] = [
     validTill: '30 Apr 2025',
     usedCount: '430 times',
     usedCountValue: 430,
-    image: 'https://images.unsplash.com/photo-1624971900024-a8d13f60c628?auto=format&fit=crop&w=600&q=80',
+    image: '/assets/Accessories (2).png',
     imageClassName: 'h-[140px] w-[176px] object-contain',
     cardTint: 'from-[#fbf6ff] via-[#fefcff] to-[#f8f0ff]',
+    bgColor: '#fbf6ff',
     imageGlow: 'bg-[radial-gradient(circle_at_74%_42%,rgba(177,118,255,0.18),transparent_36%)]',
     accent: 'text-[#933ce6]',
     categories: ['Parts & Accessories'],
@@ -322,9 +334,10 @@ const deals: DealItem[] = [
     validTill: '14 May 2025',
     usedCount: '688 times',
     usedCountValue: 688,
-    image: '/assets/oil_pour_1778070767058.png',
-    imageClassName: 'h-[142px] w-[170px] object-contain',
+    image: 'https://images.unsplash.com/photo-1536700503339-1e4b06520771?auto=format&fit=crop&w=600&q=80',
+    imageClassName: 'h-[142px] w-[170px] object-cover rounded-[20px]',
     cardTint: 'from-[#f2f7ff] via-[#fbfdff] to-[#eef5ff]',
+    bgColor: '#f2f7ff',
     imageGlow: 'bg-[radial-gradient(circle_at_74%_45%,rgba(78,126,255,0.16),transparent_36%)]',
     accent: 'text-[#1e55df]',
     categories: ['Service', 'Car Care'],
@@ -347,9 +360,10 @@ const deals: DealItem[] = [
     validTill: '11 May 2025',
     usedCount: '574 times',
     usedCountValue: 574,
-    image: '/assets/tyre_gauge_1778070752781.png',
-    imageClassName: 'h-[146px] w-[168px] object-contain',
+    image: 'https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&w=600&q=80',
+    imageClassName: 'h-[146px] w-[168px] object-cover rounded-[20px]',
     cardTint: 'from-[#fff8ef] via-[#fffdf8] to-[#fff7ea]',
+    bgColor: '#fff8ef',
     imageGlow: 'bg-[radial-gradient(circle_at_72%_44%,rgba(255,178,76,0.16),transparent_36%)]',
     accent: 'text-[#ff8c00]',
     categories: ['Tyres', 'Service'],
@@ -372,9 +386,10 @@ const deals: DealItem[] = [
     validTill: '08 May 2025',
     usedCount: '389 times',
     usedCountValue: 389,
-    image: '/assets/winter_combo_1778070734722.png',
-    imageClassName: 'h-[134px] w-[166px] object-contain',
+    image: 'https://images.unsplash.com/photo-1635437536607-b8572f443763?auto=format&fit=crop&w=600&q=80',
+    imageClassName: 'h-[134px] w-[166px] object-cover rounded-[20px]',
     cardTint: 'from-[#faf5ff] via-[#fffaff] to-[#f6efff]',
+    bgColor: '#faf5ff',
     imageGlow: 'bg-[radial-gradient(circle_at_72%_44%,rgba(166,103,255,0.16),transparent_36%)]',
     accent: 'text-[#7b2fe6]',
     categories: ['Batteries', 'Service'],
@@ -397,9 +412,10 @@ const deals: DealItem[] = [
     validTill: '28 May 2025',
     usedCount: '268 times',
     usedCountValue: 268,
-    image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=600&q=80',
     imageClassName: 'h-[148px] w-[180px] object-cover rounded-[20px]',
     cardTint: 'from-[#f2fff8] via-[#fcfffd] to-[#eefcf6]',
+    bgColor: '#f2fff8',
     imageGlow: 'bg-[radial-gradient(circle_at_76%_42%,rgba(88,198,145,0.18),transparent_36%)]',
     accent: 'text-[#179556]',
     categories: ['Car Care', 'Service'],
@@ -422,9 +438,10 @@ const deals: DealItem[] = [
     validTill: '17 May 2025',
     usedCount: '447 times',
     usedCountValue: 447,
-    image: '/assets/wiper_blade_1778070781712.png',
+    image: 'https://images.unsplash.com/photo-1518640467707-6811f4a6ab73?auto=format&fit=crop&w=600&q=80',
     imageClassName: 'h-[144px] w-[176px] object-cover rounded-[20px]',
     cardTint: 'from-[#f2fffb] via-[#fcfffe] to-[#effaf8]',
+    bgColor: '#f2fffb',
     imageGlow: 'bg-[radial-gradient(circle_at_74%_44%,rgba(83,189,176,0.16),transparent_36%)]',
     accent: 'text-[#178e56]',
     categories: ['Service', 'Parts & Accessories', 'Combo Deals'],
@@ -447,9 +464,10 @@ const deals: DealItem[] = [
     validTill: '24 May 2025',
     usedCount: '341 times',
     usedCountValue: 341,
-    image: 'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=600&q=80',
+    image: 'https://images.unsplash.com/photo-1550355291-bbee04a92027?auto=format&fit=crop&w=600&q=80',
     imageClassName: 'h-[146px] w-[180px] object-cover rounded-[20px]',
     cardTint: 'from-[#fcf6ff] via-[#fffdfd] to-[#f8f0ff]',
+    bgColor: '#fcf6ff',
     imageGlow: 'bg-[radial-gradient(circle_at_74%_44%,rgba(173,109,255,0.16),transparent_36%)]',
     accent: 'text-[#933ce6]',
     categories: ['Parts & Accessories', 'Combo Deals'],
@@ -472,9 +490,10 @@ const deals: DealItem[] = [
     validTill: '21 May 2025',
     usedCount: '612 times',
     usedCountValue: 612,
-    image: '/assets/garage_1_1778071156220.png',
+    image: 'https://images.unsplash.com/photo-1517524206127-48bbd363f3d7?auto=format&fit=crop&w=600&q=80',
     imageClassName: 'h-[142px] w-[176px] object-cover rounded-[20px]',
     cardTint: 'from-[#f4f8ff] via-[#fbfdff] to-[#eef4ff]',
+    bgColor: '#f4f8ff',
     imageGlow: 'bg-[radial-gradient(circle_at_74%_44%,rgba(93,133,255,0.16),transparent_36%)]',
     accent: 'text-[#2250df]',
     categories: ['Service', 'Car Care'],
@@ -497,9 +516,10 @@ const deals: DealItem[] = [
     validTill: '19 May 2025',
     usedCount: '278 times',
     usedCountValue: 278,
-    image: '/assets/tyre_gauge_1778070752781.png',
-    imageClassName: 'h-[146px] w-[170px] object-contain',
+    image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80',
+    imageClassName: 'h-[146px] w-[170px] object-cover rounded-[20px]',
     cardTint: 'from-[#fff9ef] via-[#fffdf8] to-[#fff7ea]',
+    bgColor: '#fff9ef',
     imageGlow: 'bg-[radial-gradient(circle_at_72%_44%,rgba(255,182,79,0.16),transparent_36%)]',
     accent: 'text-[#ff8c00]',
     categories: ['Tyres', 'Car Care'],
@@ -522,9 +542,10 @@ const deals: DealItem[] = [
     validTill: '26 May 2025',
     usedCount: '193 times',
     usedCountValue: 193,
-    image: 'https://images.unsplash.com/photo-1624971900024-a8d13f60c628?auto=format&fit=crop&w=600&q=80',
-    imageClassName: 'h-[140px] w-[176px] object-contain',
+    image: 'https://images.unsplash.com/photo-1508974239320-0a029497e820?auto=format&fit=crop&w=600&q=80',
+    imageClassName: 'h-[140px] w-[176px] object-cover rounded-[20px]',
     cardTint: 'from-[#fbf6ff] via-[#fefcff] to-[#f7efff]',
+    bgColor: '#fbf6ff',
     imageGlow: 'bg-[radial-gradient(circle_at_74%_42%,rgba(173,109,255,0.16),transparent_36%)]',
     accent: 'text-[#933ce6]',
     categories: ['Parts & Accessories'],
@@ -547,9 +568,10 @@ const deals: DealItem[] = [
     validTill: '16 May 2025',
     usedCount: '254 times',
     usedCountValue: 254,
-    image: 'https://www.amaron.in/cdn/shop/files/Amaron_PRO_12V_60AH.png?v=1713878174&width=600',
-    imageClassName: 'h-[142px] w-[166px] object-contain',
+    image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
+    imageClassName: 'h-[142px] w-[166px] object-cover rounded-[20px]',
     cardTint: 'from-[#faf5ff] via-[#fffcff] to-[#f7f0ff]',
+    bgColor: '#faf5ff',
     imageGlow: 'bg-[radial-gradient(circle_at_72%_44%,rgba(166,103,255,0.16),transparent_36%)]',
     accent: 'text-[#7b2fe6]',
     categories: ['Batteries', 'Parts & Accessories'],
@@ -572,9 +594,10 @@ const deals: DealItem[] = [
     validTill: '29 May 2025',
     usedCount: '467 times',
     usedCountValue: 467,
-    image: '/assets/weekend_combo_1778071208387.png',
-    imageClassName: 'h-[146px] w-[176px] object-contain',
+    image: 'https://images.unsplash.com/photo-1632823462950-ceb28ce26b6e?auto=format&fit=crop&w=600&q=80',
+    imageClassName: 'h-[146px] w-[176px] object-cover rounded-[20px]',
     cardTint: 'from-[#f3fff8] via-[#fafffd] to-[#eefcf4]',
+    bgColor: '#f3fff8',
     imageGlow: 'bg-[radial-gradient(circle_at_76%_44%,rgba(88,198,145,0.18),transparent_36%)]',
     accent: 'text-[#179556]',
     categories: ['Service', 'Tyres', 'Combo Deals'],
@@ -583,30 +606,46 @@ const deals: DealItem[] = [
   },
 ];
 
+const deals: DealItem[] = [
+  ...baseDeals,
+  ...baseDeals.map((d, i) => ({
+    ...d,
+    id: `${d.id}-page2-${i}`,
+    relevance: d.relevance - 20,
+  })),
+  ...baseDeals.map((d, i) => ({
+    ...d,
+    id: `${d.id}-page3-${i}`,
+    relevance: d.relevance - 40,
+  })),
+];
+
 function FilterChip({
   label,
+  displayLabel,
   icon: Icon,
   active,
   onClick,
 }: {
-  label: DealCategory;
-  icon: LucideIcon;
+  label: DealCategory | 'More Filters';
+  displayLabel: string;
+  icon?: LucideIcon;
   active: boolean;
-  onClick: (label: DealCategory) => void;
+  onClick: (label: DealCategory | 'More Filters') => void;
 }) {
   return (
     <button
       type="button"
       onClick={() => onClick(label)}
       className={cn(
-        'inline-flex h-9 items-center gap-2 rounded-[11px] border px-4 text-[12px] font-semibold transition-colors',
+        'inline-flex h-[34px] items-center gap-1.5 rounded-[11px] border px-2.5 xl:px-3 text-[11.5px] xl:text-[12px] font-semibold transition-colors shadow-sm whitespace-nowrap',
         active
           ? 'border-[#1f5cff] bg-[#1f5cff] text-white shadow-[0_10px_22px_rgba(31,92,255,0.22)]'
-          : 'border-[#e3eaf9] bg-white text-[#233b7a] hover:bg-[#f7faff]'
+          : 'border-[#dbe6ff] bg-white text-[#17307a] hover:bg-[#f7faff] hover:border-[#bfd1ff]'
       )}
     >
-      <Icon className="h-4 w-4" strokeWidth={2} />
-      {label}
+      {Icon ? <Icon className="h-4 w-4 shrink-0" strokeWidth={active ? 2.2 : 1.8} /> : null}
+      <span>{displayLabel}</span>
     </button>
   );
 }
@@ -616,58 +655,72 @@ function DealCard({ deal }: { deal: DealItem }) {
 
   return (
     <Card
-      className={cn(
-        'overflow-hidden rounded-[18px] border-[#ebeff8] bg-gradient-to-br shadow-[0_14px_32px_rgba(21,47,112,0.07)]',
-        deal.cardTint
-      )}
+      style={{ backgroundColor: deal.bgColor }}
+      className="overflow-hidden rounded-[16px] border-[#ebeff8] p-0 shadow-[0_10px_26px_rgba(21,47,112,0.06)] transition-all duration-300 hover:shadow-[0_14px_32px_rgba(21,47,112,0.09)] hover:-translate-y-0.5"
     >
-      <div className="grid min-h-[194px] grid-cols-[1.15fr_0.85fr]">
-        <div className="px-4 pb-3 pt-3.5">
-          <div
-            className={cn(
-              'flex items-center gap-2 text-[11px] font-extrabold tracking-[0.02em]',
-              deal.badgeColor
-            )}
-          >
-            <DealIcon className="h-4 w-4" strokeWidth={2.2} />
-            <span>{deal.badge}</span>
+      <div className="grid min-h-[115px] grid-cols-[1.35fr_0.65fr]">
+        <div className="p-3 relative z-10 flex flex-col justify-between">
+          <div>
+            <div
+              className={cn(
+                'flex items-center gap-1.5 text-[11px] font-extrabold tracking-[0.02em]',
+                deal.badgeColor
+              )}
+            >
+              <DealIcon className="h-3.5 w-3.5" strokeWidth={2.2} />
+              <span>{deal.badge}</span>
+            </div>
+            <h3 className="mt-1 text-[13.5px] font-bold leading-[1.25] tracking-[-0.02em] text-[#17307a]">
+              {deal.title}
+            </h3>
+            <ul className="mt-1.5 space-y-0.5">
+              {deal.bullets.map((bullet) => (
+                <li key={bullet} className="flex items-start gap-1.5 text-[11px] leading-[1.3] text-[#46608f]">
+                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#1f5cff]" strokeWidth={2.6} />
+                  <span>{bullet}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <h3 className="mt-2 text-[14.5px] font-bold leading-[1.35] tracking-[-0.03em] text-[#17307a]">
-            {deal.title}
-          </h3>
-          <ul className="mt-3 space-y-1.5">
-            {deal.bullets.map((bullet) => (
-              <li key={bullet} className="flex items-start gap-2 text-[12px] leading-5 text-[#46608f]">
-                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#1f8a48]" strokeWidth={2.6} />
-                <span>{bullet}</span>
-              </li>
-            ))}
-          </ul>
         </div>
 
-        <div className="relative">
-          <div className={cn('absolute inset-0', deal.imageGlow)} />
-          <div className="absolute inset-x-7 bottom-6 h-5 rounded-full bg-black/10 blur-xl" />
-          <img
-            src={deal.image}
-            alt={deal.title}
-            className={cn('absolute bottom-1 right-1 max-w-none', deal.imageClassName)}
-          />
+        <div 
+          className="relative h-full w-full overflow-hidden select-none flex items-center justify-center"
+          style={{ backgroundColor: deal.bgColor }}
+        >
+          {deal.image ? (
+            <>
+              <img
+                src={deal.image}
+                alt={deal.title}
+                className={cn(
+                  "h-full w-full object-center transition-transform duration-300 hover:scale-105",
+                  deal.imageClassName.includes('object-contain') ? 'object-contain p-1.5 max-h-[115px]' : 'object-cover'
+                )}
+              />
+              <div 
+                className="absolute inset-y-0 left-0 w-12 pointer-events-none"
+                style={{
+                  background: `linear-gradient(to right, ${deal.bgColor} 0%, ${deal.bgColor}a0 40%, ${deal.bgColor}00 100%)`
+                }}
+              />
+            </>
+          ) : null}
         </div>
       </div>
 
-      <div className="border-t border-[#edf2fb] bg-white/78 px-4 pb-3 pt-2.5 backdrop-blur-sm">
-        <div className="flex flex-wrap items-end gap-2">
+      <div className="border-t border-[#edf2fb] bg-white/78 px-3 py-2 backdrop-blur-sm relative z-10">
+        <div className="flex flex-wrap items-end gap-1.5">
           {deal.pricePrefix ? (
-            <span className="pb-0.5 text-[12px] font-semibold text-[#35539c]">{deal.pricePrefix}</span>
+            <span className="pb-0.5 text-[11px] font-semibold text-[#35539c]">{deal.pricePrefix}</span>
           ) : null}
-          <span className={cn('text-[16.5px] font-extrabold tracking-[-0.03em]', deal.accent)}>
+          <span className={cn('text-[15px] font-extrabold tracking-[-0.02em]', deal.accent)}>
             {deal.displayPrice}
           </span>
           {deal.strikePrice ? (
             <span
               className={cn(
-                'pb-0.5 text-[12px] font-semibold',
+                'pb-0.5 text-[11px] font-semibold',
                 deal.strikePriceLineThrough ? 'text-[#8998b8] line-through' : 'text-[#35539c]'
               )}
             >
@@ -675,18 +728,18 @@ function DealCard({ deal }: { deal: DealItem }) {
             </span>
           ) : null}
           {deal.discountLabel ? (
-            <span className="rounded-full bg-[#e8f8ec] px-2 py-1 text-[10px] font-bold text-[#259450]">
+            <span className="rounded-full bg-[#e8f8ec] px-2 py-0.5 text-[9.5px] font-bold text-[#259450]">
               {deal.discountLabel}
             </span>
           ) : null}
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-4 text-[11px] font-medium text-[#6b7da5]">
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2 text-[10.5px] font-medium text-[#6b7da5]">
             <span>Valid till {deal.validTill}</span>
             <span>Used {deal.usedCount}</span>
           </div>
-          <Button variant="outline" size="sm" className="rounded-[10px] px-3.5 text-[11px] font-bold text-[#1f5cff]">
+          <Button variant="outline" size="sm" className="h-6 rounded-[8px] border-[#1f5cff] px-2.5 text-[10.5px] font-bold text-[#1f5cff] hover:bg-[#1f5cff]/5">
             View Details
           </Button>
         </div>
@@ -728,89 +781,21 @@ const filterOptions: Record<FilterKey, { label: string; value: string }[]> = {
   ],
 };
 
-function FilterMenu({
-  label,
-  icon: Icon,
-  options,
-  value,
-  open,
-  onOpen,
-  onClose,
-  onSelect,
-  align,
-}: {
-  label: string;
-  icon: LucideIcon;
-  options: { value: string; label: string }[];
-  value: string;
-  open: boolean;
-  onOpen: () => void;
-  onClose: () => void;
-  onSelect: (value: string) => void;
-  align?: 'left' | 'right';
-}) {
-  const selected = options.find((option) => option.value === value) ?? options[0];
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={open ? onClose : onOpen}
-        className={cn(
-          'flex h-10 w-full items-center justify-center sm:justify-start gap-1.5 sm:gap-3 rounded-[12px] border border-[#dbe6ff] bg-white px-2 sm:px-4 text-[11px] sm:text-[13px] font-semibold text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)] transition-colors',
-          open && 'border-[#bfd1ff] bg-[#f8fbff]'
-        )}
-      >
-        <Icon className="h-4 w-4 shrink-0 text-[#1a56db]" />
-        <span className="truncate">{selected.value === 'all' ? label : selected.label}</span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-[#6173a1]" />
-      </button>
-      {open ? (
-        <div 
-          className={cn(
-            "absolute top-[46px] z-20 min-w-[200px] sm:min-w-[220px] rounded-[14px] border border-[#dbe6ff] bg-white p-2 shadow-[0_18px_40px_rgba(30,58,138,0.14)]",
-            align === 'right' ? "right-0" : "left-0"
-          )}
-        >
-          {options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => {
-                onSelect(option.value);
-                onClose();
-              }}
-              className={cn(
-                'flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium transition-colors',
-                option.value === value
-                  ? 'bg-[#eef4ff] text-[#1a56db]'
-                  : 'text-[#17307a] hover:bg-[#f8fbff]'
-              )}
-            >
-              <span>{option.label}</span>
-              {option.value === value ? <Check className="h-4 w-4 text-[#1a56db]" strokeWidth={3} /> : null}
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
 function DealsPageContent() {
-  const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
   const [filters, setFilters] = useState<Record<FilterKey, string>>({
     category: 'all',
     offerType: 'all',
     price: 'all',
     discount: 'all',
   });
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('Most Relevant');
   const [sortOpen, setSortOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const pageSize = 9;
   const sortRef = useRef<HTMLDivElement>(null);
+  const moreFiltersRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleSearch = (event: Event) => {
@@ -822,6 +807,9 @@ function DealsPageContent() {
     const handleClickOutside = (event: MouseEvent) => {
       if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
         setSortOpen(false);
+      }
+      if (moreFiltersRef.current && !moreFiltersRef.current.contains(event.target as Node)) {
+        setShowMoreFilters(false);
       }
     };
 
@@ -892,11 +880,11 @@ function DealsPageContent() {
     }
 
     if (currentPage <= 3) {
-      return [1, 2, 3, 4, totalPages];
+      return [1, 2, 3, totalPages];
     }
 
     if (currentPage >= totalPages - 2) {
-      return [1, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+      return [1, totalPages - 2, totalPages - 1, totalPages];
     }
 
     return [1, currentPage - 1, currentPage, currentPage + 1, totalPages];
@@ -915,100 +903,116 @@ function DealsPageContent() {
     setCurrentPage(1);
     setOpenFilter(null);
     setSortOpen(false);
+    setShowMoreFilters(false);
   };
 
   const activeFiltersCount = Object.values(filters).filter((v) => v !== 'all').length;
 
   return (
-    <div className="space-y-5 pb-6">
-      <section className="rounded-[24px] border border-white/80 bg-[radial-gradient(circle_at_top,#fff5e9_0%,rgba(255,255,255,0.96)_22%,#ffffff_100%)] px-5 py-5 shadow-[0_16px_40px_rgba(22,48,112,0.06)] sm:px-6">
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h1 className="text-[20px] font-bold tracking-[-0.04em] text-[#17307a] sm:text-[22px]">
-                View All Deals
-              </h1>
-              <p className="mt-1 text-[14px] font-medium text-[#536891]">
-                Great offers on car care, parts &amp; services
-              </p>
-            </div>
+    <div className="space-y-4 pb-6">
+      <div className="flex flex-col gap-3 pt-1">
+        <div>
+          <nav className="flex items-center gap-1.5 text-[12px] font-semibold text-[#6b7da5] mb-1.5">
+            <Link href="/" className="flex items-center gap-1 hover:text-[#1f5cff] transition-colors">
+              <Home className="h-3.5 w-3.5" />
+              <span>Home</span>
+            </Link>
+            <ChevronRight className="h-3.5 w-3.5 text-[#a4b3d1]" />
+            <span className="text-[#17307a] font-bold">Deals &amp; Offers</span>
+          </nav>
+          <h1 className="text-[22px] font-bold tracking-[-0.04em] text-[#17307a] sm:text-[24px]">
+            View All Deals
+          </h1>
+          <p className="mt-1 text-[14px] font-medium text-[#536891]">
+            Great offers on car care, parts &amp; services
+          </p>
+        </div>
 
-            <div className="relative flex items-center gap-3 lg:justify-end shrink-0">
-              <span className="text-[13px] font-semibold text-[#17307a]">Sort By:</span>
-              <div className="relative" ref={sortRef}>
-                <button
-                  type="button"
-                  onClick={() => setSortOpen((curr) => !curr)}
-                  className={cn(
-                    "flex h-10 min-w-[140px] sm:min-w-[172px] items-center justify-between rounded-[11px] border px-3 sm:px-4 text-[11px] sm:text-[12px] font-semibold transition-colors bg-white border-[#dbe6ff] text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)]",
-                    sortOpen && "border-[#bfd0ff] bg-[#f8fbff] text-[#1a56db]"
-                  )}
-                >
-                  <span className="truncate">{sortBy}</span>
-                  <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", sortOpen ? "rotate-180 text-[#1a56db]" : "text-[#6f80a8]")} />
-                </button>
-
-                {sortOpen && (
-                  <div className="absolute right-0 top-[46px] z-20 min-w-[190px] rounded-[14px] border border-[#dbe6ff] bg-white p-2 shadow-[0_18px_40px_rgba(30,58,138,0.14)]">
-                    {[
-                      'Most Relevant',
-                      'Price: Low to High',
-                      'Price: High to Low',
-                      'Highest Discount',
-                      'Most Used',
-                    ].map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => {
-                          setSortBy(option as SortOption);
-                          setCurrentPage(1);
-                          setSortOpen(false);
-                        }}
-                        className={cn(
-                          "flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium transition-colors",
-                          sortBy === option
-                            ? "bg-[#eef4ff] text-[#1a56db]"
-                            : "text-[#17307a] hover:bg-[#f8fbff]"
-                        )}
-                      >
-                        <span className="truncate">{option}</span>
-                        {sortBy === option && <Check className="h-4 w-4 shrink-0 text-[#1a56db]" strokeWidth={3} />}
-                      </button>
-                    ))}
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:flex-nowrap pb-1">
+          <div className="flex items-center gap-1.5 xl:gap-2 shrink-0 flex-wrap lg:flex-nowrap">
+            {dealFilters.map(({ label, displayLabel, icon }) => {
+              if (label === 'More Filters') {
+                return (
+                  <div key={label} className="relative" ref={moreFiltersRef}>
+                    <FilterChip
+                      label={label}
+                      displayLabel={displayLabel}
+                      icon={icon}
+                      active={showMoreFilters}
+                      onClick={() => setShowMoreFilters((curr) => !curr)}
+                    />
+                    {showMoreFilters ? (
+                      <div className="absolute left-0 top-[42px] z-50 min-w-[260px] sm:min-w-[280px] rounded-[16px] border border-[#dbe6ff] bg-white p-3 shadow-[0_20px_50px_rgba(30,58,138,0.16)] animate-in fade-in-50 duration-200 flex flex-col gap-2.5">
+                        <div className="flex items-center gap-2 rounded-[10px] border border-[#dbe6ff] bg-[#f8fbff] px-3 py-2 text-[12px] text-[#17307a]">
+                          <Search className="h-4 w-4 text-[#6173a1] shrink-0" />
+                          <input 
+                            type="text" 
+                            placeholder="Search filters..." 
+                            className="w-full bg-transparent outline-none placeholder-[#8998b8]"
+                          />
+                        </div>
+                        <div className="max-h-[310px] overflow-y-auto pr-1 flex flex-col gap-3.5 [scrollbar-width:thin]">
+                          {filterPills.map(({ key, label: pillLabel }) => (
+                            <div key={key} className="flex flex-col gap-1">
+                              <div className="px-2 py-1 text-[11px] font-bold text-[#6b7da5] uppercase tracking-wider">
+                                {pillLabel}
+                              </div>
+                              <div className="flex flex-col gap-0.5">
+                                {filterOptions[key].map((option) => {
+                                  const isSelected = filters[key] === option.value;
+                                  return (
+                                    <button
+                                      key={option.value}
+                                      type="button"
+                                      onClick={() => {
+                                        setFilters((prev) => ({ ...prev, [key]: option.value }));
+                                        setCurrentPage(1);
+                                      }}
+                                      className={cn(
+                                        'flex w-full items-center justify-between rounded-[10px] px-3 py-2 text-left text-[13px] font-medium transition-colors',
+                                        isSelected
+                                          ? 'bg-[#1f5cff] text-white font-bold shadow-sm'
+                                          : 'text-[#17307a] hover:bg-[#f7faff]'
+                                      )}
+                                    >
+                                      <span>{option.label}</span>
+                                      {isSelected && <Check className="h-4 w-4 shrink-0 text-white" strokeWidth={3} />}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
+                );
+              }
 
-          <div className="mt-4 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3">
-            {filterPills.map(({ key, label, icon }, index) => (
-              <FilterMenu
-                key={key}
-                label={label}
-                icon={icon}
-                options={filterOptions[key]}
-                value={filters[key]}
-                open={openFilter === key}
-                align={index % 3 === 2 ? 'right' : 'left'}
-                onOpen={() => {
-                  setOpenFilter(key);
-                  setSortOpen(false);
-                }}
-                onClose={() => setOpenFilter(null)}
-                onSelect={(value) => {
-                  setFilters((prev) => ({ ...prev, [key]: value }));
-                  setCurrentPage(1);
-                }}
-              />
-            ))}
+              return (
+                <FilterChip
+                  key={label}
+                  label={label}
+                  displayLabel={displayLabel}
+                  icon={icon}
+                  active={filters.category === (label === 'All Deals' ? 'all' : label)}
+                  onClick={(clickedLabel) => {
+                    setFilters((prev) => ({
+                      ...prev,
+                      category: clickedLabel === 'All Deals' ? 'all' : clickedLabel,
+                    }));
+                    setCurrentPage(1);
+                  }}
+                />
+              );
+            })}
 
             {activeFiltersCount > 0 ? (
               <button
                 type="button"
                 onClick={clearFilters}
-                className="flex h-10 items-center justify-center sm:justify-start gap-2 rounded-[12px] border border-[#ffd2d2] bg-white px-4 text-[11px] sm:text-[13px] font-semibold text-[#d14343] shadow-[0_8px_20px_rgba(30,58,138,0.04)]"
+                className="flex h-[34px] items-center justify-center gap-1.5 rounded-[11px] border border-[#ffd2d2] bg-white px-3 text-[11.5px] xl:text-[12px] font-semibold text-[#d14343] shadow-sm hover:bg-[#fff9f9] whitespace-nowrap"
               >
                 <X className="h-4 w-4" />
                 Clear Filters
@@ -1016,12 +1020,60 @@ function DealsPageContent() {
             ) : null}
           </div>
 
-          <div className="flex items-center gap-2 rounded-[12px] border border-[#deefe2] bg-[#f3fbf5] px-4 py-3 text-[13px] font-semibold text-[#21834c]">
-            <ShieldCheck className="h-4 w-4" />
-            Save more on services, parts and combos from trusted garages and partners.
+          <div className="relative flex items-center gap-2 xl:gap-2.5 shrink-0 lg:justify-end">
+            <span className="text-[12px] xl:text-[13px] font-semibold text-[#17307a] whitespace-nowrap">Sort By:</span>
+            <div className="relative" ref={sortRef}>
+              <button
+                type="button"
+                onClick={() => setSortOpen((curr) => !curr)}
+                className={cn(
+                  "flex h-[34px] min-w-[130px] xl:min-w-[145px] items-center justify-between rounded-[11px] border px-2.5 xl:px-3 text-[11px] xl:text-[12px] font-semibold transition-colors bg-white border-[#dbe6ff] text-[#17307a] shadow-sm hover:bg-[#f7faff]",
+                  sortOpen && "border-[#bfd0ff] bg-[#f8fbff] text-[#1a56db]"
+                )}
+              >
+                <span className="truncate">{sortBy}</span>
+                <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", sortOpen ? "rotate-180 text-[#1a56db]" : "text-[#6f80a8]")} />
+              </button>
+
+              {sortOpen && (
+                <div className="absolute right-0 top-[42px] z-50 min-w-[190px] rounded-[14px] border border-[#dbe6ff] bg-white p-2 shadow-[0_18px_40px_rgba(30,58,138,0.14)]">
+                  {[
+                    'Most Relevant',
+                    'Price: Low to High',
+                    'Price: High to Low',
+                    'Highest Discount',
+                    'Most Used',
+                  ].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => {
+                        setSortBy(option as SortOption);
+                        setCurrentPage(1);
+                        setSortOpen(false);
+                      }}
+                      className={cn(
+                        "flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium transition-colors",
+                        sortBy === option
+                          ? "bg-[#1f5cff] text-white font-bold shadow-sm"
+                          : "text-[#17307a] hover:bg-[#f8fbff]"
+                      )}
+                    >
+                      <span className="truncate">{option}</span>
+                      {sortBy === option && <Check className="h-4 w-4 shrink-0 text-white" strokeWidth={3} />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </section>
+
+        <div className="flex items-center gap-2.5 rounded-[12px] border border-[#deefe2] bg-[#f3fbf5] px-4 py-3 text-[13px] font-semibold text-[#21834c] shadow-sm">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-[#21834c]" strokeWidth={2.2} />
+          <span>Save more on services, parts and combos from trusted garages and partners.</span>
+        </div>
+      </div>
 
       {searchTerm ? (
         <div className="rounded-[16px] border border-[#e4ecff] bg-white px-4 py-3 text-[13px] font-medium text-[#4f67a2] shadow-[0_8px_20px_rgba(20,44,112,0.04)]">
@@ -1030,7 +1082,7 @@ function DealsPageContent() {
       ) : null}
 
       {paginatedDeals.length > 0 ? (
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <section className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-3">
           {paginatedDeals.map((deal) => (
             <DealCard key={deal.id} deal={deal} />
           ))}
@@ -1049,14 +1101,14 @@ function DealsPageContent() {
         </Card>
       )}
 
-      <section className="grid gap-4 rounded-[20px] border border-white/80 bg-white/75 px-4 py-4 shadow-[0_12px_32px_rgba(22,48,112,0.05)] lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+      <div className="grid gap-4 px-2 py-2 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
         <div className="hidden lg:block" />
         <div className="flex items-center justify-center gap-2">
           <button
             type="button"
             onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
             disabled={currentPage === 1}
-            className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#dbe6ff] bg-white text-[#3d5afe] disabled:cursor-not-allowed disabled:opacity-45"
+            className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#dbe6ff] bg-white text-[#3d5afe] disabled:cursor-not-allowed disabled:opacity-45 shadow-sm"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -1072,10 +1124,10 @@ function DealsPageContent() {
                   type="button"
                   onClick={() => setCurrentPage(page)}
                   className={cn(
-                    'flex h-9 w-9 items-center justify-center rounded-[10px] border text-[12px] font-semibold',
+                    'flex h-9 w-9 items-center justify-center rounded-[10px] border text-[12px] font-semibold shadow-sm',
                     currentPage === page
                       ? 'border-[#3d5afe] bg-[#eef3ff] font-bold text-[#3156f5]'
-                      : 'border-[#dbe6ff] bg-white text-[#4d6295]'
+                      : 'border-[#dbe6ff] bg-white text-[#4d6295] hover:bg-[#f7faff]'
                   )}
                 >
                   {page}
@@ -1088,7 +1140,7 @@ function DealsPageContent() {
             type="button"
             onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
             disabled={currentPage === totalPages}
-            className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#dbe6ff] bg-white text-[#3d5afe] disabled:cursor-not-allowed disabled:opacity-45"
+            className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-[#dbe6ff] bg-white text-[#3d5afe] disabled:cursor-not-allowed disabled:opacity-45 shadow-sm"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -1098,7 +1150,7 @@ function DealsPageContent() {
           Showing <span className="font-bold text-[#26408a]">{fromDeal} - {toDeal}</span> of{' '}
           <span className="font-bold text-[#26408a]">{filteredDeals.length} deals</span>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

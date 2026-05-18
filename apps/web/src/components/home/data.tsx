@@ -48,7 +48,7 @@ export type IconLink = {
 export const navItems: NavItem[] = [
   { label: 'Home', icon: House, href: '/', slug: 'home' },
   { label: 'AI Diagnose', icon: Sparkles, href: '/ai-diagnose', slug: 'ai-diagnose' },
-  { label: 'Services', icon: Wrench, href: '/services', slug: 'services' },
+  { label: 'Services', icon: Wrench, href: '/services', slug: 'services', chevron: true },
   { label: 'Shop', icon: ShoppingBag, href: '/shop', slug: 'shop' },
   { label: 'Garages', icon: CalendarDays, href: '/garages', slug: 'garages' },
   { label: 'Bookings', icon: CalendarCheck, href: '/bookings', slug: 'bookings' },

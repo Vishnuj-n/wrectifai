@@ -3,9 +3,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronsLeft, ChevronsRight, Gift, X } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/common/button';
-import { Card } from '@/components/common/card';
+
 import { navItems } from '@/components/home/data';
 import { cn } from '@/utils/cn';
 
@@ -78,8 +78,8 @@ export function Sidebar({
       </div>
 
       <nav className="mt-0.5 flex flex-col gap-[3px] overflow-x-hidden overflow-y-auto pr-0.5 pb-0.5 [scrollbar-width:thin] [scrollbar-color:#e4ecff_transparent] [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#e4ecff] hover:[&::-webkit-scrollbar-thumb]:bg-[#cbd5e1] [&::-webkit-scrollbar-track]:bg-transparent">
-        {navItems.map(({ label, icon: Icon, href }) => {
-          const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
+        {navItems.map(({ label, icon: Icon, href, chevron }) => {
+          const active = href === '/' ? (pathname === '/' || pathname.startsWith('/deals')) : pathname.startsWith(href);
 
           return (
             <Link
@@ -98,6 +98,9 @@ export function Sidebar({
               <span className={cn('whitespace-nowrap flex-1', collapsed && 'hidden')}>
                 {label}
               </span>
+              {chevron && !collapsed ? (
+                <ChevronRight className="h-4 w-4 shrink-0 opacity-70" />
+              ) : null}
             </Link>
           );
         })}
