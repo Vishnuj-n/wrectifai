@@ -24,10 +24,15 @@ import {
   Eye,
   Award,
   Sparkles,
+  ShieldCheck,
+  Calendar,
+  BatteryCharging,
+  Disc3,
 } from 'lucide-react';
 import { Card } from '@/components/common/card';
 import { Button } from '@/components/common/button';
 import { cn } from '@/utils/cn';
+import { PageLoader } from '@/components/common/page-loader';
 import type { Garage } from './garages-page';
 
 interface GarageDetailPageProps {
@@ -55,8 +60,8 @@ const servicesOffered = [
   { name: 'Engine Repair', icon: Sparkles },
   { name: 'AC Service', icon: Snowflake },
   { name: 'Brakes & Suspension', icon: Gauge },
-  { name: 'Battery Service', icon: Battery },
-  { name: 'Tyres & Wheel Care', icon: Award },
+  { name: 'Battery Service', icon: BatteryCharging },
+  { name: 'Tyres & Wheel Care', icon: Disc3 },
   { name: 'Diagnostics', icon: ClipboardList },
   { name: 'More Services', icon: SlidersHorizontal },
 ];
@@ -68,6 +73,8 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
   const [selectedSlot, setSelectedSlot] = useState('04:00 PM');
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [reviewPage, setReviewPage] = useState(0);
+
+  const detailImageSources = [garage.image].filter((src): src is string => Boolean(src));
 
   const reviews = [
     {
@@ -112,6 +119,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
   };
 
   return (
+    <>
     <div className="space-y-6 pb-12">
       {/* Back Button */}
       <button
@@ -123,11 +131,11 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
       </button>
 
       {/* Main Grid */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px] xl:grid-cols-[1fr_390px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_280px] xl:grid-cols-[1fr_310px]">
         {/* Left Column */}
         <div className="space-y-6">
           {/* Banner Container */}
-          <div className="relative h-[240px] w-full overflow-hidden rounded-[24px] border border-white/60 bg-gradient-to-r from-slate-900 to-slate-800 shadow-[0_16px_40px_rgba(22,48,112,0.08)] sm:h-[300px]">
+          <div className="relative h-[240px] w-full overflow-hidden rounded-[16px] border border-white/60 bg-gradient-to-r from-slate-900 to-slate-800 shadow-[0_16px_40px_rgba(22,48,112,0.08)] sm:h-[300px]">
             {garage.image && (
               <img
                 src={garage.image}
@@ -248,16 +256,16 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
           {/* Services Offered */}
           <section className="space-y-3.5">
             <h2 className="text-[14.5px] font-bold text-[#17307a]">Services Offered</h2>
-            <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
               {servicesOffered.map((svc, index) => (
                 <div
                   key={index}
-                  className="flex flex-col items-center justify-center rounded-[16px] border border-[#e2eefc] bg-white p-5 text-center shadow-[0_8px_20px_rgba(22,48,112,0.03)] transition-all hover:border-[#1a56db]/30 hover:shadow-[0_12px_28px_rgba(26,86,219,0.06)]"
+                  className="flex flex-col items-center justify-center rounded-[16px] border border-[#e2eefc] bg-white p-2 py-2.5 text-center shadow-[0_8px_20px_rgba(22,48,112,0.03)] transition-all hover:border-[#1a56db]/30 hover:shadow-[0_12px_28px_rgba(26,86,219,0.06)]"
                 >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#f0f4ff] text-[#1a56db] mb-3">
-                    <svc.icon className="h-5 w-5" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f0f4ff] text-[#1a56db] mb-1.5">
+                    <svc.icon className="h-4 w-4" />
                   </div>
-                  <span className="text-[11px] font-bold text-[#17307a]">{svc.name}</span>
+                  <span className="text-[11px] font-bold text-[#17307a] leading-tight">{svc.name}</span>
                 </div>
               ))}
             </div>
@@ -266,7 +274,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
           {/* Why Choose Us */}
           <section className="space-y-3.5">
             <h2 className="text-[14.5px] font-bold text-[#17307a]">Why Choose {garage.name}?</h2>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
               {[
                 { title: '1 Month Warranty', desc: 'On all repairs and services', icon: Shield },
                 { title: 'Free Inspection', desc: 'Complete vehicle checkup', icon: Eye },
@@ -276,13 +284,15 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
               ].map((item, index) => (
                 <div
                   key={index}
-                  className="flex flex-col rounded-[16px] border border-[#deefe2] bg-[#f3fbf5] p-4 text-left"
+                  className="flex items-center gap-2.5 rounded-[16px] border border-[#e2e8f0] bg-[#f1f5f9] px-3 py-3 text-left overflow-hidden"
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e2f7e9] text-[#21834c] mb-3">
-                    <item.icon className="h-5 w-5" />
+                  <div className="flex shrink-0 items-center justify-center text-[#21834c]">
+                    <item.icon className="h-4.5 w-4.5" />
                   </div>
-                  <h4 className="text-[11px] font-bold text-[#17307a]">{item.title}</h4>
-                  <p className="mt-1 text-[9.5px] font-medium leading-[1.3] text-[#536891]">{item.desc}</p>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-[11px] font-bold text-[#17307a] whitespace-nowrap">{item.title}</h4>
+                    <p className="mt-0.5 text-[9.5px] font-normal text-[#17307a] whitespace-nowrap">{item.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -403,7 +413,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
                   key={d.date}
                   onClick={() => setSelectedDate(d.date)}
                   className={cn(
-                    "flex flex-col items-center justify-center rounded-[14px] border p-2.5 w-[60px] h-[72px] transition-all",
+                    "flex flex-col items-center justify-center rounded-[14px] border p-1.5 flex-1 h-[64px] transition-all",
                     selectedDate === d.date
                       ? "border-[#1a56db] bg-[#1a56db] text-white shadow-[0_8px_18px_rgba(26,86,219,0.18)]"
                       : "border-[#e2eefc] bg-white text-[#17307a] hover:bg-[#f8fbff]"
@@ -472,8 +482,8 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
                 '100% Secure Transactions',
                 'Customer Data Protected',
               ].map((item, index) => (
-                <li key={index} className="flex items-center gap-3 text-[11px] font-bold text-[#228453]">
-                  <Check className="h-4.5 w-4.5 shrink-0" strokeWidth={3} />
+                <li key={index} className="flex items-center gap-3 text-[11px] font-semibold text-[#17307a]">
+                  <ShieldCheck className="h-4.5 w-4.5 shrink-0 text-[#228453]" strokeWidth={2.5} />
                   <span>{item}</span>
                 </li>
               ))}
@@ -496,6 +506,8 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
           </div>
         </div>
       )}
+      <PageLoader imageSources={detailImageSources} />
     </div>
+    </>
   );
 }

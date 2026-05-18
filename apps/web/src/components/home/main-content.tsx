@@ -16,7 +16,7 @@ import {
   Sticker,
   Zap,
   Snowflake,
-  SquareX,
+  X,
   FileText,
   CarFront,
   Gift,
@@ -121,7 +121,7 @@ function CategoriesModal({
               <h2 className="text-[15.5px] font-semibold tracking-[-0.03em] text-[#17307a]">
                 All Categories
               </h2>
-              <p className="mt-1 text-[11px] text-[#6173a1]">
+              <p className="mt-1 text-[11px] font-normal text-[#17307a]">
                 Explore our wide range of services and products for your car
               </p>
             </div>
@@ -129,9 +129,9 @@ function CategoriesModal({
               type="button"
               onClick={onClose}
               aria-label="Close categories modal"
-              className="mt-0.5 text-[#17307a] transition-colors hover:text-[#1a56db]"
+              className="mt-0.5 text-[#17307a] transition-all hover:text-black hover:scale-110 active:scale-90 duration-150"
             >
-              <SquareX className="h-5 w-5 stroke-[1.7]" />
+              <X className="h-5 w-5 stroke-[2.5]" />
             </button>
           </div>
 
@@ -156,7 +156,7 @@ function CategoriesModal({
                       <Icon className="h-5.5 w-5.5" strokeWidth={1.8} />
                     </div>
                   )}
-                  <div className="max-w-[82px] text-[10.5px] font-medium leading-[1.25] text-[#17307a]">
+                  <div className="max-w-[82px] text-[10.5px] font-semibold leading-[1.25] text-[#17307a]">
                     {label}
                   </div>
                 </Card>
@@ -185,7 +185,7 @@ function CategoriesModal({
                       <Icon className="h-5 w-5 stroke-[1.8]" />
                     </div>
                   )}
-                  <div className="max-w-[124px] text-[10.5px] font-medium leading-[1.35] text-[#17307a]">
+                  <div className="max-w-[124px] text-[10.5px] font-semibold leading-[1.35] text-[#17307a]">
                     {label === 'Vehicle Protection & Safety' ? (
                       <>
                         <span className="block whitespace-nowrap">Vehicle Protection</span>
@@ -209,7 +209,7 @@ function CategoriesModal({
                 <h4 className="text-[12.5px] font-semibold tracking-[-0.03em] text-[#17307a]">
                   Can&apos;t find what you&apos;re looking for?
                 </h4>
-                <p className="mt-0.5 text-[11px] text-[#6173a1]">
+                <p className="mt-0.5 text-[11px] font-normal text-[#17307a]">
                   Let us help you find the right service for your car.
                 </p>
               </div>
@@ -426,7 +426,7 @@ function CategoryGrid({
                     <Icon className="h-6 w-6" strokeWidth={1.8} />
                   </div>
                 )}
-                <div className="max-w-full text-[11.5px] font-medium leading-[1.3] text-[#17307a] px-1">
+                <div className="max-w-full text-[11.5px] font-semibold leading-[1.3] text-[#17307a] px-1">
                   {label}
                 </div>
               </Card>
@@ -468,10 +468,10 @@ function MaintenanceStrip({
                   </div>
                 )}
                 <div className="min-w-0">
-                  <h3 className="truncate whitespace-nowrap text-[9.5px] font-medium leading-3 text-[#17307a]">
+                  <h3 className="truncate whitespace-nowrap text-[9.5px] font-semibold leading-3 text-[#17307a]">
                     {label}
                   </h3>
-                  <p className="mt-0.5 whitespace-nowrap text-[9px] leading-3 text-[#66759e]">{due}</p>
+                  <p className="mt-0.5 whitespace-nowrap text-[9px] font-normal leading-3 text-[#17307a]">{due}</p>
                 </div>
               </Card>
             </HoverComingSoon>
@@ -511,22 +511,22 @@ function GarageCard({
           <div className="h-8 w-10 rounded bg-white/10" />
         </div>
       </div>
-      <div className="p-4">
-        <h3 className="text-[14.5px] font-bold tracking-[-0.03em] text-[#17307a]">{name}</h3>
-        <div className="mt-2 flex items-center gap-2 text-[11.5px] text-[#6e7ca4]">
-          <Star className="h-4 w-4 fill-[#ff9f1a] text-[#ff9f1a]" />
+      <div className="p-3 pb-2.5">
+        <h3 className="text-[13.5px] font-bold tracking-[-0.03em] text-[#17307a]">{name}</h3>
+        <div className="mt-1 flex items-center gap-1.5 text-[11px] font-normal text-[#17307a]">
+          <Star className="h-3.5 w-3.5 fill-[#ff9f1a] text-[#ff9f1a]" />
           <span className="font-semibold text-[#f28c28]">{rating}</span>
           <span>({reviews})</span>
         </div>
-        <div className="mt-2 space-y-1.5 text-[11.5px] text-[#6e7ca4]">
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-[#6177ad]" />
-            {location}
+        <div className="mt-1.5 space-y-1 text-[11px] font-normal text-[#17307a]">
+          <div className="flex items-center gap-1.5 truncate">
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-[#17307a]" />
+            <span className="truncate">{location}</span>
           </div>
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-[#6177ad]" />
-              {distance}
+          <div className="flex items-center justify-between gap-2 pt-0.5">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-[#17307a]" />
+              <span>{distance}</span>
             </div>
             <span className="font-bold text-[#16a34a]">{price}</span>
           </div>
@@ -544,10 +544,17 @@ function scrollRow(container: HTMLDivElement | null, amount: number) {
   const nextLeft = container.scrollLeft + amount;
   const maxLeft = container.scrollWidth - container.clientWidth;
 
-  container.scrollTo({
-    left: nextLeft >= maxLeft - 4 ? 0 : nextLeft,
-    behavior: 'smooth',
-  });
+  if (amount > 0) {
+    container.scrollTo({
+      left: nextLeft >= maxLeft - 4 ? maxLeft : nextLeft,
+      behavior: 'smooth',
+    });
+  } else {
+    container.scrollTo({
+      left: nextLeft <= 4 ? 0 : nextLeft,
+      behavior: 'smooth',
+    });
+  }
 }
 
 function FeaturedGarages({
@@ -556,6 +563,49 @@ function FeaturedGarages({
   garagesList: typeof garages;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [showLeft, setShowLeft] = useState(false);
+  const [showRight, setShowRight] = useState(true);
+
+  // Monitor scroll actions to dynamically update the active page dot
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      if (maxScroll <= 0) {
+        setShowLeft(false);
+        setShowRight(false);
+        return;
+      }
+      
+      setShowLeft(container.scrollLeft > 10);
+      setShowRight(container.scrollLeft < maxScroll - 10);
+
+      const progress = container.scrollLeft / maxScroll;
+      const index = Math.min(2, Math.max(0, Math.round(progress * 2)));
+      setActiveIndex(index);
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Trigger initial execution
+
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToPage = (pageIndex: number) => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    const targetScrollLeft = (pageIndex / 2) * maxScroll;
+
+    container.scrollTo({
+      left: targetScrollLeft,
+      behavior: 'smooth',
+    });
+  };
 
   return (
     <section id="garages">
@@ -571,18 +621,41 @@ function FeaturedGarages({
             </div>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={() => scrollRow(scrollRef.current, 286)}
-          aria-label="Show more garages"
-          className="absolute right-[-14px] top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#1a56db] shadow-[0_10px_25px_rgba(20,44,112,0.18)] xl:flex"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
+        {showLeft && (
+          <button
+            type="button"
+            onClick={() => scrollRow(scrollRef.current, -286)}
+            aria-label="Show previous garages"
+            className="absolute left-[-14px] top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#1a56db] shadow-[0_10px_25px_rgba(20,44,112,0.18)] xl:flex z-10 animate-in fade-in duration-200"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        )}
+        {showRight && (
+          <button
+            type="button"
+            onClick={() => scrollRow(scrollRef.current, 286)}
+            aria-label="Show more garages"
+            className="absolute right-[-14px] top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#1a56db] shadow-[0_10px_25px_rgba(20,44,112,0.18)] xl:flex z-10 animate-in fade-in duration-200"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        )}
         <div className="mt-3 flex items-center justify-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#1a56db]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#c8d6f6]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#c8d6f6]" />
+          {[0, 1, 2].map((i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => scrollToPage(i)}
+              aria-label={`Go to garages page ${i + 1}`}
+              className={cn(
+                "h-2.5 w-2.5 rounded-full transition-all duration-300",
+                activeIndex === i 
+                  ? "bg-[#1a56db] w-5 shadow-sm" 
+                  : "bg-[#c8d6f6] hover:bg-[#a5beee]"
+              )}
+            />
+          ))}
         </div>
       </div>
     </section>
@@ -595,6 +668,29 @@ function SeasonalDeals({
   deals: typeof seasonalDeals;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [showLeft, setShowLeft] = useState(false);
+  const [showRight, setShowRight] = useState(true);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      if (maxScroll <= 0) {
+        setShowLeft(false);
+        setShowRight(false);
+        return;
+      }
+      setShowLeft(container.scrollLeft > 10);
+      setShowRight(container.scrollLeft < maxScroll - 10);
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <section id="seasonal-deals">
@@ -610,21 +706,21 @@ function SeasonalDeals({
               <Card
                 key={deal.title}
                 style={{ backgroundColor: deal.bgColor }}
-                className="w-[344px] shrink-0 overflow-hidden border border-[#e5e9f2]/50 p-0 shadow-[0_3px_10px_-1px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_4px_12px_-1px_rgba(0,0,0,0.05)] hover:-translate-y-0.5"
+                className="w-[270px] shrink-0 overflow-hidden border border-[#e5e9f2]/50 p-0 shadow-[0_3px_10px_-1px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_4px_12px_-1px_rgba(0,0,0,0.05)] hover:-translate-y-0.5"
               >
-                <div className="grid min-h-[124px] grid-cols-[1.2fr_0.8fr]">
-                  <div className="p-4 pb-3 relative z-10 flex flex-col justify-between">
+                <div className="grid min-h-[96px] grid-cols-[1.25fr_0.75fr]">
+                  <div className="p-3 pb-2.5 relative z-10 flex flex-col justify-between">
                     <div>
-                      <div className={cn('flex items-center gap-1.5 text-[11.5px] font-bold', deal.textColor)}>
-                        {DealIcon ? <DealIcon className="h-4 w-4 shrink-0" /> : null}
+                      <div className={cn('flex items-center gap-1 text-[11.5px] font-bold', deal.textColor)}>
+                        {DealIcon ? <DealIcon className="h-3.5 w-3.5 shrink-0" /> : null}
                         {deal.title}
                       </div>
-                      <p className="mt-2 max-w-[175px] text-[11px] leading-[1.45] font-semibold text-[#2d4179]">{deal.subtitle}</p>
+                      <p className="mt-1 max-w-[175px] text-[10.5px] leading-[1.35] font-normal text-[#17307a] line-clamp-2">{deal.subtitle}</p>
                     </div>
-                    <div className="mt-2 flex flex-wrap items-end gap-2">
-                      <span className={cn('text-[21px] font-bold leading-none', deal.textColor)}>{deal.price}</span>
-                      <span className="pb-1 text-[11.5px] font-medium text-[#8a96b8] line-through">{deal.strikePrice}</span>
-                      <Badge tone="lightGreen" className="mb-0.5 px-1.5 text-[9.5px]">
+                    <div className="mt-1.5 flex items-center gap-1.5 whitespace-nowrap">
+                      <span className={cn('text-[17px] font-bold leading-none', deal.textColor)}>{deal.price}</span>
+                      <span className="text-[10.5px] font-medium text-[#8a96b8] line-through">{deal.strikePrice}</span>
+                      <Badge tone="lightGreen" className="px-1.5 py-0.5 text-[9px] font-bold leading-none">
                         {deal.discount}
                       </Badge>
                     </div>
@@ -636,14 +732,14 @@ function SeasonalDeals({
                     {deal.image ? (
                       <>
                         <img
-                          src={deal.image}
-                          alt={deal.title}
-                          className="h-full w-full object-cover object-center mix-blend-multiply"
+                           src={deal.image}
+                           alt={deal.title}
+                           className="h-full w-full object-cover object-center"
                         />
                         <div 
-                          className="absolute inset-y-0 left-0 w-24 pointer-events-none"
+                          className="absolute inset-y-0 left-0 w-10 pointer-events-none"
                           style={{
-                            background: `linear-gradient(to right, ${deal.bgColor} 0%, ${deal.bgColor}e0 25%, ${deal.bgColor}00 100%)`
+                            background: `linear-gradient(to right, ${deal.bgColor} 0%, ${deal.bgColor}a0 40%, ${deal.bgColor}00 100%)`
                           }}
                         />
                       </>
@@ -654,14 +750,26 @@ function SeasonalDeals({
             );
           })}
         </div>
-        <button
-          type="button"
-          onClick={() => scrollRow(scrollRef.current, 368)}
-          aria-label="Show more seasonal deals"
-          className="absolute right-[-14px] top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#1a56db] shadow-[0_10px_25px_rgba(20,44,112,0.18)] xl:flex"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
+        {showLeft && (
+          <button
+            type="button"
+            onClick={() => scrollRow(scrollRef.current, -286)}
+            aria-label="Show previous seasonal deals"
+            className="absolute left-[-14px] top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#1a56db] shadow-[0_10px_25px_rgba(20,44,112,0.18)] xl:flex z-10 animate-in fade-in duration-200"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        )}
+        {showRight && (
+          <button
+            type="button"
+            onClick={() => scrollRow(scrollRef.current, 286)}
+            aria-label="Show more seasonal deals"
+            className="absolute right-[-14px] top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#1a56db] shadow-[0_10px_25px_rgba(20,44,112,0.18)] xl:flex z-10 animate-in fade-in duration-200"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        )}
       </div>
     </section>
   );
@@ -673,6 +781,29 @@ function CareTips({
   tips: typeof careTips;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [showLeft, setShowLeft] = useState(false);
+  const [showRight, setShowRight] = useState(true);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      if (maxScroll <= 0) {
+        setShowLeft(false);
+        setShowRight(false);
+        return;
+      }
+      setShowLeft(container.scrollLeft > 10);
+      setShowRight(container.scrollLeft < maxScroll - 10);
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <section id="tips">
@@ -683,9 +814,9 @@ function CareTips({
           className="flex gap-3 overflow-x-auto pr-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {tips.map(({ title, icon: Icon, image }, index) => (
-            <Card key={title} className="grid min-h-[78px] w-[188px] shrink-0 grid-cols-[1fr_72px] items-center overflow-hidden p-0 border border-[#e5e9f2]/50 shadow-[0_3px_10px_-1px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_4px_12px_-1px_rgba(0,0,0,0.05)] hover:-translate-y-0.5">
-              <div className="p-4 py-3">
-                <p className="text-[10.5px] font-semibold leading-5 text-[#17307a]">{title}</p>
+            <Card key={title} className="grid min-h-[86px] w-[220px] shrink-0 grid-cols-[1fr_75px] items-center overflow-hidden p-0 border border-[#e5e9f2]/50 shadow-[0_3px_10px_-1px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_4px_12px_-1px_rgba(0,0,0,0.05)] hover:-translate-y-0.5">
+              <div className="p-3 py-2.5">
+                <p className="text-[11px] font-medium leading-[1.3] text-[#17307a] line-clamp-4">{title}</p>
               </div>
               <div className="relative h-full overflow-hidden">
                 {image ? (
@@ -720,14 +851,26 @@ function CareTips({
             </Card>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={() => scrollRow(scrollRef.current, 205)}
-          aria-label="Show more care tips"
-          className="absolute right-[-14px] top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#1a56db] shadow-[0_10px_25px_rgba(20,44,112,0.18)] xl:flex"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
+        {showLeft && (
+          <button
+            type="button"
+            onClick={() => scrollRow(scrollRef.current, -220)}
+            aria-label="Show previous care tips"
+            className="absolute left-[-14px] top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#1a56db] shadow-[0_10px_25px_rgba(20,44,112,0.18)] xl:flex z-10 animate-in fade-in duration-200"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        )}
+        {showRight && (
+          <button
+            type="button"
+            onClick={() => scrollRow(scrollRef.current, 220)}
+            aria-label="Show more care tips"
+            className="absolute right-[-14px] top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[#1a56db] shadow-[0_10px_25px_rgba(20,44,112,0.18)] xl:flex z-10 animate-in fade-in duration-200"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        )}
       </div>
     </section>
   );

@@ -23,6 +23,7 @@ import { Button } from '@/components/common/button';
 import { DashboardShell } from '@/components/home/dashboard-shell';
 import { TopNavbar } from '@/components/home/top-navbar';
 import { cn } from '@/utils/cn';
+import { PageLoader } from '@/components/common/page-loader';
 
 import { GarageDetailPage } from './garage-detail-page';
 
@@ -434,7 +435,7 @@ function GarageCard({
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-2.5 flex flex-wrap gap-2">
           {chips.map((chip) => (
             <span key={chip} className="rounded-full bg-[#e9f8ef] px-3 py-1.5 text-[10px] font-semibold text-[#238453]">
               {chip}
@@ -442,16 +443,16 @@ function GarageCard({
           ))}
         </div>
 
-        <div className="mt-5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-t border-[#eef3ff] pt-4">
-          <div className="flex min-w-0 items-start gap-2 text-[#6173a1]">
+        <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-1.5 border-t border-[#eef3ff] pt-2">
+          <div className="flex min-w-0 items-start gap-1 font-normal text-[#17307a]">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#1a56db]" />
-            <div className="min-w-0 text-[9.5px] font-medium leading-[1.3]">
-              <div className="truncate">No upfront payment &#8226;</div>
-              <div className="truncate">Final quote after inspection</div>
+            <div className="min-w-0 text-[8.5px] tracking-tight font-normal leading-[1.25]">
+              <div>No upfront payment &#8226;</div>
+              <div>Final quote after inspection</div>
             </div>
           </div>
-          <Button type="button" variant="outline" className="h-8 shrink-0 rounded-[9px] px-2.5 text-[11px] font-semibold">
-            Book Now
+          <Button type="button" variant="outline" className="h-8 shrink-0 rounded-[9px] px-2 text-[10.5px] font-semibold">
+            Book Appointment
           </Button>
         </div>
       </div>
@@ -630,7 +631,7 @@ function GaragesContent() {
             </button>
           </div>
 
-          <div className="relative flex items-center gap-3">
+          <div className="relative flex items-center gap-1">
             <span className="text-[12px] font-semibold text-[#17307a]">Sort By:</span>
             <button
               type="button"
@@ -801,10 +802,19 @@ function GaragesContent() {
   );
 }
 
+const garagesImageSources = Array.from(
+  new Set(
+    garages.map((item) => item.image).filter((src): src is string => Boolean(src))
+  )
+);
+
 export function GaragesPage() {
   return (
-    <DashboardShell header={<TopNavbar />}>
-      <GaragesContent />
-    </DashboardShell>
+    <>
+      <DashboardShell header={<TopNavbar />}>
+        <GaragesContent />
+      </DashboardShell>
+      <PageLoader imageSources={garagesImageSources} />
+    </>
   );
 }

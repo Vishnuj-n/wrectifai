@@ -383,7 +383,7 @@ export const promoItems = [
     href: '#garages',
     image: '/assets/ac_vent_1778070688367.png',
   },
-  ];
+];
 
 export const topNavIcons: IconLink[] = [
   { icon: Bell, badge: '3', href: '#overview', label: 'Notifications' },
