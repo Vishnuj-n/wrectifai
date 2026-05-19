@@ -901,7 +901,6 @@ function DealsPageContent() {
       discount: 'all',
     });
     setCurrentPage(1);
-    setOpenFilter(null);
     setSortOpen(false);
     setShowMoreFilters(false);
   };
