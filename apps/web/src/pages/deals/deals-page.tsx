@@ -1161,3 +1161,5 @@ export function DealsPage() {
     </DashboardShell>
   );
 }
+
+export default DealsPage;

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
-import { FeatureComingSoonPage } from '@/components/home/feature-coming-soon-page';
-import { GaragesPage } from '@/components/home/garages-page';
+import { FeatureComingSoonPage } from '@/pages/feature-coming-soon/feature-coming-soon-page';
+import { GaragesPage } from '@/pages/garages/garages-page';
 import { navItems } from '@/components/home/data';
 
 const featurePageCopy: Record<string, string> = {

@@ -25,7 +25,7 @@ import { TopNavbar } from '@/components/home/top-navbar';
 import { cn } from '@/utils/cn';
 import { PageLoader } from '@/components/common/page-loader';
 
-import { GarageDetailPage } from './garage-detail-page';
+import { GarageDetailPage } from '@/components/garages/garage-detail-page';
 
 type FilterKey = 'rating' | 'distance' | 'serviceType' | 'responseTime' | 'offers' | 'moreFilters';
 type ViewMode = 'list' | 'map';
@@ -818,3 +818,5 @@ export function GaragesPage() {
     </>
   );
 }
+
+export default GaragesPage;

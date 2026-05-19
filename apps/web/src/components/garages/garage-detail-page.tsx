@@ -13,19 +13,13 @@ import {
   Tag,
   CheckCircle2,
   Snowflake,
-  Battery,
   ClipboardList,
   SlidersHorizontal,
-  Phone,
-  MessageSquare,
-  Map,
   Heart,
   Check,
   Eye,
-  Award,
   Sparkles,
   ShieldCheck,
-  Calendar,
   BatteryCharging,
   Disc3,
 } from 'lucide-react';
@@ -33,7 +27,8 @@ import { Card } from '@/components/common/card';
 import { Button } from '@/components/common/button';
 import { cn } from '@/utils/cn';
 import { PageLoader } from '@/components/common/page-loader';
-import type { Garage } from './garages-page';
+import type { Garage } from '@/pages/garages/garages-page';
+import { BookingConfirmed } from '@/components/garages/booking-confirmed';
 
 interface GarageDetailPageProps {
   garage: Garage;
@@ -113,10 +108,21 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
 
   const handleBookAppointment = () => {
     setBookingConfirmed(true);
-    setTimeout(() => {
-      setBookingConfirmed(false);
-    }, 4000);
   };
+
+  if (bookingConfirmed) {
+    return (
+      <BookingConfirmed
+        garage={garage}
+        selectedDate={selectedDate}
+        selectedSlot={selectedSlot}
+        onViewBookings={() => {
+          setBookingConfirmed(false);
+          onBack();
+        }}
+      />
+    );
+  }
 
   return (
     <>
@@ -459,7 +465,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
                 onClick={handleBookAppointment}
                 className="w-full h-12 rounded-[14px] text-[12px] font-bold bg-[#1a56db] text-white hover:bg-[#0b43c4] shadow-lg transition-transform hover:scale-[1.01]"
               >
-                Continue Booking
+                Book Now
               </Button>
               <div className="flex flex-col gap-1.5 text-[10px] font-bold text-[#8a99ad] items-center justify-center pt-1 border-t border-[#eef3ff]">
                 <div className="flex items-center gap-1.5">
@@ -511,3 +517,5 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
     </>
   );
 }
+
+export default GarageDetailPage;

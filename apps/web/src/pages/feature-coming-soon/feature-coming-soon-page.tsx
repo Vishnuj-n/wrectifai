@@ -116,3 +116,5 @@ export function FeatureComingSoonPage({
     </DashboardShell>
   );
 }
+
+export default FeatureComingSoonPage;
