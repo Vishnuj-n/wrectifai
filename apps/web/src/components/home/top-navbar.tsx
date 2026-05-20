@@ -47,8 +47,10 @@ export function TopNavbar() {
   );
 
   return (
-    <header className="flex flex-wrap items-center gap-3 lg:flex-nowrap lg:gap-4">
-      <div className="order-1 flex items-center gap-2 sm:gap-3">
+    <header className="w-full flex flex-wrap items-center justify-between gap-3 lg:flex-nowrap lg:gap-6">
+      
+      {/* Left Section: Mobile Menu & Location Dropdown */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <button
           type="button"
           onClick={() => window.dispatchEvent(new Event('toggle-mobile-sidebar'))}
@@ -134,13 +136,34 @@ export function TopNavbar() {
         </div>
       </div>
 
-      <div className="order-3 ml-auto flex items-center gap-[7px] sm:gap-[12px]">
+      {/* Center Section: Search input form */}
+      <form className="relative w-full order-3 lg:order-none lg:flex-1 lg:max-w-[420px] lg:mx-auto" onSubmit={handleSubmit}>
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7aa5]" />
+        <Input
+          value={query}
+          onChange={(event) => {
+            const newQuery = event.target.value;
+            setQuery(newQuery);
+            window.dispatchEvent(
+              new CustomEvent('dashboard-search', {
+                detail: newQuery.trim(),
+              })
+            );
+          }}
+          className="h-10 rounded-lg pl-11 pr-4 w-full"
+          placeholder="Search for services, parts, garages..."
+          aria-label="Search for services, parts, garages"
+        />
+      </form>
+
+      {/* Right Section: Notifications, Chat, Favorites, Profile */}
+      <div className="flex items-center gap-[7px] sm:gap-[12px] shrink-0 ml-auto lg:ml-0">
         {topNavIcons.map(({ icon: Icon, badge, label }) => (
           <div
             key={label}
             aria-label={label}
             className={cn(
-              "relative h-9 w-9 lg:h-10 lg:w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#17307a] shadow-sm ring-1 ring-[#e5ecfb]",
+              "relative h-9 w-9 lg:h-10 lg:w-10 shrink-0 flex items-center justify-center rounded-full bg-white text-[#17307a] shadow-sm ring-1 ring-[#e5ecfb]",
               label !== 'Notifications' ? "hidden lg:flex" : "flex"
             )}
           >
@@ -159,25 +182,6 @@ export function TopNavbar() {
           <ChevronDown className="hidden h-4 w-4 text-[#17307a] lg:block" />
         </div>
       </div>
-
-      <form className="relative order-3 w-[360px] lg:order-2 lg:ml-9 lg:w-[420px]" onSubmit={handleSubmit}>
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b7aa5]" />
-        <Input
-          value={query}
-          onChange={(event) => {
-            const newQuery = event.target.value;
-            setQuery(newQuery);
-            window.dispatchEvent(
-              new CustomEvent('dashboard-search', {
-                detail: newQuery.trim(),
-              })
-            );
-          }}
-          className="h-10 rounded-lg pl-11 pr-4"
-          placeholder="Search for services, parts, garages..."
-          aria-label="Search for services, parts, garages"
-        />
-      </form>
     </header>
   );
 }

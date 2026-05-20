@@ -14,7 +14,11 @@ import {
   Copy,
   ThumbsUp,
   UserCheck,
+  Store,
+  Home,
+  ChevronRight,
 } from 'lucide-react';
+import Link from 'next/link';
 import { Card } from '@/components/common/card';
 import { Button } from '@/components/common/button';
 import { cn } from '@/utils/cn';
@@ -47,7 +51,7 @@ export function BookingConfirmed({
       title: 'Booking Confirmed',
       desc: 'You will receive a confirmation shortly',
       active: true,
-      icon: Check,
+      icon: Store,
     },
     {
       title: 'Garage Assigned',
@@ -59,7 +63,7 @@ export function BookingConfirmed({
       title: 'Service in Progress',
       desc: 'We will notify you when our team starts',
       active: false,
-      icon: Wrench,
+      icon: CarFront,
     },
     {
       title: 'Service Completed',
@@ -78,43 +82,67 @@ export function BookingConfirmed({
   ];
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_280px] xl:grid-cols-[1fr_320px] pb-12 animate-in fade-in duration-300">
-      {/* Left Column */}
-      <div className="space-y-6">
+    <div className="space-y-4 pb-12 animate-in fade-in duration-300">
+      {/* Breadcrumbs */}
+      <nav className="flex items-center gap-1.5 text-[12px] font-semibold text-[#6b7da5] pt-1">
+        <Link href="/" className="flex items-center gap-1 hover:text-[#1a56db] transition-colors">
+          <Home className="h-3.5 w-3.5" />
+          <span>Home</span>
+        </Link>
+        <ChevronRight className="h-3.5 w-3.5 text-[#a4b3d1]" />
+        <button onClick={onViewBookings} className="hover:text-[#1a56db] transition-colors">
+          Garages
+        </button>
+        <ChevronRight className="h-3.5 w-3.5 text-[#a4b3d1]" />
+        <span className="text-[#17307a] font-bold">Booking Confirmed</span>
+      </nav>
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_280px] xl:grid-cols-[1fr_320px]">
+        {/* Left Column */}
+        <div className="space-y-6">
         {/* Confirmed Banner Card */}
-        <div className="relative overflow-hidden rounded-[22px] border border-[#dcfce7] bg-[#f0fdf4] p-6 shadow-[0_12px_36px_rgba(22,163,74,0.04)]">
-          <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
-            {/* Animated Celebration Green Check Indicator */}
-            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#1aa14a] text-white shadow-[0_8px_20px_rgba(34,197,94,0.3)]">
-              <Check className="h-6 w-6 stroke-[3]" />
-              {/* Outer floating particles decorative element */}
-              <div className="absolute -inset-1 rounded-full border border-dashed border-[#1aa14a]/30 animate-spin" style={{ animationDuration: '8s' }} />
-              <div className="absolute -inset-2 rounded-full border border-dotted border-[#1aa14a]/20 animate-spin" style={{ animationDuration: '14s' }} />
+        <div className="relative overflow-hidden rounded-[20px] border border-[#d5eedb] bg-[#f4fcf7] p-6 shadow-[0_10px_28px_rgba(15,164,87,0.03)]">
+          <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:gap-6">
+            
+            {/* Elegant Check Indicator with Circular Confetti Particles matching reference */}
+            <div className="relative shrink-0 flex items-center justify-center">
+              <div className="flex h-[56px] w-[56px] items-center justify-center rounded-full bg-[#0fa457] text-white shadow-[0_6px_16px_rgba(15,164,87,0.25)]">
+                <Check className="h-6 w-6 stroke-[3.5]" />
+              </div>
+              
+              {/* Reference-matching confetti dots strategically positioned */}
+              <div className="absolute -top-1 -left-1 w-[4.5px] h-[4.5px] rounded-full bg-[#c084fc] opacity-75" />
+              <div className="absolute top-2 -right-2.5 w-[5px] h-[5px] rounded-full bg-[#fb923c] opacity-80" />
+              <div className="absolute -bottom-1.5 right-2 w-[4px] h-[4px] rounded-full bg-[#34d399] opacity-75" />
+              <div className="absolute bottom-2.5 -left-2.5 w-[5px] h-[5px] rounded-full bg-[#60a5fa] opacity-75" />
+              <div className="absolute -top-2.5 right-1.5 w-[3.5px] h-[3.5px] rounded-full bg-[#f43f5e] opacity-70" />
+              <div className="absolute bottom-6 -right-1 w-[3px] h-[3px] rounded-full bg-[#facc15] opacity-80" />
+              <div className="absolute -bottom-2 -left-0.5 w-[4px] h-[4px] rounded-full bg-[#a78bfa] opacity-70" />
             </div>
 
             {/* Banner details */}
             <div className="text-center sm:text-left space-y-1">
-              <h1 className="text-[20px] font-extrabold tracking-tight text-[#14532d] sm:text-[22px]">
+              <h1 className="text-[20px] font-extrabold tracking-tight text-[#0fa457] sm:text-[21px]">
                 Booking Confirmed!
               </h1>
-              <p className="text-[13px] font-semibold text-[#166534]">
+              <p className="text-[13px] font-semibold text-[#1e293b]">
                 Your appointment has been successfully booked.
               </p>
               
-              <div className="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                <span className="text-[12.5px] font-bold text-[#17307a]">
-                  Booking ID: <span className="font-mono tracking-tight">{bookingId}</span>
+              <div className="mt-2.5 flex items-center justify-center sm:justify-start gap-1.5">
+                <span className="text-[12px] font-bold text-[#475569]">
+                  Booking ID: <span className="text-[#0f172a] font-extrabold font-mono tracking-tight">{bookingId}</span>
                 </span>
                 <button
                   onClick={handleCopy}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-white border border-[#e2eefc] text-[#1a56db] hover:bg-[#f0f4ff] active:scale-95 transition-all shadow-sm"
+                  className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-white border border-[#e2eefc] text-[#1a56db] hover:bg-[#f0f4ff] active:scale-95 transition-all shadow-sm"
                   title="Copy Booking ID"
                 >
-                  {copied ? <Check className="h-3.5 w-3.5 text-[#1aa14a]" strokeWidth={3} /> : <Copy className="h-3.5 w-3.5" />}
+                  {copied ? <Check className="h-3 w-3 text-[#0fa457]" strokeWidth={3} /> : <Copy className="h-3 w-3" />}
                 </button>
               </div>
               
-              <p className="text-[11.5px] font-medium text-[#536891] pt-1">
+              <p className="text-[11px] font-semibold text-[#64748b] pt-0.5">
                 We&apos;ve sent the booking details to your email and SMS.
               </p>
             </div>
@@ -123,90 +151,94 @@ export function BookingConfirmed({
 
         {/* Booking Details Grid Box */}
         <Card className="rounded-[22px] border-[#e7eefc] p-6 shadow-[0_12px_32px_rgba(21,48,122,0.05)] bg-white space-y-5">
-          <h2 className="text-[14.5px] font-extrabold tracking-tight text-[#17307a]">
+          <h2 className="text-[14px] font-extrabold tracking-tight text-[#17307a]">
             Booking Details
           </h2>
           
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
             {/* Date & Time */}
-            <div className="flex gap-3.5 items-start p-3.5 rounded-[16px] border border-[#eef3ff] bg-[#fcfdff]">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f0f4ff] text-[#1a56db]">
+            <div className="flex gap-3.5 items-start py-1">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e2eefd] text-[#1a56db]">
                 <Calendar className="h-5 w-5" />
               </div>
               <div className="space-y-0.5">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8a99ad]">Date &amp; Time</div>
-                <div className="text-[13px] font-extrabold text-[#17307a]">
+                <div className="text-[11.5px] font-semibold text-[#64748b]">Date &amp; Time</div>
+                <div className="text-[13px] font-extrabold text-[#0f172a]">
                   Fri, {selectedDate} May 2025 • {selectedSlot}
                 </div>
               </div>
             </div>
 
             {/* Garage Info */}
-            <div className="flex gap-3.5 items-start p-3.5 rounded-[16px] border border-[#eef3ff] bg-[#fcfdff]">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f0f4ff] text-[#1a56db]">
-                <MapPin className="h-5 w-5" />
+            <div className="flex gap-3.5 items-start py-1 border-t border-[#f1f5f9] pt-4 sm:border-t-0 sm:pt-0">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e2eefd] text-[#1a56db]">
+                <Store className="h-5 w-5" />
               </div>
               <div className="space-y-0.5">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8a99ad]">Garage</div>
-                <div className="text-[13px] font-extrabold text-[#17307a]">
+                <div className="text-[11.5px] font-semibold text-[#64748b]">Garage</div>
+                <div className="text-[13px] font-extrabold text-[#0f172a]">
                   {garage.name}
                 </div>
-                <div className="text-[11px] font-semibold text-[#536891]">{garage.location}</div>
+                <div className="text-[11px] font-semibold text-[#64748b]">{garage.location}</div>
               </div>
             </div>
 
             {/* Service details */}
-            <div className="flex gap-3.5 items-start p-3.5 rounded-[16px] border border-[#eef3ff] bg-[#fcfdff]">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f0f4ff] text-[#1a56db]">
+            <div className="flex gap-3.5 items-start py-1 border-t border-[#f1f5f9] pt-4 sm:pt-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e2eefd] text-[#1a56db]">
                 <Wrench className="h-5 w-5" />
               </div>
-              <div className="space-y-1">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8a99ad]">Service</div>
-                <div className="text-[13px] font-extrabold text-[#17307a]">
+              <div className="space-y-0.5">
+                <div className="text-[11.5px] font-semibold text-[#64748b]">Service</div>
+                <div className="text-[13px] font-extrabold text-[#0f172a]">
                   General Service (Standard Service)
                 </div>
-                <span className="inline-block rounded-full bg-[#eefbf3] px-2.5 py-1 text-[9.5px] font-bold text-[#228453]">
-                  60-90 mins
-                </span>
+                <div className="pt-0.5">
+                  <span className="inline-block rounded-[6px] bg-[#eefbf3] px-2 py-0.5 text-[10px] font-bold text-[#228453]">
+                    60-90 mins
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* Response Time details */}
-            <div className="flex gap-3.5 items-start p-3.5 rounded-[16px] border border-[#eef3ff] bg-[#fcfdff]">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f0f4ff] text-[#1a56db]">
+            <div className="flex gap-3.5 items-start py-1 border-t border-[#f1f5f9] pt-4 sm:pt-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e2eefd] text-[#1a56db]">
                 <Clock className="h-5 w-5" />
               </div>
               <div className="space-y-0.5">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8a99ad]">Response Time</div>
-                <div className="text-[13px] font-extrabold text-[#17307a]">
+                <div className="text-[11.5px] font-semibold text-[#64748b]">Response Time</div>
+                <div className="text-[13px] font-extrabold text-[#0f172a]">
                   {garage.responseMins} mins
                 </div>
               </div>
             </div>
 
             {/* Vehicle Details */}
-            <div className="flex gap-3.5 items-start p-3.5 rounded-[16px] border border-[#eef3ff] bg-[#fcfdff]">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f0f4ff] text-[#1a56db]">
+            <div className="flex gap-3.5 items-start py-1 border-t border-[#f1f5f9] pt-4 sm:pt-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e2eefd] text-[#1a56db]">
                 <CarFront className="h-5 w-5" />
               </div>
               <div className="space-y-0.5">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8a99ad]">Vehicle</div>
-                <div className="text-[13px] font-extrabold text-[#17307a]">Honda City</div>
-                <div className="text-[11px] font-semibold text-[#536891]">TS07 AB 1234 • Petrol • 2018</div>
+                <div className="text-[11.5px] font-semibold text-[#64748b]">Vehicle</div>
+                <div className="text-[13px] font-extrabold text-[#0f172a]">Honda City</div>
+                <div className="text-[11px] font-semibold text-[#64748b]">TS07 AB 1234 • Petrol • 2018</div>
               </div>
             </div>
 
             {/* Payment Mode details */}
-            <div className="flex gap-3.5 items-start p-3.5 rounded-[16px] border border-[#eef3ff] bg-[#fcfdff]">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f0f4ff] text-[#1a56db]">
+            <div className="flex gap-3.5 items-start py-1 border-t border-[#f1f5f9] pt-4 sm:pt-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e2eefd] text-[#1a56db]">
                 <ShieldCheck className="h-5 w-5" />
               </div>
-              <div className="space-y-1">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-[#8a99ad]">Payment Mode</div>
-                <div className="text-[13px] font-extrabold text-[#17307a]">Pay after service</div>
-                <span className="inline-block rounded-full bg-[#eefbf3] px-2.5 py-1 text-[9.5px] font-bold text-[#228453]">
-                  No upfront payment
-                </span>
+              <div className="space-y-0.5">
+                <div className="text-[11.5px] font-semibold text-[#64748b]">Payment Mode</div>
+                <div className="text-[13px] font-extrabold text-[#0f172a]">Pay after service</div>
+                <div className="pt-0.5">
+                  <span className="inline-block rounded-[6px] bg-[#eefbf3] px-2 py-0.5 text-[10px] font-bold text-[#228453]">
+                    No upfront payment
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -221,6 +253,7 @@ export function BookingConfirmed({
           <div className="relative flex flex-col md:flex-row justify-between gap-6 md:gap-4 md:items-start">
             {steps.map((step, idx) => {
               const StepIcon = step.icon;
+              const isFirstStep = idx === 0;
               return (
                 <div key={idx} className="flex flex-row md:flex-col items-start md:items-center text-left md:text-center flex-1 min-w-0 gap-4 md:gap-3 relative">
                   {/* Decorative horizontal dashed link lines between steps */}
@@ -232,16 +265,16 @@ export function BookingConfirmed({
                   <div
                     className={cn(
                       'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 transition-all',
-                      step.active
-                        ? 'border-[#1a56db] bg-[#f0f4ff] text-[#1a56db] shadow-[0_0_12px_rgba(26,86,219,0.15)]'
-                        : 'border-[#cbd4e6] bg-white text-[#8a99ad]'
+                      isFirstStep
+                        ? 'border-[#d3eedc] bg-[#eefbf3] text-[#228453] shadow-[0_0_12px_rgba(34,197,94,0.15)]'
+                        : 'border-[#dbe6ff] bg-[#f0f4ff] text-[#1a56db]'
                     )}
                   >
                     <StepIcon className="h-4.5 w-4.5" />
                   </div>
                   
                   <div className="space-y-0.5 max-w-[140px] md:mx-auto">
-                    <h4 className={cn('text-[12px] font-bold', step.active ? 'text-[#1a56db]' : 'text-[#17307a]')}>
+                    <h4 className={cn('text-[12px] font-bold', isFirstStep ? 'text-[#228453]' : 'text-[#17307a]')}>
                       {step.title}
                     </h4>
                     <p className="text-[10px] font-semibold leading-normal text-[#6b7da5]">
@@ -441,6 +474,7 @@ export function BookingConfirmed({
         </Card>
       </div>
     </div>
+  </div>
   );
 }
 

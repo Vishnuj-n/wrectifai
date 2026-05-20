@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { FeatureComingSoonPage } from '@/pages/feature-coming-soon/feature-coming-soon-page';
 import { GaragesPage } from '@/pages/garages/garages-page';
+import { AIDiagnosePage } from '@/pages/ai-diagnose/ai-diagnose-page';
 import { navItems } from '@/components/home/data';
 
 const featurePageCopy: Record<string, string> = {
@@ -50,6 +51,10 @@ export default async function FeaturePage({
 
   if (slug === 'garages') {
     return <GaragesPage />;
+  }
+
+  if (slug === 'ai-diagnose') {
+    return <AIDiagnosePage />;
   }
 
   return (

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import {
-  CheckCircle2,
+  BadgeCheck,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -356,7 +356,7 @@ function FilterMenu({
               )}
             >
               <span>{option.label}</span>
-              {option.value === value ? <CheckCircle2 className="h-4 w-4 fill-[#1a56db] text-[#1a56db]" /> : null}
+              {option.value === value ? <BadgeCheck className="h-4 w-4 fill-[#1a56db] text-white" /> : null}
             </button>
           ))}
         </div>
@@ -411,7 +411,7 @@ function GarageCard({
       <div className="p-4">
         <div className="flex items-center gap-2">
           <h3 className="text-[14.5px] font-bold tracking-[-0.03em] text-[#17307a]">{name}</h3>
-          {verified ? <CheckCircle2 className="h-4 w-4 fill-[#1a56db] text-[#1a56db]" /> : null}
+          {verified ? <BadgeCheck className="h-4 w-4 fill-[#1a56db] text-white" /> : null}
         </div>
 
         <div className="mt-2 flex items-center gap-3 text-[11px] text-[#6173a1]">
@@ -661,7 +661,7 @@ function GaragesContent() {
                     )}
                   >
                     <span>{option.label}</span>
-                    {option.value === sortBy ? <CheckCircle2 className="h-4 w-4 fill-[#1a56db] text-[#1a56db]" /> : null}
+                    {option.value === sortBy ? <BadgeCheck className="h-4 w-4 fill-[#1a56db] text-white" /> : null}
                   </button>
                 ))}
               </div>
