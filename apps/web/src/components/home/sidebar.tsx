@@ -64,7 +64,7 @@ export function Sidebar({
                 width={1536}
                 height={1024}
                 priority
-                className="absolute top-[-41px] left-[0px] h-[165px] w-auto max-w-none object-contain"
+                className="absolute top-[-48px] left-[05px] h-[160px] w-auto max-w-none object-contain"
               />
             </div>
           )}

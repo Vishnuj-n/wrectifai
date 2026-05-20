@@ -314,44 +314,9 @@ export function BookingConfirmed({
               </div>
             </div>
 
-            {/* Gorgeous SVG illustration of car and shield */}
-            <div className="relative w-[180px] h-[90px] shrink-0 self-center sm:self-auto overflow-hidden">
-              <svg className="w-full h-full" viewBox="0 0 180 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Soft blue accent backdrop glowing spots */}
-                <circle cx="120" cy="50" r="36" fill="#eff5ff" />
-                <circle cx="70" cy="65" r="22" fill="#f0fdf4" />
-                
-                {/* SVG Car Graphic representation */}
-                <g transform="translate(10, 15)">
-                  {/* Car Shadow */}
-                  <ellipse cx="78" cy="62" rx="66" ry="7" fill="#1e3a8a" fillOpacity="0.08" />
-                  
-                  {/* Car Body Base */}
-                  <path d="M12 48C12 48 18 42 26 38C34 34 68 34 78 34C88 34 116 36 126 44C136 52 138 58 138 58H10C10 58 10 52 12 48Z" fill="#2563eb" />
-                  <path d="M26 38L38 22H94L110 38H26Z" fill="#1d4ed8" />
-                  
-                  {/* Windows */}
-                  <path d="M42 24H64V36H32L42 24Z" fill="#eff6ff" />
-                  <path d="M68 24H88L98 36H68V24Z" fill="#eff6ff" />
-                  
-                  {/* Wheel arches & Wheels */}
-                  <circle cx="34" cy="56" r="13" fill="#1e293b" />
-                  <circle cx="34" cy="56" r="6" fill="#94a3b8" />
-                  <circle cx="106" cy="56" r="13" fill="#1e293b" />
-                  <circle cx="106" cy="56" r="6" fill="#94a3b8" />
-                  
-                  {/* Headlights & Tail lights */}
-                  <polygon points="138,50 134,46 132,54" fill="#fbbf24" />
-                  <rect x="10" y="44" width="4" height="6" rx="2" fill="#ef4444" />
-                </g>
-                
-                {/* Floating Shield Check graphic for protection */}
-                <g transform="translate(132, 28)">
-                  <circle cx="20" cy="20" r="18" fill="white" filter="drop-shadow(0px 4px 10px rgba(30,58,138,0.12))" />
-                  <path d="M20 9C20 9 27 12 27 16C27 23 20 28 20 28C20 28 13 23 13 16C13 12 20 9 20 9Z" fill="#10b981" />
-                  <path d="M17 18.5L19 20.5L23 15.5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                </g>
-              </svg>
+            {/* Support illustration */}
+            <div className="relative w-[180px] h-[90px] shrink-0 self-center sm:self-auto overflow-hidden flex items-center justify-center">
+              <img src="/assets/Car_Help.png" alt="Need Help" className="w-full h-full object-contain mix-blend-multiply" />
             </div>
           </div>
         </Card>
