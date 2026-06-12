@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import {
   Bot,
@@ -25,6 +26,16 @@ import {
   Bomb,
   Settings,
   Contact,
+  ArrowLeft,
+  PenLine,
+  PhoneCall,
+  Wrench,
+  CircleAlert,
+  Info,
+  Headset,
+  BadgeCheck,
+  Shield,
+  CarFront,
 } from 'lucide-react';
 import { DashboardShell } from '@/components/home/dashboard-shell';
 import { TopNavbar } from '@/components/home/top-navbar';
@@ -98,6 +109,125 @@ const footerFeatures = [
   },
 ];
 
+const resultIssues = [
+  {
+    id: 'wheel-balance',
+    title: 'Wheel Balancing Issue',
+    badge: 'High Match',
+    badgeClass: 'bg-[#ffe8ea] text-[#ff4f68]',
+    description:
+      'Unbalanced wheels can cause vibration in the steering wheel, especially at higher speeds.',
+    match: 85,
+    risks: ['Uneven tyre wear', 'Suspension damage'],
+    estimatedCost: '₹1,500 - ₹2,500',
+    imageSrc: '/assets/tyres_and_wheels.png',
+  },
+  {
+    id: 'wheel-alignment',
+    title: 'Wheel Alignment Issue',
+    badge: 'Medium Match',
+    badgeClass: 'bg-[#fff2df] text-[#f59a23]',
+    description:
+      'Improper alignment can cause vibrations and pulling to one side.',
+    match: 65,
+    risks: ['Uneven tyre wear', 'Handling issues'],
+    estimatedCost: '₹800 - ₹1,500',
+    imageSrc: '/assets/Tyre_rotataion.png',
+  },
+  {
+    id: 'brake-disc',
+    title: 'Brake Disc Warped',
+    badge: 'Low Match',
+    badgeClass: 'bg-[#edf2ff] text-[#4974ff]',
+    description:
+      'Warped brake discs can cause vibration in the steering wheel while braking.',
+    match: 40,
+    risks: ['Reduced braking performance', 'Safety risk'],
+    estimatedCost: '₹2,500 - ₹4,500',
+    imageSrc: '/assets/brake_rotor.png',
+  },
+];
+
+const resultSummaryItems = [
+  {
+    title: 'Top Concern',
+    heading: 'Wheel Balancing Issue',
+    body: 'Unbalanced wheels are the most likely cause of the vibration.',
+    pill: 'High Priority',
+    pillClass: 'bg-[#ffe9ec] text-[#ff5a63]',
+    icon: CircleAlert,
+    iconClass: 'bg-[#fff1f1] text-[#ff5d67]',
+  },
+  {
+    title: 'Other Possible Issues',
+    heading: 'Wheel Alignment, Brake Disc Warped',
+    body: 'These issues may also contribute to the problem.',
+    pill: 'Medium Priority',
+    pillClass: 'bg-[#fff1de] text-[#f39b20]',
+    icon: Wrench,
+    iconClass: 'bg-[#fff5e8] text-[#f39b20]',
+  },
+  {
+    title: 'What This Means',
+    heading: 'Address this issue early',
+    body: 'Addressing these issues early can prevent further damage and ensure safety.',
+    pill: 'Important',
+    pillClass: 'bg-[#e8f8eb] text-[#23a249]',
+    icon: Info,
+    iconClass: 'bg-[#edf2ff] text-[#4974ff]',
+  },
+];
+
+const resultNextSteps = [
+  {
+    step: '01',
+    title: 'Get Quotes',
+    body: 'Receive quotes from trusted garages',
+    meta: 'Within 30 mins',
+  },
+  {
+    step: '02',
+    title: 'Compare & Choose',
+    body: 'Compare prices, ratings & reviews',
+    meta: 'At your convenience',
+  },
+  {
+    step: '03',
+    title: 'Book Appointment',
+    body: 'Choose time slot & book',
+    meta: 'Instant confirmation',
+  },
+  {
+    step: '04',
+    title: 'Get Service',
+    body: 'Visit garage & get your car fixed',
+    meta: 'Quality service',
+  },
+];
+
+const resultTrustItems = [
+  {
+    title: '100% Free',
+    description: 'No hidden charges',
+    icon: Shield,
+  },
+  {
+    title: 'Trusted Garages Only',
+    description: 'Verified & rated garages',
+    icon: BadgeCheck,
+  },
+  {
+    title: 'Best Price Guarantee',
+    description: 'Get the best deals',
+    icon: Gauge,
+  },
+  {
+    title: 'Secure & Private',
+    description: 'Your data is safe with us',
+    icon: Lock,
+  },
+];
+
 function ProgressRing({ progress }: { progress: number }) {
   const radius = 31;
   const circumference = 2 * Math.PI * radius;
@@ -141,7 +271,760 @@ function AssistantPill() {
   );
 }
 
+function DiagnoseAnalyzingScreen() {
+  const analyzingSteps = [
+    {
+      title: 'Analyzing issue',
+      description: 'Reading your input',
+      icon: Sparkles,
+    },
+    {
+      title: 'Checking systems',
+      description: 'Scanning possible causes',
+      icon: Settings,
+    },
+    {
+      title: 'Matching solutions',
+      description: 'Finding best fixes',
+      icon: Gauge,
+    },
+    {
+      title: 'Preparing results',
+      description: 'Almost there...',
+      icon: ShieldCheck,
+    },
+  ];
+
+  return (
+    <div className="px-4 pb-5 pt-2 md:px-7">
+      <div className="overflow-hidden rounded-[24px] border border-[#e8eefc] bg-[radial-gradient(circle_at_top,#f7f9ff_0%,#ffffff_60%)] px-4 py-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] md:px-8 md:py-10">
+        <div className="relative mx-auto flex max-w-[760px] flex-col items-center text-center">
+          <div className="pointer-events-none absolute left-1/2 top-[84px] hidden h-px w-[72%] -translate-x-1/2 bg-[linear-gradient(90deg,rgba(72,117,255,0)_0%,rgba(72,117,255,0.2)_18%,rgba(72,117,255,0.42)_50%,rgba(72,117,255,0.2)_82%,rgba(72,117,255,0)_100%)] md:block" />
+
+          <div className="relative flex h-[180px] w-[180px] items-center justify-center">
+            <div className="absolute inset-[10px] rounded-full border-[6px] border-[#edf3ff]" />
+            <div className="absolute inset-0 rounded-full border-[6px] border-[#2f67ff] border-t-transparent border-l-transparent animate-spin [animation-duration:2.4s]" />
+            <div className="absolute inset-[28px] rounded-full border border-[#dae6ff] bg-white/70 shadow-[0_24px_48px_rgba(39,73,154,0.08)] backdrop-blur-sm" />
+            <div className="absolute inset-[42px] rounded-full bg-[radial-gradient(circle_at_30%_30%,#275dff_0%,#143fb8_58%,#0d2f8f_100%)] shadow-[0_20px_40px_rgba(24,69,198,0.28)]" />
+            <div className="relative flex h-[92px] w-[92px] items-center justify-center rounded-full border border-white/25 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.18),rgba(255,255,255,0.04))] text-[42px] font-bold tracking-[-0.04em] text-white">
+              AI
+            </div>
+          </div>
+
+          <h2 className="mt-3 text-[28px] font-semibold tracking-[-0.04em] text-[#1f43a8]">
+            Analyzing your issue...
+          </h2>
+          <p className="mt-3 max-w-[520px] text-[15px] leading-7 text-[#46619d]">
+            Our AI is checking possible causes and preparing the best solutions for you.
+          </p>
+
+          <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#e3ebff] bg-white/90 px-4 py-2 text-[13px] font-medium text-[#4b63a0] shadow-[0_10px_26px_rgba(39,73,154,0.06)]">
+            <Clock3 className="h-4 w-4 text-[#416cff]" />
+            <span>This may take a few seconds, please wait.</span>
+          </div>
+
+          <div className="mt-9 grid w-full gap-4 md:grid-cols-4">
+            {analyzingSteps.map(({ title, description, icon: Icon }, index) => (
+              <div key={title} className="relative flex flex-col items-center text-center">
+                {index < analyzingSteps.length - 1 ? (
+                  <div className="absolute left-[calc(50%+28px)] top-[22px] hidden h-px w-[calc(100%-56px)] bg-[#d9e4ff] md:block" />
+                ) : null}
+                <div className="relative z-10 flex h-11 w-11 items-center justify-center rounded-full border border-[#dce7ff] bg-white text-[#3263f4] shadow-[0_10px_24px_rgba(39,73,154,0.08)]">
+                  <Icon className={cn('h-5 w-5', index === 0 ? 'animate-pulse' : '')} />
+                </div>
+                <div className="mt-3 text-[13px] font-semibold text-[#21419a]">{title}</div>
+                <div className="mt-1 text-[12px] text-[#647aa8]">{description}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 w-full rounded-[18px] border border-[#e8eefc] bg-white/90 px-4 py-4 shadow-[0_10px_28px_rgba(39,73,154,0.04)]">
+            <div className="flex items-center justify-center gap-2 text-[13px] font-medium text-[#2d59d3]">
+              <ShieldCheck className="h-4.5 w-4.5" />
+              <span>AI scans thousands of data points to provide accurate diagnosis and recommendations.</span>
+            </div>
+          </div>
+
+          <div className="mt-6 flex items-center justify-center gap-2 text-[12px] text-[#6c7fa8]">
+            <Lock className="h-3.5 w-3.5" />
+            <span>100% Secure</span>
+            <span>•</span>
+            <span>Your data is safe with us</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfidenceGauge({ value }: { value: number }) {
+  const radius = 52;
+  const circumference = Math.PI * radius;
+  const dashOffset = circumference - (circumference * value) / 100;
+
+  return (
+    <div className="relative mx-auto h-[126px] w-[190px] overflow-hidden">
+      <svg className="absolute inset-0" viewBox="0 0 190 126" aria-hidden="true">
+        <path
+          d="M 31 95 A 64 64 0 0 1 159 95"
+          fill="none"
+          stroke="#e7edff"
+          strokeWidth="13"
+          strokeLinecap="round"
+        />
+        <path
+          d="M 31 95 A 64 64 0 0 1 159 95"
+          fill="none"
+          stroke="url(#confidence-gradient)"
+          strokeWidth="13"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+        />
+        <defs>
+          <linearGradient id="confidence-gradient" x1="0%" x2="100%">
+            <stop offset="0%" stopColor="#1533d5" />
+            <stop offset="100%" stopColor="#5a8bff" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <div className="absolute inset-x-0 top-[38px] text-center">
+        <div className="text-[44px] font-semibold tracking-[-0.05em] text-[#1d37b9]">{value}%</div>
+        <div className="mt-2 text-[18px] font-semibold text-[#2aaa4c]">High Confidence</div>
+      </div>
+    </div>
+  );
+}
+
+type DiagnoseResultsScreenProps = {
+  answers: {
+    occursAt: string;
+    wheelShakes: string;
+    started: string;
+  };
+  selectedIssues: string[];
+  detailsText: string;
+  onDetailsTextChange: (value: string) => void;
+  onToggleIssue: (issueId: string) => void;
+  onEditIssue: () => void;
+  onRequestQuotes: () => void;
+};
+
+function DiagnoseResultsScreen({
+  answers,
+  selectedIssues,
+  detailsText,
+  onDetailsTextChange,
+  onToggleIssue,
+  onEditIssue,
+  onRequestQuotes,
+}: DiagnoseResultsScreenProps) {
+  const selectedCount = selectedIssues.length;
+  const detailsTabs = ['Text Details', 'Photo', 'Video', 'Audio'];
+
+  return (
+    <div className="space-y-5 pb-6">
+      <div className="space-y-2">
+        <Link
+          href="/home"
+          className="inline-flex items-center gap-2 text-[13px] font-medium text-[#2f54d1] transition-colors hover:text-[#163cb3]"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>Back to Home</span>
+        </Link>
+        <div>
+          <h1 className="text-[37px] font-semibold tracking-[-0.045em] text-[#183db1]">
+            AI Diagnoses Results
+          </h1>
+          <p className="mt-1 text-[16px] text-[#6176ac]">Here&apos;s what our AI found based on your input</p>
+        </div>
+      </div>
+
+      <Card className="overflow-hidden rounded-[22px] border-[#e6ecfb] bg-white p-0 shadow-[0_14px_32px_rgba(37,73,153,0.04)]">
+        <div className="grid md:grid-cols-3">
+          {[
+            {
+              id: '1',
+              title: 'Describe Issue',
+              description: "Tell us what's wrong",
+              complete: true,
+              active: false,
+            },
+            {
+              id: '2',
+              title: 'AI Analysis',
+              description: 'AI is analyzing the issue',
+              complete: true,
+              active: true,
+            },
+            {
+              id: '3',
+              title: 'Results',
+              description: 'Solutions & recommendations',
+              complete: false,
+              active: false,
+            },
+          ].map((step, index) => (
+            <div
+              key={step.id}
+              className={cn(
+                'relative flex items-center gap-4 px-6 py-6',
+                index < 2 ? 'border-b border-[#eef2ff] md:border-b-0 md:border-r' : '',
+                index < 2 ? 'border-[#eef2ff]' : ''
+              )}
+            >
+              {index < 2 ? (
+                <div className="pointer-events-none absolute right-[-23px] top-0 z-10 hidden h-full w-[46px] bg-white md:block [clip-path:polygon(0_0,100%_50%,0_100%,18%_100%,72%_50%,18%_0)]" />
+              ) : null}
+              <div
+                className={cn(
+                  'relative z-20 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[16px] font-semibold',
+                  step.complete && !step.active
+                    ? 'bg-[#1ea84a] text-white'
+                    : step.active
+                      ? 'bg-[#2350f6] text-white'
+                      : 'bg-[#eef1fb] text-[#9da8c6]'
+                )}
+              >
+                {step.complete && !step.active ? <Check className="h-5 w-5 stroke-[3]" /> : step.id}
+              </div>
+              <div className="relative z-20">
+                <div className={cn('text-[14px] font-semibold', step.active ? 'text-[#1e46ce]' : 'text-[#1f3275]')}>
+                  {step.title}
+                </div>
+                <div className="mt-1 text-[13px] text-[#7384af]">{step.description}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="rounded-[22px] border-[#e6ecfb] bg-white px-6 py-5 shadow-[0_12px_28px_rgba(37,73,153,0.04)]">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="text-[18px] font-semibold text-[#1f3da4]">Your Issue</div>
+            <p className="mt-3 text-[14px] leading-7 text-[#3d568f]">
+              Car is shaking at 70-80 kmph and I can feel vibration in the steering wheel.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onEditIssue}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-[12px] border border-[#dde6ff] px-5 text-[14px] font-medium text-[#2451e5] transition-colors hover:bg-[#f8fbff]"
+          >
+            <PenLine className="h-4 w-4" />
+            <span>Edit Issue</span>
+          </button>
+        </div>
+      </Card>
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_242px]">
+        <div className="space-y-5">
+          <Card className="rounded-[22px] border-[#e6ecfb] bg-white px-6 py-6 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-[18px] font-semibold text-[#183db1]">AI Diagnosis Summary</h2>
+              <span className="rounded-full bg-[#e8f8eb] px-3 py-1 text-[11px] font-semibold text-[#25a24a]">
+                Analysis completed in 8.4s
+              </span>
+            </div>
+
+            <div className="mt-6 grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+              <div className="flex flex-col items-center rounded-[18px] bg-[radial-gradient(circle_at_top,#f8faff_0%,#ffffff_70%)] px-4 py-5 text-center">
+                <Image
+                  src="/assets/mega car.png"
+                  alt="Car"
+                  width={230}
+                  height={132}
+                  className="h-auto w-[190px] object-contain"
+                />
+                <div className="mt-3 text-[15px] font-semibold text-[#26408d]">Honda City (TS07 AB 1234)</div>
+                <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-2 text-left text-[12px] text-[#6a7ca9]">
+                  <span>Petrol</span>
+                  <span>2018</span>
+                  <span className="col-span-2">KM Driven: 58,320 km</span>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-center text-[13px] text-[#687ba8] lg:text-left">
+                  Our AI analysis indicates potential issues that need immediate attention.
+                </p>
+                <div className="mt-6 space-y-5">
+                  {resultSummaryItems.map(({ title, heading, body, pill, pillClass, icon: Icon, iconClass }) => (
+                    <div key={title} className="flex items-start gap-4">
+                      <span className={cn('mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full', iconClass)}>
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[12px] text-[#7b89b0]">{title}</div>
+                        <div className="mt-1 flex flex-wrap items-center gap-3">
+                          <div className="text-[16px] font-semibold text-[#2142a2]">{heading}</div>
+                          <span className={cn('rounded-full px-2.5 py-1 text-[11px] font-semibold', pillClass)}>
+                            {pill}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-[13px] leading-6 text-[#60729d]">{body}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="rounded-[22px] border-[#e6ecfb] bg-white px-6 py-6 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-[18px] font-semibold text-[#183db1]">Top Possible Issues</h2>
+                <span className="text-[12px] text-[#7a88af]">(Select one or more to request quotes)</span>
+              </div>
+              <button type="button" className="inline-flex items-center gap-2 text-[12px] font-medium text-[#2854e9]">
+                <Info className="h-3.5 w-3.5" />
+                <span>Understand Results</span>
+              </button>
+            </div>
+
+            <div className="mt-5 divide-y divide-[#edf1fb]">
+              {resultIssues.map((issue, index) => {
+                const checked = selectedIssues.includes(issue.id);
+                return (
+                  <div key={issue.id} className="grid gap-4 py-5 md:grid-cols-[26px_74px_minmax(0,1fr)_92px_112px] md:items-center">
+                    <label className="flex items-start justify-center pt-1">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => onToggleIssue(issue.id)}
+                        className="h-4.5 w-4.5 rounded border-[#cdd9fb] text-[#2551f6] focus:ring-[#2551f6]"
+                      />
+                    </label>
+                    <div className="flex justify-center md:justify-start">
+                      <Image
+                        src={issue.imageSrc}
+                        alt={issue.title}
+                        width={72}
+                        height={72}
+                        className="h-[64px] w-[64px] object-contain"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="text-[17px] font-semibold text-[#183aa7]">
+                          {index + 1}. {issue.title}
+                        </div>
+                        <span className={cn('rounded-full px-2.5 py-1 text-[11px] font-semibold', issue.badgeClass)}>
+                          {issue.badge}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-[13px] leading-6 text-[#61729f]">{issue.description}</p>
+                      <div className="mt-3 text-[12px] font-semibold text-[#35508d]">Risk if ignored:</div>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-5 gap-y-1 text-[12px] text-[#6b7ba7]">
+                        {issue.risks.map((risk) => (
+                          <span key={risk}>• {risk}</span>
+                        ))}
+                      </div>
+                      <div className="mt-3 text-[13px] text-[#5d6f9a]">
+                        <span className="font-semibold text-[#35508d]">Estimated Cost:</span>{' '}
+                        <span>{issue.estimatedCost}</span>
+                      </div>
+                    </div>
+                    <div className="text-left md:text-center">
+                      <div className="text-[40px] font-semibold tracking-[-0.05em] text-[#173ab3]">{issue.match}%</div>
+                      <div className="text-[13px] text-[#7382ab]">Match</div>
+                    </div>
+                    <div className="flex items-center md:justify-end">
+                      <button
+                        type="button"
+                        className="inline-flex h-10 items-center justify-center rounded-[12px] border border-[#dde6ff] px-4 text-[13px] font-medium text-[#2853e8] transition-colors hover:bg-[#f8fbff]"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
+          <Card className="rounded-[22px] border-[#e6ecfb] bg-white px-6 py-6 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
+            <div>
+              <h2 className="text-[18px] font-semibold text-[#183db1]">
+                Provide more details for selected issue(s) <span className="text-[13px] font-medium text-[#8090b7]">(Optional)</span>
+              </h2>
+              <p className="mt-2 text-[13px] text-[#6f7fa9]">
+                The more details you provide, the more accurate quotes you&apos;ll receive.
+              </p>
+            </div>
+
+            <div className="mt-5 flex flex-wrap items-center gap-8 border-b border-[#eaf0fd] px-2">
+              {detailsTabs.map((tab, index) => (
+                <button
+                  key={tab}
+                  type="button"
+                  className={cn(
+                    'border-b-2 pb-3 text-[13px] font-medium transition-colors',
+                    index === 0 ? 'border-[#3d68ff] text-[#244fe2]' : 'border-transparent text-[#8090b7]'
+                  )}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-4 rounded-[16px] border border-[#e8eefc] bg-[#fcfdff] px-4 py-4">
+              <textarea
+                value={detailsText}
+                onChange={(event) => onDetailsTextChange(event.target.value)}
+                placeholder="Add more details about the issue..."
+                className="min-h-[96px] w-full resize-none bg-transparent text-[13px] leading-6 text-[#2b4278] outline-none placeholder:text-[#a5b1cb]"
+              />
+              <div className="text-right text-[11px] text-[#9babca]">{detailsText.length}/1000</div>
+            </div>
+          </Card>
+        </div>
+
+        <div className="space-y-5">
+          <Card className="rounded-[22px] border-[#e6ecfb] bg-white px-4 py-6 text-center shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
+            <h3 className="text-[16px] font-semibold text-[#183db1]">Diagnosis Confidence</h3>
+            <div className="mt-6">
+              <ConfidenceGauge value={92} />
+            </div>
+            <p className="mx-auto mt-4 max-w-[180px] text-[13px] leading-7 text-[#6a7ca9]">
+              Based on AI analysis of your issue description and thousands of similar cases.
+            </p>
+          </Card>
+
+          <Card className="rounded-[22px] border-[#ffe4e2] bg-[linear-gradient(180deg,#fff8f7_0%,#fffdfd_100%)] px-4 py-6 shadow-[0_12px_30px_rgba(255,102,102,0.06)]">
+            <h3 className="text-[16px] font-semibold text-[#ff4a43]">Need Immediate Help?</h3>
+            <p className="mt-3 text-[13px] leading-6 text-[#8f7480]">
+              Talk to our experts or get roadside assistance
+            </p>
+            <div className="mt-5 space-y-3">
+              <button
+                type="button"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-[12px] border border-[#dde6ff] bg-white text-[13px] font-medium text-[#2551e5]"
+              >
+                <PhoneCall className="h-4 w-4" />
+                <span>Call Support</span>
+              </button>
+              <button
+                type="button"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-[12px] border border-[#dde6ff] bg-white text-[13px] font-medium text-[#2551e5]"
+              >
+                <Headset className="h-4 w-4" />
+                <span>Roadside Assistance</span>
+              </button>
+            </div>
+            <div className="mt-4 inline-flex rounded-full bg-[#ffe8e7] px-3 py-1 text-[11px] font-semibold text-[#ff584d]">
+              24/7 Available
+            </div>
+          </Card>
+
+          <Card className="rounded-[22px] border-[#e6ecfb] bg-white px-4 py-6 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
+            <h3 className="text-[16px] font-semibold text-[#183db1]">Next Steps</h3>
+            <div className="mt-6 space-y-6">
+              {resultNextSteps.map((step) => (
+                <div key={step.step} className="flex gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f2f5ff] text-[12px] font-semibold text-[#3059e1]">
+                    {step.step}
+                  </div>
+                  <div>
+                    <div className="text-[14px] font-semibold text-[#2243a4]">{step.title}</div>
+                    <p className="mt-1 text-[12px] leading-5 text-[#6b7ca8]">{step.body}</p>
+                    <div className="mt-2 text-[11px] font-medium text-[#5b72b3]">◉ {step.meta}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      <Card className="rounded-[22px] border-[#e6ecfb] bg-[linear-gradient(180deg,#fbfcff_0%,#ffffff_100%)] px-6 py-5 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start gap-4">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#f2f5ff] text-[#365ff1]">
+              <ShieldCheck className="h-6 w-6" />
+            </span>
+            <div>
+              <div className="text-[21px] font-semibold tracking-[-0.03em] text-[#173cab]">
+                Ready to get the best quotes from trusted garages?
+              </div>
+              <p className="mt-2 text-[14px] text-[#61729f]">
+                Send your selected issues and compare the best offers.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-start gap-2 lg:items-end">
+            <button
+              type="button"
+              onClick={onRequestQuotes}
+              className="flex h-[56px] items-center justify-center gap-3 rounded-[14px] bg-[linear-gradient(90deg,#1a46e8_0%,#245cff_100%)] px-8 text-[18px] font-semibold text-white shadow-[0_18px_36px_rgba(37,82,235,0.22)] transition-transform hover:scale-[1.01]"
+            >
+              <Send className="h-5 w-5" />
+              <span>Request Quotes ({selectedCount})</span>
+            </button>
+            <div className="text-[12px] text-[#7f8eb5]">You will receive quotes within 30 mins</div>
+          </div>
+        </div>
+      </Card>
+
+      <div className="grid gap-4 rounded-[22px] border border-[#e6ecfb] bg-white px-6 py-5 shadow-[0_12px_30px_rgba(37,73,153,0.04)] md:grid-cols-2 xl:grid-cols-4">
+        {resultTrustItems.map(({ title, description, icon: Icon }) => (
+          <div key={title} className="flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f4f7ff] text-[#3158e1]">
+              <Icon className="h-5 w-5" />
+            </span>
+            <div>
+              <div className="text-[15px] font-semibold text-[#2243a3]">{title}</div>
+              <div className="mt-1 text-[13px] text-[#7586b0]">{description}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+type FindingQuotesScreenProps = {
+  selectedIssues: string[];
+  onBack: () => void;
+};
+
+function FindingQuotesScreen({ selectedIssues, onBack }: FindingQuotesScreenProps) {
+  const chosenIssues = resultIssues.filter((issue) => selectedIssues.includes(issue.id));
+
+  return (
+    <div className="space-y-5 pb-6">
+      <div>
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-[13px] font-medium text-[#2f54d1] transition-colors hover:text-[#163cb3]"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>Back to AI Diagnose Results</span>
+        </button>
+      </div>
+
+      <div className="rounded-[24px] px-4 py-4">
+        <div className="mx-auto max-w-[760px] text-center">
+          <h1 className="text-[35px] font-semibold tracking-[-0.05em] text-[#173cab]">
+            Finding the best garages for you...
+          </h1>
+          <p className="mt-2 text-[18px] text-[#4f65aa]">This will only take a few seconds</p>
+
+          <div className="relative mx-auto mt-8 h-[210px] w-[390px] max-w-full">
+            <div className="absolute inset-x-1/2 top-0 h-[124px] w-[124px] -translate-x-1/2 rounded-[26px] border border-[#cfe0ff] bg-[radial-gradient(circle_at_top,#ffffff_0%,#edf3ff_78%)] shadow-[0_16px_40px_rgba(44,92,255,0.12)]">
+              <div className="absolute inset-0 rounded-[26px] border border-[#edf3ff]" />
+              <div className="absolute inset-[13px] rounded-[18px] border-2 border-dashed border-[#b6cbff]" />
+              <div className="absolute inset-0 flex items-center justify-center text-[58px] font-semibold tracking-[-0.08em] text-[#2551ea]">
+                AI
+              </div>
+            </div>
+            <div className="absolute left-1/2 top-[92px] h-[95px] w-[320px] -translate-x-1/2 rounded-[999px] bg-[radial-gradient(ellipse_at_center,rgba(74,121,255,0.16)_0%,rgba(74,121,255,0)_72%)] blur-md" />
+            <div className="absolute left-1/2 top-[106px] -translate-x-1/2">
+              <Image
+                src="/assets/mega car.png"
+                alt="Car"
+                width={260}
+                height={110}
+                className="h-auto w-[250px] object-contain drop-shadow-[0_16px_24px_rgba(28,74,188,0.18)]"
+              />
+            </div>
+            <div className="pointer-events-none absolute inset-0 hidden md:block">
+              <div className="absolute left-[20px] top-[86px] h-px w-[98px] bg-[#d7e3ff]" />
+              <div className="absolute right-[20px] top-[86px] h-px w-[98px] bg-[#d7e3ff]" />
+              <div className="absolute left-[48px] top-[72px] h-2 w-2 rounded-full bg-[#bfd1ff]" />
+              <div className="absolute left-[82px] top-[120px] h-1.5 w-1.5 rounded-full bg-[#bfd1ff]" />
+              <div className="absolute right-[54px] top-[68px] h-2 w-2 rounded-full bg-[#bfd1ff]" />
+              <div className="absolute right-[86px] top-[124px] h-1.5 w-1.5 rounded-full bg-[#bfd1ff]" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Card className="rounded-[22px] border-[#e7edfd] bg-white px-5 py-0 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
+        <div className="grid md:grid-cols-4">
+          {[
+            { label: 'Analyzing your issue', complete: true, active: false },
+            { label: 'Finding nearby trusted garages', complete: true, active: false },
+            { label: 'Matching with best service providers', complete: false, active: true },
+            { label: 'Sending your request', complete: false, active: false },
+          ].map((step, index) => (
+            <div
+              key={step.label}
+              className={cn(
+                'flex items-center gap-4 px-5 py-7',
+                index < 3 ? 'border-b border-[#eef2ff] md:border-b-0 md:border-r md:border-[#eef2ff]' : ''
+              )}
+            >
+              <span
+                className={cn(
+                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2',
+                  step.complete
+                    ? 'border-[#17884f] bg-[#17884f] text-white'
+                    : step.active
+                      ? 'border-[#2351f6] bg-white text-[#2351f6]'
+                      : 'border-[#7d85ba] bg-white text-transparent'
+                )}
+              >
+                {step.complete ? <Check className="h-4 w-4 stroke-[3]" /> : <span className="h-3 w-3 rounded-full bg-current" />}
+              </span>
+              <div className={cn('text-[14px] font-medium', step.active ? 'text-[#1e46ce]' : 'text-[#213882]')}>
+                {step.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="rounded-[20px] border-[#e7edfd] bg-[linear-gradient(180deg,#fbfcff_0%,#ffffff_100%)] px-6 py-5 shadow-[0_12px_28px_rgba(37,73,153,0.04)]">
+        <div className="flex items-center justify-center gap-3 text-center text-[15px] font-medium text-[#1f46c7]">
+          <ShieldCheck className="h-5 w-5" />
+          <span>We share your request only with verified and trusted garages.</span>
+        </div>
+      </Card>
+
+      <div className="grid gap-5 xl:grid-cols-[254px_minmax(0,1fr)_390px]">
+        <Card className="rounded-[22px] border-[#e7edfd] bg-white px-5 py-5 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
+          <h3 className="text-[18px] font-semibold text-[#183db1]">Your Vehicle</h3>
+          <div className="mt-10 flex flex-col items-center text-center">
+            <span className="flex h-[92px] w-[92px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,#f5f8ff_0%,#edf2ff_100%)] text-[#244fe5] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
+              <CarFront className="h-11 w-11" />
+            </span>
+            <div className="mt-8 text-[18px] font-semibold tracking-[-0.03em] text-[#193daa]">Honda City (TS07 AB 1234)</div>
+            <div className="mt-5 flex items-center gap-4 text-[14px] text-[#6679a6]">
+              <span>Petrol</span>
+              <span className="h-1 w-1 rounded-full bg-[#8997bc]" />
+              <span>2018</span>
+            </div>
+            <div className="mt-4 text-[14px] text-[#546a9f]">KM Driven: 58,320 km</div>
+          </div>
+        </Card>
+
+        <Card className="rounded-[22px] border-[#e7edfd] bg-white px-5 py-5 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
+          <div className="flex items-center gap-3">
+            <h3 className="text-[18px] font-semibold text-[#183db1]">Your Selected Issues</h3>
+            <span className="text-[14px] text-[#6c80b0]">({chosenIssues.length} Selected)</span>
+          </div>
+          <div className="mt-5 divide-y divide-[#edf2fb]">
+            {chosenIssues.map((issue, index) => (
+              <div key={issue.id} className="grid gap-4 py-5 md:grid-cols-[76px_minmax(0,1fr)_92px] md:items-center">
+                <div className="flex justify-center md:justify-start">
+                  <Image
+                    src={issue.imageSrc}
+                    alt={issue.title}
+                    width={72}
+                    height={72}
+                    className="h-[66px] w-[66px] object-contain"
+                  />
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="text-[16px] font-semibold text-[#183aa7]">
+                      {index + 1}. {issue.title}
+                    </div>
+                    <span className={cn('rounded-full px-2.5 py-1 text-[11px] font-semibold', issue.badgeClass)}>
+                      {issue.badge}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[13px] leading-7 text-[#61729f]">{issue.description}</p>
+                </div>
+                <div className="text-left md:text-center">
+                  <div className="text-[40px] font-semibold tracking-[-0.05em] text-[#173ab3]">{issue.match}%</div>
+                  <div className="text-[13px] text-[#7382ab]">Match</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="rounded-[22px] border-[#e7edfd] bg-white px-6 py-5 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
+          <h3 className="text-[18px] font-semibold text-[#183db1]">What&apos;s Happening?</h3>
+          <div className="mt-8 space-y-7">
+            {[
+              {
+                title: 'Analyzing your issue',
+                status: 'Completed',
+                complete: true,
+                active: false,
+                pending: false,
+              },
+              {
+                title: 'Finding nearby trusted garages',
+                status: 'Completed',
+                complete: true,
+                active: false,
+                pending: false,
+              },
+              {
+                title: 'Matching with best service providers',
+                status: 'In progress',
+                complete: false,
+                active: true,
+                pending: false,
+              },
+              {
+                title: 'Sending your request',
+                status: 'Pending',
+                complete: false,
+                active: false,
+                pending: true,
+              },
+            ].map((step, index, array) => (
+              <div key={step.title} className="relative flex gap-4">
+                {index < array.length - 1 ? (
+                  <div className="absolute left-[13px] top-[32px] h-[34px] w-px border-l border-dashed border-[#d8e4ff]" />
+                ) : null}
+                <span
+                  className={cn(
+                    'relative z-10 mt-0.5 flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full border-2',
+                    step.complete
+                      ? 'border-[#17884f] bg-[#17884f] text-white'
+                      : step.active
+                        ? 'border-[#2351f6] bg-white text-[#2351f6]'
+                        : 'border-[#707ab3] bg-white text-transparent'
+                  )}
+                >
+                  {step.complete ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : <span className="h-2.5 w-2.5 rounded-full bg-current" />}
+                </span>
+                <div>
+                  <div className="text-[16px] font-medium text-[#183aa7]">{step.title}</div>
+                  <div
+                    className={cn(
+                      'mt-2 text-[14px] font-medium',
+                      step.complete ? 'text-[#6477a6]' : step.active ? 'text-[#2351f6]' : 'text-[#7f8db3]'
+                    )}
+                  >
+                    {step.status}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 rounded-[22px] border border-[#e6ecfb] bg-white px-6 py-5 shadow-[0_12px_30px_rgba(37,73,153,0.04)] md:grid-cols-2 xl:grid-cols-4">
+        {resultTrustItems.map(({ title, description, icon: Icon }) => (
+          <div key={title} className="flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f4f7ff] text-[#3158e1]">
+              <Icon className="h-5 w-5" />
+            </span>
+            <div>
+              <div className="text-[15px] font-semibold text-[#2243a3]">{title}</div>
+              <div className="mt-1 text-[13px] text-[#7586b0]">{description}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function AIDiagnosePage() {
+  const router = useRouter();
   const [messages, setMessages] = useState<ChatEntry[]>([
     {
       id: 'message-1',
@@ -173,7 +1056,11 @@ export function AIDiagnosePage() {
   const [typingText, setTypingText] = useState('WrectifAI is thinking...');
   const [activeStepId, setActiveStepId] = useState('2'); // '1' = Describe, '2' = Analyzing, '3' = Completed
   const [isDiagnosed, setIsDiagnosed] = useState(false);
+  const [isFindingQuotes, setIsFindingQuotes] = useState(false);
+  const [isAnalyzingResults, setIsAnalyzingResults] = useState(false);
   const [typedMessage, setTypedMessage] = useState('');
+  const [selectedIssues, setSelectedIssues] = useState<string[]>(['wheel-balance', 'wheel-alignment']);
+  const [detailsText, setDetailsText] = useState('');
   
   const pageRootRef = useRef<HTMLDivElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -207,7 +1094,50 @@ export function AIDiagnosePage() {
     chatScroller.scrollTo({ top: chatScroller.scrollHeight, behavior: 'smooth' });
   }, [messages, isTyping]);
 
+  const resetDiagnoseFlow = () => {
+    setMessages([
+      {
+        id: 'message-1',
+        sender: 'assistant',
+        time: '10:30 AM',
+        kind: 'message',
+        text: "Thanks! Let's narrow this down ✨",
+        highlighted: true,
+      },
+      {
+        id: 'question-1',
+        sender: 'assistant',
+        time: '10:30 AM',
+        kind: 'question',
+        question: 'When do you feel the vibration?',
+        options: ['Only while braking', 'While accelerating', 'At constant speed', 'Always'],
+        selected: '',
+      },
+    ]);
+    setAnswers({ occursAt: '-', wheelShakes: '-', started: '-' });
+    setProgress(60);
+    setIsTyping(false);
+    setTypingText('WrectifAI is thinking...');
+    setActiveStepId('2');
+    setIsDiagnosed(false);
+    setIsFindingQuotes(false);
+    setIsAnalyzingResults(false);
+    setTypedMessage('');
+    setSelectedIssues(['wheel-balance', 'wheel-alignment']);
+    setDetailsText('');
+  };
+
+  const toggleSelectedIssue = (issueId: string) => {
+    setSelectedIssues((current) =>
+      current.includes(issueId)
+        ? current.filter((item) => item !== issueId)
+        : [...current, issueId]
+    );
+  };
+
   const handleSelectOption = (questionId: string, option: string) => {
+    if (isAnalyzingResults) return;
+
     // Prevent re-selecting options once chosen
     const question = messages.find(m => m.id === questionId);
     if (question && question.kind === 'question' && question.selected) return;
@@ -279,15 +1209,13 @@ export function AIDiagnosePage() {
     } else if (questionId === 'question-3') {
       setAnswers((prev) => ({ ...prev, started: option }));
       setProgress(95);
-      setIsTyping(true);
-      setTypingText('Analyzing your answers...\nThis will just take a few seconds');
       setActiveStepId('2'); // AI Analysis Step
+      setIsAnalyzingResults(true);
 
       setTimeout(() => {
-        setIsTyping(false);
+        setIsAnalyzingResults(false);
         setProgress(100);
         setActiveStepId('3'); // Results/Completed Step
-        setIsDiagnosed(true);
         setMessages((prev) => [
           ...prev,
           {
@@ -307,14 +1235,16 @@ Based on WrectifAI's evaluation of your inputs against 2M+ real-world automotive
    *Potential cause:* Distorted brake disc surface.
    *Urgency:* Low to Medium - inspect brake pads & discs.
 
-You can now connect with our verified service partners to resolve this.`,
+            You can now connect with our verified service partners to resolve this.`,
           },
         ]);
-      }, 2500);
+        router.push('/ai-diagnose-results');
+      }, 2200);
     }
   };
 
   const handleSendMessage = () => {
+    if (isAnalyzingResults) return;
     if (!typedMessage.trim()) return;
 
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -416,6 +1346,37 @@ You can now connect with our verified service partners to resolve this.`,
     { id: '4', title: 'Getting Quotes', description: "We'll notify you once quotes are ready", active: false },
   ];
 
+  if (isDiagnosed) {
+    if (isFindingQuotes) {
+      return (
+        <DashboardShell header={<TopNavbar />}>
+          <div ref={pageRootRef} className="pt-1">
+            <FindingQuotesScreen
+              selectedIssues={selectedIssues}
+              onBack={() => setIsFindingQuotes(false)}
+            />
+          </div>
+        </DashboardShell>
+      );
+    }
+
+    return (
+      <DashboardShell header={<TopNavbar />}>
+        <div ref={pageRootRef} className="pt-1">
+          <DiagnoseResultsScreen
+            answers={answers}
+            selectedIssues={selectedIssues}
+            detailsText={detailsText}
+            onDetailsTextChange={setDetailsText}
+            onToggleIssue={toggleSelectedIssue}
+            onEditIssue={resetDiagnoseFlow}
+            onRequestQuotes={() => setIsFindingQuotes(true)}
+          />
+        </div>
+      </DashboardShell>
+    );
+  }
+
   return (
     <DashboardShell header={<TopNavbar />}>
       <div ref={pageRootRef} className="space-y-4 pb-6 pt-1">
@@ -453,10 +1414,18 @@ You can now connect with our verified service partners to resolve this.`,
                     />
                     <div className="pb-4">
                       <h2 className="text-[14px] font-semibold text-[#2447a2]">
-                        {isDiagnosed ? "AI Diagnostics Complete!" : "I need a bit more information to diagnose accurately."}
+                        {isDiagnosed
+                          ? "AI Diagnostics Complete!"
+                          : isAnalyzingResults
+                            ? "WrectifAI is analyzing your issue."
+                            : "I need a bit more information to diagnose accurately."}
                       </h2>
                       <p className="mt-1 text-[13px] text-[#334c85]">
-                        {isDiagnosed ? "Review your results and connect with garages below." : "Please answer a few quick questions."}
+                        {isDiagnosed
+                          ? "Review your results and connect with garages below."
+                          : isAnalyzingResults
+                            ? "Please wait while we prepare your diagnosis."
+                            : "Please answer a few quick questions."}
                       </p>
                     </div>
                   </div>
@@ -464,25 +1433,29 @@ You can now connect with our verified service partners to resolve this.`,
 
                 {/* Conversational Timeline container (SCROLLABLE FEED) */}
                 <div ref={chatScrollRef} className="flex-1 overflow-y-auto px-3 pt-4 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-blue-100 [&::-webkit-scrollbar-thumb]:rounded-full">
-                  {/* Initial User message */}
-                  <div className="mb-7 flex justify-end">
-                    <div className="w-full max-w-[250px] rounded-[14px] border border-[#dfe9fb] bg-[#f8fbff] px-4 py-3 shadow-[0_10px_22px_rgba(39,73,154,0.04)]">
-                      <div className="mb-1 flex items-center justify-between text-[10px]">
-                        <span className="font-semibold text-[#3155a8]">You</span>
-                        <span className="text-[#a4b1cb]">10:30 AM</span>
+                  {isAnalyzingResults ? (
+                    <DiagnoseAnalyzingScreen />
+                  ) : (
+                    <>
+                      {/* Initial User message */}
+                      <div className="mb-7 flex justify-end">
+                        <div className="w-full max-w-[250px] rounded-[14px] border border-[#dfe9fb] bg-[#f8fbff] px-4 py-3 shadow-[0_10px_22px_rgba(39,73,154,0.04)]">
+                          <div className="mb-1 flex items-center justify-between text-[10px]">
+                            <span className="font-semibold text-[#3155a8]">You</span>
+                            <span className="text-[#a4b1cb]">10:30 AM</span>
+                          </div>
+                          <p className="text-[13px] leading-6 text-[#35518d]">
+                            Car is shaking at 70-80 kmph and I can feel vibration in the steering wheel.
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-[13px] leading-6 text-[#35518d]">
-                        Car is shaking at 70-80 kmph and I can feel vibration in the steering wheel.
-                      </p>
-                    </div>
-                  </div>
 
-                  {/* Dynamic messages rendering */}
-                  <div className="relative mt-6 pb-3">
-                    {/* Vertical Dashed Timeline Line */}
-                    <div className="absolute left-[13.5px] top-2 bottom-0 w-0 border-l border-dashed border-[#c7d8ff] z-0" />
-                    <div className="space-y-8">
-                      {messages.map((entry) => {
+                      {/* Dynamic messages rendering */}
+                      <div className="relative mt-6 pb-3">
+                        {/* Vertical Dashed Timeline Line */}
+                        <div className="absolute left-[13.5px] top-2 bottom-0 w-0 border-l border-dashed border-[#c7d8ff] z-0" />
+                        <div className="space-y-8">
+                          {messages.map((entry) => {
                         if (entry.sender === 'user') {
                           return (
                             <div key={entry.id} className="relative flex justify-end animate-in fade-in slide-in-from-right-3 duration-300">
@@ -596,53 +1569,55 @@ You can now connect with our verified service partners to resolve this.`,
                             </div>
                           </div>
                         );
-                      })}
+                          })}
 
-                      {/* Typing indicator bubble */}
-                      {isTyping && (
-                        <div className="relative flex gap-4 animate-pulse duration-700">
-                          <div className="relative z-10 mt-[2px]">
-                            <AssistantPill />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="mb-2 flex items-center gap-2 text-[10px]">
-                              <span className="font-semibold text-[#3a60ba]">WrectifAI</span>
-                            </div>
-                            <div className="inline-flex rounded-[12px] border border-[#e7ecf8] bg-[#fafdff] px-4 py-3 shadow-[0_8px_20px_rgba(39,73,154,0.04)]">
-                              <div className="flex items-center gap-2.5">
-                                <span className="text-[13px] text-[#31508f] font-medium whitespace-pre-line leading-relaxed">{typingText}</span>
-                                <span className="flex items-center gap-1 shrink-0">
-                                  <span className="h-1.5 w-1.5 rounded-full bg-[#3a60ba] animate-bounce [animation-delay:-0.3s]" />
-                                  <span className="h-1.5 w-1.5 rounded-full bg-[#3a60ba] animate-bounce [animation-delay:-0.15s]" />
-                                  <span className="h-1.5 w-1.5 rounded-full bg-[#3a60ba] animate-bounce" />
-                                </span>
+                          {/* Typing indicator bubble */}
+                          {isTyping && (
+                            <div className="relative flex gap-4 animate-pulse duration-700">
+                              <div className="relative z-10 mt-[2px]">
+                                <AssistantPill />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="mb-2 flex items-center gap-2 text-[10px]">
+                                  <span className="font-semibold text-[#3a60ba]">WrectifAI</span>
+                                </div>
+                                <div className="inline-flex rounded-[12px] border border-[#e7ecf8] bg-[#fafdff] px-4 py-3 shadow-[0_8px_20px_rgba(39,73,154,0.04)]">
+                                  <div className="flex items-center gap-2.5">
+                                    <span className="text-[13px] text-[#31508f] font-medium whitespace-pre-line leading-relaxed">{typingText}</span>
+                                    <span className="flex items-center gap-1 shrink-0">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-[#3a60ba] animate-bounce [animation-delay:-0.3s]" />
+                                      <span className="h-1.5 w-1.5 rounded-full bg-[#3a60ba] animate-bounce [animation-delay:-0.15s]" />
+                                      <span className="h-1.5 w-1.5 rounded-full bg-[#3a60ba] animate-bounce" />
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </div>
-                      )}
+                          )}
 
-                      {/* Dynamic Booking / Matching CTA Buttons */}
-                      {isDiagnosed && (
-                        <div className="mt-8 flex flex-wrap gap-4 pl-11 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                          <button
-                            type="button"
-                            className="flex h-[42px] items-center gap-2 rounded-[11px] bg-[#1a56db] px-5 text-[13.5px] font-bold text-white shadow-[0_8px_22px_rgba(26,86,219,0.3)] hover:bg-[#1546b8] transition-all hover:scale-[1.02] active:scale-[0.98]"
-                          >
-                            <span>View Matching Garages</span>
-                            <ArrowRight className="h-4.5 w-4.5" />
-                          </button>
-                          <button
-                            type="button"
-                            className="flex h-[42px] items-center gap-2 rounded-[11px] border border-[#dbe6ff] bg-white px-5 text-[13.5px] font-bold text-[#1a56db] hover:bg-[#f8fbff] transition-all shadow-[0_4px_12px_rgba(26,86,219,0.02)] active:scale-[0.98]"
-                          >
-                            <span>Get Free Quotes</span>
-                          </button>
-                        </div>
-                      )}
+                          {/* Dynamic Booking / Matching CTA Buttons */}
+                          {isDiagnosed && (
+                            <div className="mt-8 flex flex-wrap gap-4 pl-11 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                              <button
+                                type="button"
+                                className="flex h-[42px] items-center gap-2 rounded-[11px] bg-[#1a56db] px-5 text-[13.5px] font-bold text-white shadow-[0_8px_22px_rgba(26,86,219,0.3)] hover:bg-[#1546b8] transition-all hover:scale-[1.02] active:scale-[0.98]"
+                              >
+                                <span>View Matching Garages</span>
+                                <ArrowRight className="h-4.5 w-4.5" />
+                              </button>
+                              <button
+                                type="button"
+                                className="flex h-[42px] items-center gap-2 rounded-[11px] border border-[#dbe6ff] bg-white px-5 text-[13.5px] font-bold text-[#1a56db] hover:bg-[#f8fbff] transition-all shadow-[0_4px_12px_rgba(26,86,219,0.02)] active:scale-[0.98]"
+                              >
+                                <span>Get Free Quotes</span>
+                              </button>
+                            </div>
+                          )}
 
-                    </div>
-                  </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
               </div>
@@ -672,11 +1647,13 @@ You can now connect with our verified service partners to resolve this.`,
                     onChange={(e) => setTypedMessage(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                     placeholder="Type additional details or ask a question..."
+                    disabled={isAnalyzingResults}
                     className="w-full bg-transparent py-2 text-[13px] text-[#31508f] placeholder-[#a7b2ca] outline-none border-none focus:ring-0 shadow-none"
                   />
                   <button
                     type="button"
                     onClick={handleSendMessage}
+                    disabled={isAnalyzingResults}
                     className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1a56db]/5 text-[#1a56db] hover:bg-[#1a56db] hover:text-white transition-all duration-200"
                   >
                     <Send className="h-4 w-4" />
@@ -740,6 +1717,7 @@ You can now connect with our verified service partners to resolve this.`,
                     setProgress(60);
                     setActiveStepId('2');
                     setIsDiagnosed(false);
+                    setIsAnalyzingResults(false);
                   }}
                   className="flex items-center gap-1 text-[12px] font-medium text-[#3b6bff] hover:text-[#184aff] transition-colors"
                 >

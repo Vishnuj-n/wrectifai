@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronsLeft, ChevronsRight, ChevronRight, X } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, ChevronDown, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/common/button';
 
 import { navItems } from '@/components/home/data';
@@ -44,33 +44,35 @@ export function Sidebar({
           href="/"
           className={cn(
             'transition-all',
-            collapsed ? 'flex justify-center px-0' : 'flex flex-1 items-center px-0'
+            collapsed ? 'flex justify-center px-0' : 'flex flex-1 items-center justify-center px-0'
           )}
         >
           {collapsed ? (
-            <Image
-              src="/wrectifai-mark.png"
-              alt="WrectifAI"
-              width={1600}
-              height={1600}
-              priority
-              className="h-[28px] [@media(max-height:850px)]:h-[24px] w-[54px] object-cover object-top"
-            />
-          ) : (
-            <div className="relative h-[48px] w-[248px] overflow-hidden -ml-2">
+            <div className="relative h-[28px] w-[45px] overflow-hidden">
               <Image
-                src="/Dashboard_car.png"
+                src="/fin_logo.png"
                 alt="WrectifAI"
-                width={1536}
+                width={1024}
                 height={1024}
                 priority
-                className="absolute top-[-48px] left-[05px] h-[160px] w-auto max-w-none object-contain"
+                className="absolute left-0 top-[2px] h-[45px] w-[45px] object-contain"
+              />
+            </div>
+          ) : (
+            <div className="relative h-[62px] w-full overflow-hidden">
+              <Image
+                src="/fin_logo.png"
+                alt="WrectifAI"
+                width={1024}
+                height={1024}
+                priority
+                className="absolute left-0 top-[-38px] h-[150px] w-full object-fill"
               />
             </div>
           )}
         </Link>
         <button 
-          className="lg:hidden p-2 text-[#17307a] hover:bg-[#f5f8ff] rounded-full" 
+          className="absolute right-2 top-2 lg:hidden p-2 text-[#17307a] hover:bg-[#f5f8ff] rounded-full" 
           onClick={onMobileClose}
         >
           <X className="h-5 w-5" />
@@ -80,30 +82,69 @@ export function Sidebar({
       <nav className="mt-0.5 flex flex-col gap-[3px] overflow-x-hidden overflow-y-auto pr-0.5 pb-0.5 [scrollbar-width:thin] [scrollbar-color:#e4ecff_transparent] [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#e4ecff] hover:[&::-webkit-scrollbar-thumb]:bg-[#cbd5e1] [&::-webkit-scrollbar-track]:bg-transparent">
         {navItems.map(({ label, icon: Icon, href, chevron }) => {
           const active = pathname
-            ? (href === '/' ? (pathname === '/' || pathname.startsWith('/deals')) : pathname.startsWith(href))
+            ? (
+                href === '/'
+                  ? (pathname === '/' || pathname.startsWith('/deals'))
+                  : href === '/ai-diagnose'
+                    ? (
+                        pathname.startsWith('/ai-diagnose') ||
+                        pathname.startsWith('/ai-diagnose-results') ||
+                        pathname.startsWith('/finding-quotes') ||
+                        pathname.startsWith('/request-aent')
+                      )
+                    : href === '/quotes'
+                      ? (
+                          pathname.startsWith('/quotes') ||
+                          pathname.startsWith('/compare-quotes')
+                        )
+                    : pathname.startsWith(href)
+              )
             : false;
+          const showQuotesChildren =
+            href === '/quotes' &&
+            (pathname?.startsWith('/quotes') || pathname?.startsWith('/compare-quotes'));
 
           return (
-            <Link
-              key={label}
-              href={href}
-              title={collapsed ? label : undefined}
-              className={cn(
-                'flex h-[32px] shrink-0 items-center gap-2 rounded-[8px] px-2 text-left text-[12px] font-semibold transition-colors',
-                collapsed && 'mx-auto h-[32px] w-[32px] min-w-[28px] justify-center px-0',
-                active
-                  ? 'bg-[#1a56db] text-white shadow-[0_6px_12px_rgba(26,86,219,0.2)]'
-                  : 'text-[#17307a] hover:bg-[#f5f8ff]'
-              )}
-            >
-              <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={active ? 2.2 : 1.7} />
-              <span className={cn('whitespace-nowrap flex-1', collapsed && 'hidden')}>
-                {label}
-              </span>
-              {chevron && !collapsed ? (
-                <ChevronRight className="h-4 w-4 shrink-0 opacity-70" />
+            <div key={label}>
+              <Link
+                href={href}
+                title={collapsed ? label : undefined}
+                className={cn(
+                  'flex h-[32px] shrink-0 items-center gap-2 rounded-[8px] px-2 text-left text-[12px] font-semibold transition-colors',
+                  collapsed && 'mx-auto h-[32px] w-[32px] min-w-[28px] justify-center px-0',
+                  active
+                    ? 'bg-[#1a56db] text-white shadow-[0_6px_12px_rgba(26,86,219,0.2)]'
+                    : 'text-[#17307a] hover:bg-[#f5f8ff]'
+                )}
+              >
+                <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={active ? 2.2 : 1.7} />
+                <span className={cn('whitespace-nowrap flex-1', collapsed && 'hidden')}>
+                  {label}
+                </span>
+                {showQuotesChildren && !collapsed ? (
+                  <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
+                ) : chevron && !collapsed ? (
+                  <ChevronRight className="h-4 w-4 shrink-0 opacity-70" />
+                ) : null}
+              </Link>
+
+              {showQuotesChildren && !collapsed ? (
+                <div className="mt-1 ml-6 space-y-1">
+                  <Link
+                    href="/quotes"
+                    className="flex h-[30px] items-center rounded-[8px] bg-[#f2f5ff] px-3 text-[12px] font-semibold text-[#2451f6]"
+                  >
+                    My Quotes
+                  </Link>
+                  <button
+                    type="button"
+                    className="flex h-[30px] w-full items-center rounded-[8px] px-3 text-left text-[12px] font-medium text-[#5f7099] hover:bg-[#f8faff]"
+                  >
+                    Archived Quotes
+                  </button>
+                </div>
               ) : null}
-            </Link>
+            </div>
           );
         })}
       </nav>
