@@ -52,7 +52,11 @@ export default async function FeaturePage({
   }
 
   if (slug === 'garages') {
-    return <GaragesPage />;
+    return (
+      <Suspense fallback={null}>
+        <GaragesPage />
+      </Suspense>
+    );
   }
 
   if (slug === 'ai-diagnose') {
@@ -64,7 +68,11 @@ export default async function FeaturePage({
   }
 
   if (slug === 'quotes') {
-    return <QuotesPage />;
+    return (
+      <Suspense fallback={null}>
+        <QuotesPage />
+      </Suspense>
+    );
   }
 
   return (
