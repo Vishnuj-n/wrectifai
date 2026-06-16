@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import { FeatureComingSoonPage } from '@/pages/feature-coming-soon/feature-coming-soon-page';
 import { GaragesPage } from '@/pages/garages/garages-page';
 import { AIDiagnosePage } from '@/pages/ai-diagnose/ai-diagnose-page';
@@ -6,7 +7,7 @@ import { QuotesPage } from '@/pages/quotes/quotes-page';
 import { navItems } from '@/components/home/data';
 
 const featurePageCopy: Record<string, string> = {
-  'ai-diagnose': 'The dedicated AI diagnosis workflow is being prepared. Symptom capture, vehicle context, and guided issue triage will land here soon.',
+  'ai-diagnose': 'The dedicated WrectifAI diagnosis workflow is being prepared. Symptom capture, vehicle context, and guided issue triage will land here soon.',
   services:
     'Service discovery, bundles, and booking flows are being built for this section. You will be able to compare services and continue into booking from here.',
   shop: 'Parts, accessories, and curated marketplace listings will appear here soon.',
@@ -55,7 +56,11 @@ export default async function FeaturePage({
   }
 
   if (slug === 'ai-diagnose') {
-    return <AIDiagnosePage />;
+    return (
+      <Suspense fallback={null}>
+        <AIDiagnosePage />
+      </Suspense>
+    );
   }
 
   if (slug === 'quotes') {

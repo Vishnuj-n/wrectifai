@@ -2,7 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, CarFront, Check } from 'lucide-react';
 import { DashboardShell } from '@/components/home/dashboard-shell';
 import { TopNavbar } from '@/components/home/top-navbar';
@@ -12,11 +13,25 @@ import { cn } from '@/utils/cn';
 
 export function FindingQuotesPage({ issues }: { issues?: string }) {
   const pageRootRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState(0);
+
   const selectedIssueIds = (issues || 'wheel-balance,wheel-alignment')
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
   const chosenIssues = resultIssues.filter((issue) => selectedIssueIds.includes(issue.id));
+
+  useEffect(() => {
+    if (currentStep < 4) {
+      const timer = setTimeout(() => {
+        setCurrentStep((prev) => prev + 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      router.push(`/request-aent?issues=${selectedIssueIds.join(',')}`);
+    }
+  }, [currentStep, router, selectedIssueIds]);
 
   useEffect(() => {
     const pageScroller = (() => {
@@ -41,23 +56,30 @@ export function FindingQuotesPage({ issues }: { issues?: string }) {
             className="inline-flex items-center gap-2 text-[13px] font-medium text-[#2f54d1] transition-colors hover:text-[#163cb3]"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Back to AI Diagnose Results</span>
+            <span>Back to WrectifAI Diagnosis Results</span>
           </Link>
         </div>
 
         <div className="rounded-[24px] px-4 py-4">
           <div className="mx-auto max-w-[760px] text-center">
-            <h1 className="text-[35px] font-semibold tracking-[-0.05em] text-[#173cab]">
+            <h1 className="text-[26px] font-semibold tracking-[-0.03em] text-[#173cab]">
               Finding the best garages for you...
             </h1>
-            <p className="mt-2 text-[18px] text-[#4f65aa]">This will only take a few seconds</p>
+            <p className="mt-2 text-[14.5px] text-[#4f65aa]">This will only take a few seconds</p>
 
             <div className="relative mx-auto mt-8 h-[210px] w-[390px] max-w-full">
               <div className="absolute inset-x-1/2 top-0 h-[124px] w-[124px] -translate-x-1/2 rounded-[26px] border border-[#cfe0ff] bg-[radial-gradient(circle_at_top,#ffffff_0%,#edf3ff_78%)] shadow-[0_16px_40px_rgba(44,92,255,0.12)]">
                 <div className="absolute inset-0 rounded-[26px] border border-[#edf3ff]" />
                 <div className="absolute inset-[13px] rounded-[18px] border-2 border-dashed border-[#b6cbff]" />
-                <div className="absolute inset-0 flex items-center justify-center text-[58px] font-semibold tracking-[-0.08em] text-[#2551ea]">
-                  AI
+                <div className="absolute inset-0 flex items-center justify-center p-4">
+                  <Image
+                    src="/Logo_noBg.png"
+                    alt="WrectifAI Logo"
+                    width={80}
+                    height={80}
+                    priority
+                    className="object-contain"
+                  />
                 </div>
               </div>
               <div className="absolute left-1/2 top-[92px] h-[95px] w-[320px] -translate-x-1/2 rounded-[999px] bg-[radial-gradient(ellipse_at_center,rgba(74,121,255,0.16)_0%,rgba(74,121,255,0)_72%)] blur-md" />
@@ -85,35 +107,39 @@ export function FindingQuotesPage({ issues }: { issues?: string }) {
         <Card className="rounded-[22px] border-[#e7edfd] bg-white px-5 py-0 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
           <div className="grid md:grid-cols-4">
             {[
-              { label: 'Analyzing your issue', complete: true, active: false },
-              { label: 'Finding nearby trusted garages', complete: true, active: false },
-              { label: 'Matching with best service providers', complete: false, active: true },
-              { label: 'Sending your request', complete: false, active: false },
-            ].map((step, index) => (
-              <div
-                key={step.label}
-                className={cn(
-                  'flex items-center gap-4 px-5 py-7',
-                  index < 3 ? 'border-b border-[#eef2ff] md:border-b-0 md:border-r md:border-[#eef2ff]' : ''
-                )}
-              >
-                <span
+              { label: 'Analyzing your issue' },
+              { label: 'Finding nearby trusted garages' },
+              { label: 'Matching with best service providers' },
+              { label: 'Sending your request' },
+            ].map((step, index) => {
+              const isComplete = index < currentStep;
+              const isActive = index === currentStep;
+              return (
+                <div
+                  key={step.label}
                   className={cn(
-                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2',
-                    step.complete
-                      ? 'border-[#17884f] bg-[#17884f] text-white'
-                      : step.active
-                        ? 'border-[#2351f6] bg-white text-[#2351f6]'
-                        : 'border-[#7d85ba] bg-white text-transparent'
+                    'flex items-center gap-4 px-5 py-7',
+                    index < 3 ? 'border-b border-[#eef2ff] md:border-b-0 md:border-r md:border-[#eef2ff]' : ''
                   )}
                 >
-                  {step.complete ? <Check className="h-4 w-4 stroke-[3]" /> : <span className="h-3 w-3 rounded-full bg-current" />}
-                </span>
-                <div className={cn('text-[14px] font-medium', step.active ? 'text-[#1e46ce]' : 'text-[#213882]')}>
-                  {step.label}
+                  <span
+                    className={cn(
+                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-300',
+                      isComplete
+                        ? 'border-[#17884f] bg-[#17884f] text-white'
+                        : isActive
+                          ? 'border-[#2351f6] bg-white text-[#2351f6]'
+                          : 'border-[#cbd5e1] bg-white text-transparent'
+                    )}
+                  >
+                    {isComplete ? <Check className="h-4 w-4 stroke-[3]" /> : null}
+                  </span>
+                  <div className={cn('text-[14px] font-medium transition-colors duration-300', isActive ? 'text-[#1e46ce]' : 'text-[#213882]')}>
+                    {step.label}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
 
@@ -126,25 +152,25 @@ export function FindingQuotesPage({ issues }: { issues?: string }) {
 
         <div className="grid gap-5 xl:grid-cols-[254px_minmax(0,1fr)_390px]">
           <Card className="rounded-[22px] border-[#e7edfd] bg-white px-5 py-5 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
-            <h3 className="text-[18px] font-semibold text-[#183db1]">Your Vehicle</h3>
+            <h3 className="text-[15.5px] font-semibold text-[#183db1]">Your Vehicle</h3>
             <div className="mt-10 flex flex-col items-center text-center">
               <span className="flex h-[92px] w-[92px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,#f5f8ff_0%,#edf2ff_100%)] text-[#244fe5] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
                 <CarFront className="h-11 w-11" />
               </span>
-              <div className="mt-8 text-[18px] font-semibold tracking-[-0.03em] text-[#193daa]">Honda City (TS07 AB 1234)</div>
-              <div className="mt-5 flex items-center gap-4 text-[14px] text-[#6679a6]">
+              <div className="mt-8 text-[15.5px] font-semibold tracking-[-0.03em] text-[#193daa]">Honda City (TS07 AB 1234)</div>
+              <div className="mt-5 flex items-center gap-4 text-[12px] text-[#6679a6]">
                 <span>Petrol</span>
                 <span className="h-1 w-1 rounded-full bg-[#8997bc]" />
                 <span>2018</span>
               </div>
-              <div className="mt-4 text-[14px] text-[#546a9f]">KM Driven: 58,320 km</div>
+              <div className="mt-4 text-[12px] text-[#546a9f]">KM Driven: 58,320 km</div>
             </div>
           </Card>
 
           <Card className="rounded-[22px] border-[#e7edfd] bg-white px-5 py-5 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
             <div className="flex items-center gap-3">
-              <h3 className="text-[18px] font-semibold text-[#183db1]">Your Selected Issues</h3>
-              <span className="text-[14px] text-[#6c80b0]">({chosenIssues.length} Selected)</span>
+              <h3 className="text-[15.5px] font-semibold text-[#183db1]">Your Selected Issues</h3>
+              <span className="text-[12px] text-[#6c80b0]">({chosenIssues.length} Selected)</span>
             </div>
             <div className="mt-5 divide-y divide-[#edf2fb]">
               {chosenIssues.map((issue, index) => (
@@ -160,7 +186,7 @@ export function FindingQuotesPage({ issues }: { issues?: string }) {
                   </div>
                   <div>
                     <div className="flex flex-wrap items-center gap-3">
-                      <div className="text-[16px] font-semibold text-[#183aa7]">
+                      <div className="text-[14px] font-semibold text-[#183aa7]">
                         {index + 1}. {issue.title}
                       </div>
                       <span className={cn('rounded-full px-2.5 py-1 text-[11px] font-semibold', issue.badgeClass)}>
@@ -170,8 +196,8 @@ export function FindingQuotesPage({ issues }: { issues?: string }) {
                     <p className="mt-2 text-[13px] leading-7 text-[#61729f]">{issue.description}</p>
                   </div>
                   <div className="text-left md:text-center">
-                    <div className="text-[40px] font-semibold tracking-[-0.05em] text-[#173ab3]">{issue.match}%</div>
-                    <div className="text-[13px] text-[#7382ab]">Match</div>
+                    <div className="text-[28px] font-semibold tracking-[-0.05em] text-[#173ab3]">{issue.match}%</div>
+                    <div className="text-[12px] text-[#7382ab]">Match</div>
                   </div>
                 </div>
               ))}
@@ -179,43 +205,48 @@ export function FindingQuotesPage({ issues }: { issues?: string }) {
           </Card>
 
           <Card className="rounded-[22px] border-[#e7edfd] bg-white px-6 py-5 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
-            <h3 className="text-[18px] font-semibold text-[#183db1]">What&apos;s Happening?</h3>
+            <h3 className="text-[15.5px] font-semibold text-[#183db1]">What&apos;s Happening?</h3>
             <div className="mt-8 space-y-7">
               {[
-                { title: 'Analyzing your issue', status: 'Completed', complete: true, active: false },
-                { title: 'Finding nearby trusted garages', status: 'Completed', complete: true, active: false },
-                { title: 'Matching with best service providers', status: 'In progress', complete: false, active: true },
-                { title: 'Sending your request', status: 'Pending', complete: false, active: false },
-              ].map((step, index, array) => (
-                <div key={step.title} className="relative flex gap-4">
-                  {index < array.length - 1 ? (
-                    <div className="absolute left-[13px] top-[32px] h-[34px] w-px border-l border-dashed border-[#d8e4ff]" />
-                  ) : null}
-                  <span
-                    className={cn(
-                      'relative z-10 mt-0.5 flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full border-2',
-                      step.complete
-                        ? 'border-[#17884f] bg-[#17884f] text-white'
-                        : step.active
-                          ? 'border-[#2351f6] bg-white text-[#2351f6]'
-                          : 'border-[#707ab3] bg-white text-transparent'
-                    )}
-                  >
-                    {step.complete ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : <span className="h-2.5 w-2.5 rounded-full bg-current" />}
-                  </span>
-                  <div>
-                    <div className="text-[16px] font-medium text-[#183aa7]">{step.title}</div>
-                    <div
+                { title: 'Analyzing your issue' },
+                { title: 'Finding nearby trusted garages' },
+                { title: 'Matching with best service providers' },
+                { title: 'Sending your request' },
+              ].map((step, index, array) => {
+                const isComplete = index < currentStep;
+                const isActive = index === currentStep;
+                const status = isComplete ? 'Completed' : isActive ? 'In progress' : 'Pending';
+                return (
+                  <div key={step.title} className="relative flex gap-4">
+                    {index < array.length - 1 ? (
+                      <div className="absolute left-[13px] top-[32px] h-[34px] w-px border-l border-dashed border-[#d8e4ff]" />
+                    ) : null}
+                    <span
                       className={cn(
-                        'mt-2 text-[14px] font-medium',
-                        step.complete ? 'text-[#6477a6]' : step.active ? 'text-[#2351f6]' : 'text-[#7f8db3]'
+                        'relative z-10 mt-0.5 flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-300',
+                        isComplete
+                          ? 'border-[#17884f] bg-[#17884f] text-white'
+                          : isActive
+                            ? 'border-[#2351f6] bg-white text-[#2351f6]'
+                            : 'border-[#cbd5e1] bg-white text-transparent'
                       )}
                     >
-                      {step.status}
+                      {isComplete ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : null}
+                    </span>
+                    <div>
+                      <div className="text-[14px] font-semibold text-[#183aa7]">{step.title}</div>
+                      <div
+                        className={cn(
+                          'mt-2 text-[12px] font-medium transition-colors duration-300',
+                          isComplete ? 'text-[#6477a6]' : isActive ? 'text-[#2351f6]' : 'text-[#7f8db3]'
+                        )}
+                      >
+                        {status}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Card>
         </div>

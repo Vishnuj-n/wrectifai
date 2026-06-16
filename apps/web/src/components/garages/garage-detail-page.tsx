@@ -29,10 +29,19 @@ import { cn } from '@/utils/cn';
 import { PageLoader } from '@/components/common/page-loader';
 import type { Garage } from '@/pages/garages/garages-page';
 import { BookingConfirmed } from '@/components/garages/booking-confirmed';
+import type { QuoteItem } from '@/components/quotes/quotes-shared';
+import type { DiagnoseIssue } from '@/components/ai-diagnose/diagnose-flow-shared';
 
 interface GarageDetailPageProps {
   garage: Garage;
   onBack: () => void;
+  mode?: 'default' | 'quote-context';
+  quoteContext?: {
+    quote: QuoteItem;
+    issues: DiagnoseIssue[];
+    issueIds: string[];
+    aiEstimateRange: string;
+  };
 }
 
 const appointmentDates = [
@@ -61,7 +70,12 @@ const servicesOffered = [
   { name: 'More Services', icon: SlidersHorizontal },
 ];
 
-export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
+export function GarageDetailPage({
+  garage,
+  onBack,
+  mode = 'default',
+  quoteContext,
+}: GarageDetailPageProps) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedDate, setSelectedDate] = useState('23');
@@ -70,6 +84,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
   const [reviewPage, setReviewPage] = useState(0);
 
   const detailImageSources = [garage.image].filter((src): src is string => Boolean(src));
+  const isQuoteContext = mode === 'quote-context' && Boolean(quoteContext);
 
   const reviews = [
     {
@@ -116,6 +131,7 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
         garage={garage}
         selectedDate={selectedDate}
         selectedSlot={selectedSlot}
+        quoteContext={isQuoteContext ? quoteContext : undefined}
         onViewBookings={() => {
           setBookingConfirmed(false);
           onBack();
@@ -259,148 +275,246 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
             </div>
           </Card>
 
-          {/* Services Offered */}
-          <section className="space-y-3.5">
-            <h2 className="text-[14.5px] font-bold text-[#17307a]">Services Offered</h2>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
-              {servicesOffered.map((svc, index) => (
-                <div
-                  key={index}
-                  className="flex flex-col items-center justify-center rounded-[16px] border border-[#e2eefc] bg-white p-2 py-2.5 text-center shadow-[0_8px_20px_rgba(22,48,112,0.03)] transition-all hover:border-[#1a56db]/30 hover:shadow-[0_12px_28px_rgba(26,86,219,0.06)]"
-                >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f0f4ff] text-[#1a56db] mb-1.5">
-                    <svc.icon className="h-4 w-4" />
-                  </div>
-                  <span className="text-[11px] font-bold text-[#17307a] leading-tight">{svc.name}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Why Choose Us */}
-          <section className="space-y-3.5">
-            <h2 className="text-[14.5px] font-bold text-[#17307a]">Why Choose {garage.name}?</h2>
-            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
-              {[
-                { title: '1 Month Warranty', desc: 'On all repairs and services', icon: Shield },
-                { title: 'Free Inspection', desc: 'Complete vehicle checkup', icon: Eye },
-                { title: 'Free Pickup & Drop', desc: 'Within 10 km radius', icon: MapPin },
-                { title: 'Pay After Service', desc: 'No upfront payment', icon: CheckCircle2 },
-                { title: 'Genuine Parts', desc: '100% original parts used', icon: Sparkles },
-              ].map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2.5 rounded-[16px] border border-[#e2e8f0] bg-[#f1f5f9] px-3 py-3 text-left overflow-hidden"
-                >
-                  <div className="flex shrink-0 items-center justify-center text-[#21834c]">
-                    <item.icon className="h-4.5 w-4.5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-[11px] font-bold text-[#17307a] whitespace-nowrap">{item.title}</h4>
-                    <p className="mt-0.5 text-[9.5px] font-normal text-[#17307a] whitespace-nowrap">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Customer Reviews */}
-          <section className="space-y-4">
-            <h2 className="text-[14.5px] font-bold text-[#17307a]">Customer Reviews ({garage.reviews})</h2>
-            <div className="grid gap-4 md:grid-cols-[200px_1fr_1fr]">
-              {/* Overall Rating Card */}
-              <div className="flex flex-col items-center justify-center rounded-[20px] border border-[#e2eefc] bg-white p-6 text-center">
-                <span className="text-[38px] font-extrabold tracking-tight text-[#17307a]">
-                  {garage.rating.toFixed(1)}
-                </span>
-                <div className="flex items-center gap-0.5 my-1.5">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={cn(
-                        "h-4 w-4",
-                        i < Math.floor(garage.rating) ? "fill-[#ff9f1a] text-[#ff9f1a]" : "text-[#dbe6ff]"
-                      )}
-                    />
-                  ))}
-                </div>
-                <span className="text-[12px] font-bold text-[#228453]">Excellent</span>
-                <span className="mt-1 text-[10px] font-semibold text-[#8a99ad]">{garage.reviews} reviews</span>
-              </div>
-
-              {/* Progress Bars Card */}
-              <div className="rounded-[20px] border border-[#e2eefc] bg-white p-5 space-y-2.5 flex flex-col justify-center">
-                {[
-                  { stars: 5, pct: '62%', count: '60' },
-                  { stars: 4, pct: '25%', count: '24' },
-                  { stars: 3, pct: '8%', count: '8' },
-                  { stars: 2, pct: '3%', count: '3' },
-                  { stars: 1, pct: '2%', count: '1' },
-                ].map((row) => (
-                  <div key={row.stars} className="flex items-center gap-3 text-[10px] font-bold text-[#536891]">
-                    <span className="w-2.5 text-right">{row.stars}</span>
-                    <Star className="h-3.5 w-3.5 fill-[#cbd4e6] text-[#cbd4e6]" />
-                    <div className="h-2 flex-1 rounded-full bg-[#f0f4ff] overflow-hidden">
-                      <div className="h-full rounded-full bg-[#1aa14a]" style={{ width: row.pct }} />
+          {isQuoteContext && quoteContext ? (
+            <>
+              <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+                <Card className="rounded-[20px] border-[#e6ecfb] bg-white p-5 shadow-[0_10px_28px_rgba(21,48,122,0.04)]">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-[15px] font-bold text-[#17307a]">Quote Summary</h2>
+                      <p className="mt-1 text-[11px] text-[#62749f]">
+                        Quote details for this garage based on your requested repair.
+                      </p>
                     </div>
-                    <span className="w-8 text-right">{row.pct}</span>
-                    <span className="w-8 text-right text-[#8a99ad]">({row.count})</span>
+                    {quoteContext.quote.tag ? (
+                      <span className="rounded-full bg-[#e8f7ee] px-3 py-1 text-[10px] font-bold text-[#159a5d]">
+                        {quoteContext.quote.tag}
+                      </span>
+                    ) : null}
                   </div>
-                ))}
-              </div>
 
-              {/* Individual Review Card */}
-              <div className="relative rounded-[20px] border border-[#e2eefc] bg-white p-5 shadow-[0_4px_16px_rgba(22,48,112,0.02)] flex flex-col justify-between min-h-[160px]">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#eef4ff] text-[11px] font-bold text-[#1a56db]">
-                        {reviews[reviewPage].avatar}
+                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-[16px] border border-[#e2eefc] bg-[#fbfdff] p-4">
+                      <div className="text-[11px] font-medium text-[#62749f]">Current Quote</div>
+                      <div className="mt-2 text-[22px] font-extrabold tracking-[-0.03em] text-[#17307a]">
+                        {quoteContext.quote.price}
                       </div>
-                      <div>
-                        <div className="text-[11px] font-bold text-[#17307a]">{reviews[reviewPage].name}</div>
-                        <div className="flex items-center gap-1 text-[9.5px] font-medium text-[#228453]">
-                          <CheckCircle2 className="h-3 w-3 fill-[#228453] text-white" />
-                          <span>{reviews[reviewPage].status}</span>
+                    </div>
+                    <div className="rounded-[16px] border border-[#e2eefc] bg-[#fbfdff] p-4">
+                      <div className="text-[11px] font-medium text-[#62749f]">WrectifAI Estimate</div>
+                      <div className="mt-2 text-[18px] font-bold text-[#159a5d]">
+                        {quoteContext.aiEstimateRange}
+                      </div>
+                    </div>
+                    <div className="rounded-[16px] border border-[#e2eefc] bg-[#fbfdff] p-4">
+                      <div className="text-[11px] font-medium text-[#62749f]">Estimated Savings</div>
+                      <div className="mt-2 text-[18px] font-bold text-[#17307a]">
+                        {quoteContext.quote.savings}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-[16px] border border-[#e2eefc] bg-[#f8fbff] p-4">
+                      <div className="text-[12px] font-bold text-[#17307a]">Included In This Quote</div>
+                      <div className="mt-3 space-y-2 text-[11px] text-[#536891]">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-[#1a56db]" />
+                          <span>{quoteContext.quote.meta}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-[#1a56db]" />
+                          <span>{quoteContext.quote.metaSecondary}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-[#1a56db]" />
+                          <span>Final inspection-based confirmation before service</span>
                         </div>
                       </div>
                     </div>
-                    <span className="text-[9.5px] font-bold text-[#8a99ad]">{reviews[reviewPage].date}</span>
+
+                    <div className="rounded-[16px] border border-[#e2eefc] bg-[#f8fbff] p-4">
+                      <div className="text-[12px] font-bold text-[#17307a]">Price Notes</div>
+                      <div className="mt-3 space-y-2 text-[11px] text-[#536891]">
+                        <div className="flex items-start gap-2">
+                          <Shield className="mt-0.5 h-4 w-4 text-[#1a56db]" />
+                          <span>No upfront payment. Final amount is confirmed after inspection.</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Clock className="mt-0.5 h-4 w-4 text-[#1a56db]" />
+                          <span>Garage response time: {garage.responseMins} mins</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Tag className="mt-0.5 h-4 w-4 text-[#1a56db]" />
+                          <span>Warranty, pickup/drop, and service coverage depend on final inspection.</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="rounded-[20px] border-[#e6ecfb] bg-white p-5 shadow-[0_10px_28px_rgba(21,48,122,0.04)]">
+                  <h2 className="text-[15px] font-bold text-[#17307a]">Selected Issue Details</h2>
+                  <p className="mt-1 text-[11px] text-[#62749f]">
+                    These issue details were used to create and compare the quote.
+                  </p>
+
+                  <div className="mt-4 space-y-3">
+                    {quoteContext.issues.map((issue) => (
+                      <div key={issue.id} className="rounded-[16px] border border-[#e2eefc] bg-[#fbfdff] p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="text-[12.5px] font-bold text-[#17307a]">{issue.title}</div>
+                          <span className={cn('rounded-full px-2.5 py-1 text-[10px] font-bold', issue.badgeClass)}>
+                            {issue.badge}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-[11px] leading-5 text-[#536891]">{issue.description}</p>
+                        <div className="mt-3 text-[11px] font-medium text-[#17307a]">Estimated match: {issue.match}%</div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </section>
+            </>
+          ) : (
+            <>
+              {/* Services Offered */}
+              <section className="space-y-3.5">
+                <h2 className="text-[14.5px] font-bold text-[#17307a]">Services Offered</h2>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+                  {servicesOffered.map((svc, index) => (
+                    <div
+                      key={index}
+                      className="flex flex-col items-center justify-center rounded-[16px] border border-[#e2eefc] bg-white p-2 py-2.5 text-center shadow-[0_8px_20px_rgba(22,48,112,0.03)] transition-all hover:border-[#1a56db]/30 hover:shadow-[0_12px_28px_rgba(26,86,219,0.06)]"
+                    >
+                      <div className="mb-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-[#f0f4ff] text-[#1a56db]">
+                        <svc.icon className="h-4 w-4" />
+                      </div>
+                      <span className="text-[11px] font-bold text-[#17307a] leading-tight">{svc.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Why Choose Us */}
+              <section className="space-y-3.5">
+                <h2 className="text-[14.5px] font-bold text-[#17307a]">Why Choose {garage.name}?</h2>
+                <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
+                  {[
+                    { title: '1 Month Warranty', desc: 'On all repairs and services', icon: Shield },
+                    { title: 'Free Inspection', desc: 'Complete vehicle checkup', icon: Eye },
+                    { title: 'Free Pickup & Drop', desc: 'Within 10 km radius', icon: MapPin },
+                    { title: 'Pay After Service', desc: 'No upfront payment', icon: CheckCircle2 },
+                    { title: 'Genuine Parts', desc: '100% original parts used', icon: Sparkles },
+                  ].map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2.5 rounded-[16px] border border-[#e2e8f0] bg-[#f1f5f9] px-3 py-3 text-left overflow-hidden"
+                    >
+                      <div className="flex shrink-0 items-center justify-center text-[#21834c]">
+                        <item.icon className="h-4.5 w-4.5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-[11px] font-bold text-[#17307a] whitespace-nowrap">{item.title}</h4>
+                        <p className="mt-0.5 text-[9.5px] font-normal text-[#17307a] whitespace-nowrap">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Customer Reviews */}
+              <section className="space-y-4">
+                <h2 className="text-[14.5px] font-bold text-[#17307a]">Customer Reviews ({garage.reviews})</h2>
+                <div className="grid gap-4 md:grid-cols-[200px_1fr_1fr]">
+                  <div className="flex flex-col items-center justify-center rounded-[20px] border border-[#e2eefc] bg-white p-6 text-center">
+                    <span className="text-[38px] font-extrabold tracking-tight text-[#17307a]">
+                      {garage.rating.toFixed(1)}
+                    </span>
+                    <div className="my-1.5 flex items-center gap-0.5">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={cn(
+                            'h-4 w-4',
+                            i < Math.floor(garage.rating) ? 'fill-[#ff9f1a] text-[#ff9f1a]' : 'text-[#dbe6ff]'
+                          )}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-[12px] font-bold text-[#228453]">Excellent</span>
+                    <span className="mt-1 text-[10px] font-semibold text-[#8a99ad]">{garage.reviews} reviews</span>
                   </div>
 
-                  <div className="flex items-center gap-0.5 mt-2.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={cn(
-                          "h-3.5 w-3.5",
-                          i < Math.floor(reviews[reviewPage].rating) ? "fill-[#ff9f1a] text-[#ff9f1a]" : "text-[#cbd4e6]"
-                        )}
-                      />
+                  <div className="rounded-[20px] border border-[#e2eefc] bg-white p-5 space-y-2.5 flex flex-col justify-center">
+                    {[
+                      { stars: 5, pct: '62%', count: '60' },
+                      { stars: 4, pct: '25%', count: '24' },
+                      { stars: 3, pct: '8%', count: '8' },
+                      { stars: 2, pct: '3%', count: '3' },
+                      { stars: 1, pct: '2%', count: '1' },
+                    ].map((row) => (
+                      <div key={row.stars} className="flex items-center gap-3 text-[10px] font-bold text-[#536891]">
+                        <span className="w-2.5 text-right">{row.stars}</span>
+                        <Star className="h-3.5 w-3.5 fill-[#cbd4e6] text-[#cbd4e6]" />
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#f0f4ff]">
+                          <div className="h-full rounded-full bg-[#1aa14a]" style={{ width: row.pct }} />
+                        </div>
+                        <span className="w-8 text-right">{row.pct}</span>
+                        <span className="w-8 text-right text-[#8a99ad]">({row.count})</span>
+                      </div>
                     ))}
                   </div>
 
-                  <p className="mt-2.5 text-[11px] font-medium leading-[1.5] text-[#536891]">
-                    "{reviews[reviewPage].text}"
-                  </p>
-                </div>
+                  <div className="relative flex min-h-[160px] flex-col justify-between rounded-[20px] border border-[#e2eefc] bg-white p-5 shadow-[0_4px_16px_rgba(22,48,112,0.02)]">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#eef4ff] text-[11px] font-bold text-[#1a56db]">
+                            {reviews[reviewPage].avatar}
+                          </div>
+                          <div>
+                            <div className="text-[11px] font-bold text-[#17307a]">{reviews[reviewPage].name}</div>
+                            <div className="flex items-center gap-1 text-[9.5px] font-medium text-[#228453]">
+                              <CheckCircle2 className="h-3 w-3 fill-[#228453] text-white" />
+                              <span>{reviews[reviewPage].status}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-[9.5px] font-bold text-[#8a99ad]">{reviews[reviewPage].date}</span>
+                      </div>
 
-                {/* Pagination Dots */}
-                <div className="flex justify-center gap-1.5 pt-3">
-                  {reviews.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setReviewPage(i)}
-                      className={cn(
-                        "h-2 w-2 rounded-full transition-colors",
-                        i === reviewPage ? "bg-[#1a56db]" : "bg-[#cbd4e6]"
-                      )}
-                    />
-                  ))}
+                      <div className="mt-2.5 flex items-center gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={cn(
+                              'h-3.5 w-3.5',
+                              i < Math.floor(reviews[reviewPage].rating) ? 'fill-[#ff9f1a] text-[#ff9f1a]' : 'text-[#cbd4e6]'
+                            )}
+                          />
+                        ))}
+                      </div>
+
+                      <p className="mt-2.5 text-[11px] font-medium leading-[1.5] text-[#536891]">
+                        "{reviews[reviewPage].text}"
+                      </p>
+                    </div>
+
+                    <div className="flex justify-center gap-1.5 pt-3">
+                      {reviews.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setReviewPage(i)}
+                          className={cn('h-2 w-2 rounded-full transition-colors', i === reviewPage ? 'bg-[#1a56db]' : 'bg-[#cbd4e6]')}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </section>
+              </section>
+            </>
+          )}
         </div>
 
         {/* Right Column (Widgets) */}
@@ -479,6 +593,42 @@ export function GarageDetailPage({ garage, onBack }: GarageDetailPageProps) {
               </div>
             </div>
           </Card>
+
+          {isQuoteContext && quoteContext ? (
+            <Card className="rounded-[24px] border-[#e7eefc] bg-[linear-gradient(180deg,#fbfdff_0%,#f6f9ff_100%)] p-5 shadow-[0_16px_40px_rgba(21,48,122,0.06)] space-y-4">
+              <div>
+                <h3 className="text-[14.5px] font-bold text-[#17307a]">Quote Summary</h3>
+                <p className="mt-1 text-[11px] font-semibold text-[#8a99ad]">Quote context for this garage</p>
+              </div>
+
+              <div className="rounded-[16px] border border-[#e2eefc] bg-white p-4">
+                <div className="text-[11px] font-medium text-[#62749f]">Current Quote Price</div>
+                <div className="mt-2 text-[22px] font-extrabold tracking-[-0.03em] text-[#17307a]">
+                  {quoteContext.quote.price}
+                </div>
+                <div className="mt-3 text-[11px] font-medium text-[#159a5d]">
+                  You save {quoteContext.quote.savings}
+                </div>
+              </div>
+
+              <div className="rounded-[16px] border border-[#e2eefc] bg-white p-4">
+                <div className="text-[11px] font-medium text-[#62749f]">WrectifAI Estimate</div>
+                <div className="mt-2 text-[16px] font-bold text-[#159a5d]">{quoteContext.aiEstimateRange}</div>
+              </div>
+
+              <div className="rounded-[16px] border border-[#e2eefc] bg-white p-4">
+                <div className="text-[11px] font-medium text-[#62749f]">Selected Issues</div>
+                <div className="mt-3 space-y-2">
+                  {quoteContext.issues.map((issue) => (
+                    <div key={issue.id} className="text-[11px] font-semibold text-[#17307a]">
+                      {issue.title}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          ) : null}
+
           {/* Trust & Safety */}
           <Card className="rounded-[24px] border-[#e7eefc] bg-white p-5 shadow-[0_16px_40px_rgba(21,48,122,0.06)] space-y-4">
             <h3 className="text-[12.5px] font-bold text-[#17307a]">Trust & Safety</h3>

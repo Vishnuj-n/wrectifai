@@ -23,11 +23,19 @@ import { Card } from '@/components/common/card';
 import { Button } from '@/components/common/button';
 import { cn } from '@/utils/cn';
 import type { Garage } from '@/pages/garages/garages-page';
+import type { QuoteItem } from '@/components/quotes/quotes-shared';
+import type { DiagnoseIssue } from '@/components/ai-diagnose/diagnose-flow-shared';
 
 interface BookingConfirmedProps {
   garage: Garage;
   selectedDate: string;
   selectedSlot: string;
+  quoteContext?: {
+    quote: QuoteItem;
+    issues: DiagnoseIssue[];
+    issueIds: string[];
+    aiEstimateRange: string;
+  };
   onViewBookings: () => void;
 }
 
@@ -35,6 +43,7 @@ export function BookingConfirmed({
   garage,
   selectedDate,
   selectedSlot,
+  quoteContext,
   onViewBookings,
 }: BookingConfirmedProps) {
   const [copied, setCopied] = useState(false);
@@ -73,13 +82,21 @@ export function BookingConfirmed({
     },
   ];
 
-  const bulletPoints = [
-    'Complete vehicle inspection',
-    'Engine oil change',
-    'Filter replacement',
-    'Performance check',
-    'Basic adjustments',
-  ];
+  const bulletPoints = quoteContext
+    ? [
+        quoteContext.quote.meta,
+        quoteContext.quote.metaSecondary,
+        'Final inspection-based quote confirmation',
+        `Current quote price: ${quoteContext.quote.price}`,
+        `Estimated savings: ${quoteContext.quote.savings}`,
+      ]
+    : [
+        'Complete vehicle inspection',
+        'Engine oil change',
+        'Filter replacement',
+        'Performance check',
+        'Basic adjustments',
+      ];
 
   return (
     <div className="space-y-4 pb-12 animate-in fade-in duration-300">
@@ -191,11 +208,11 @@ export function BookingConfirmed({
               <div className="space-y-0.5">
                 <div className="text-[11.5px] font-semibold text-[#64748b]">Service</div>
                 <div className="text-[13px] font-extrabold text-[#0f172a]">
-                  General Service (Standard Service)
+                  {quoteContext ? `Quote-based repair booking` : 'General Service (Standard Service)'}
                 </div>
                 <div className="pt-0.5">
                   <span className="inline-block rounded-[6px] bg-[#eefbf3] px-2 py-0.5 text-[10px] font-bold text-[#228453]">
-                    60-90 mins
+                    {quoteContext ? quoteContext.quote.meta : '60-90 mins'}
                   </span>
                 </div>
               </div>
@@ -243,6 +260,40 @@ export function BookingConfirmed({
             </div>
           </div>
         </Card>
+
+        {quoteContext ? (
+          <Card className="rounded-[22px] border-[#e7eefc] p-6 shadow-[0_12px_32px_rgba(21,48,122,0.05)] bg-white space-y-5">
+            <h2 className="text-[14px] font-extrabold tracking-tight text-[#17307a]">
+              Quote Booking Summary
+            </h2>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="rounded-[16px] border border-[#e2eefc] bg-[#fbfdff] p-4">
+                <div className="text-[11.5px] font-semibold text-[#64748b]">Current Quote</div>
+                <div className="mt-2 text-[18px] font-extrabold text-[#0f172a]">{quoteContext.quote.price}</div>
+              </div>
+              <div className="rounded-[16px] border border-[#e2eefc] bg-[#fbfdff] p-4">
+                <div className="text-[11.5px] font-semibold text-[#64748b]">WrectifAI Estimate</div>
+                <div className="mt-2 text-[16px] font-extrabold text-[#159a5d]">{quoteContext.aiEstimateRange}</div>
+              </div>
+              <div className="rounded-[16px] border border-[#e2eefc] bg-[#fbfdff] p-4">
+                <div className="text-[11.5px] font-semibold text-[#64748b]">Savings</div>
+                <div className="mt-2 text-[16px] font-extrabold text-[#0f172a]">{quoteContext.quote.savings}</div>
+              </div>
+            </div>
+
+            <div className="rounded-[18px] border border-[#e2eefc] bg-[#f8fbff] p-5">
+              <div className="text-[12px] font-bold text-[#17307a]">Issues Booked</div>
+              <div className="mt-3 space-y-2">
+                {quoteContext.issues.map((issue) => (
+                  <div key={issue.id} className="text-[11.5px] font-semibold text-[#17307a]">
+                    {issue.title}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        ) : null}
 
         {/* Process Steps Timeline ("What's Next") */}
         <Card className="rounded-[22px] border-[#e7eefc] p-6 shadow-[0_12px_32px_rgba(21,48,122,0.05)] bg-white space-y-6">
@@ -299,14 +350,16 @@ export function BookingConfirmed({
               <div className="flex flex-wrap gap-2.5">
                 <Button
                   variant="outline"
-                  className="h-10 rounded-[12px] px-4 text-[11.5px] font-bold border-[#cbd4e6] text-[#17307a] hover:bg-[#f7f9fc] flex items-center gap-2"
+                  disabled
+                  className="h-10 rounded-[12px] px-4 text-[11.5px] font-bold border-[#cbd4e6] text-[#17307a] flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-100"
                 >
                   <MessageSquare className="h-4 w-4 text-[#1a56db]" />
                   Chat with Us
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-10 rounded-[12px] px-4 text-[11.5px] font-bold border-[#cbd4e6] text-[#17307a] hover:bg-[#f7f9fc] flex items-center gap-2"
+                  disabled
+                  className="h-10 rounded-[12px] px-4 text-[11.5px] font-bold border-[#cbd4e6] text-[#17307a] flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-100"
                 >
                   <Phone className="h-4 w-4 text-[#1a56db]" />
                   Call Garage
@@ -324,8 +377,8 @@ export function BookingConfirmed({
         {/* View My Bookings trigger */}
         <div className="flex justify-center pt-2">
           <Button
-            onClick={onViewBookings}
-            className="h-11 rounded-[12px] px-8 text-[12.5px] font-bold bg-[#1a56db] text-white hover:bg-[#0b43c4] shadow-md transition-all hover:scale-[1.01]"
+            disabled
+            className="h-11 rounded-[12px] px-8 text-[12.5px] font-bold bg-[#1a56db] text-white shadow-md disabled:cursor-not-allowed disabled:opacity-100"
           >
             View My Bookings
           </Button>
@@ -412,13 +465,15 @@ export function BookingConfirmed({
           <div className="flex gap-2">
             <Button
               variant="outline"
-              className="flex-1 h-10 rounded-[12px] text-[11px] font-bold border-[#cbd4e6] text-[#17307a] hover:bg-[#f7f9fc]"
+              disabled
+              className="flex-1 h-10 rounded-[12px] text-[11px] font-bold border-[#cbd4e6] text-[#17307a] disabled:cursor-not-allowed disabled:opacity-100"
             >
               Reschedule
             </Button>
             <Button
               variant="outline"
-              className="flex-1 h-10 rounded-[12px] text-[11px] font-bold border-[#ffd2d2] text-[#d14343] hover:bg-[#fff9f9]"
+              disabled
+              className="flex-1 h-10 rounded-[12px] text-[11px] font-bold border-[#ffd2d2] text-[#d14343] disabled:cursor-not-allowed disabled:opacity-100"
             >
               Cancel Booking
             </Button>

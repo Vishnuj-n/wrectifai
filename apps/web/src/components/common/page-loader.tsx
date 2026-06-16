@@ -8,27 +8,37 @@ interface PageLoaderProps {
 }
 
 export function PageLoader({ imageSources = [] }: PageLoaderProps) {
-  // Smart cache detection: check if images are already cached by the browser
-  const [isLoadingNeeded] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    if (imageSources.length === 0) return false;
+  const [progress, setProgress] = useState(0);
+  const [isFadeOut, setIsFadeOut] = useState(false);
+  const [isDestroyed, setIsDestroyed] = useState(false);
+  const [isLoadingNeeded, setIsLoadingNeeded] = useState(imageSources.length > 0);
 
+  useEffect(() => {
+    if (imageSources.length === 0) {
+      setIsLoadingNeeded(false);
+      return;
+    }
+
+    // Smart cache detection: check if images are already cached by the browser
+    let allCached = true;
     for (const src of imageSources) {
       const img = new window.Image();
       img.src = src;
       if (!img.complete) {
-        return true; // At least one image is not cached, loader is needed
+        allCached = false;
+        break;
       }
     }
-    return false; // All images are already cached, no loader needed!
-  });
 
-  const [progress, setProgress] = useState(0);
-  const [isFadeOut, setIsFadeOut] = useState(false);
-  const [isDestroyed, setIsDestroyed] = useState(false);
-
-  useEffect(() => {
-    if (!isLoadingNeeded) return;
+    if (allCached) {
+      // If all images are cached, fade out immediately and destroy the loader
+      setIsFadeOut(true);
+      const destroyTimer = setTimeout(() => {
+        setIsDestroyed(true);
+        setIsLoadingNeeded(false);
+      }, 500);
+      return () => clearTimeout(destroyTimer);
+    }
 
     let isMounted = true;
     let loadedCount = 0;
@@ -81,7 +91,7 @@ export function PageLoader({ imageSources = [] }: PageLoaderProps) {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [isLoadingNeeded, imageSources]);
+  }, [imageSources]);
 
   useEffect(() => {
     if (!isLoadingNeeded) return;

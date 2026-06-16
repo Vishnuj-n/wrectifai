@@ -26,6 +26,7 @@ import { useRouter } from 'next/navigation';
 import { DashboardShell } from '@/components/home/dashboard-shell';
 import { TopNavbar } from '@/components/home/top-navbar';
 import { Card } from '@/components/common/card';
+import { GarageMoreMenu } from '@/components/quotes/garage-more-menu';
 import { quotesList } from '@/components/quotes/quotes-shared';
 import { cn } from '@/utils/cn';
 
@@ -104,7 +105,7 @@ const priceRows: PriceRow[] = [
     emphasize: true,
   },
   {
-    label: `You Save (vs Wrectfai high)`,
+    label: `You Save (vs WrectifAI high)`,
     aiValue: '\u2013',
     quoteValues: {
       quickpit: `${RUPEE}450 (12%)`,
@@ -217,7 +218,6 @@ export function CompareQuotesPage({ ids }: { ids?: string }) {
 
   const [selectedQuoteIds, setSelectedQuoteIds] = useState<string[]>(initialSelectedIds);
   const [showOnlyDifferences, setShowOnlyDifferences] = useState(false);
-
   const selectedQuotes = useMemo(() => {
     const matches = quotesList.filter((quote) => selectedQuoteIds.includes(quote.id));
     return selectedQuoteIds.length ? matches : [];
@@ -340,14 +340,14 @@ export function CompareQuotesPage({ ids }: { ids?: string }) {
                   <span className="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] border border-[#cdddff] bg-white text-[#2451f6]">
                     <Image
                       src="/assets/Robo_icon.png"
-                      alt="Wrectfai"
+                      alt="WrectifAI"
                       width={29}
                       height={29}
                       className="h-[29px] w-[29px] object-contain"
                     />
                   </span>
                   <div className="text-[14px] font-semibold leading-6 text-[#1e48d4]">
-                    Wrectfai Estimated
+                    WrectifAI Estimated
                     <br />
                     Price
                   </div>
@@ -423,38 +423,62 @@ export function CompareQuotesPage({ ids }: { ids?: string }) {
                       {quote.price}
                     </div>
                     <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#e8f7ee] px-2.5 py-1 text-[10px] font-semibold text-[#18965c]">
-                      <span>You save {quote.savings} (vs Wrectfai high)</span>
+                      <span>You save {quote.savings} (vs WrectifAI high)</span>
                       <Info className="h-3 w-3 text-[#7789b3]" />
                     </div>
                   </div>
 
                   <div className="mt-4 grid grid-cols-4 gap-1.5">
-                    {actionItems.map(({ label, icon: Icon, tone }) => (
-                      <button
-                        key={`${quote.id}-${label}`}
-                        type="button"
-                        className="flex flex-col items-center gap-2 text-center"
-                      >
-                        <span
-                          className={cn(
-                            'flex h-[32px] w-[32px] items-center justify-center rounded-full border bg-white',
-                            tone === 'purple'
-                              ? 'border-[#eedaff] text-[#d145ff]'
-                              : 'border-[#dbe5ff] text-[#2451f6]'
-                          )}
+                    {actionItems.map(({ label, icon: Icon, tone }) => {
+                      if (label === 'More') {
+                        return (
+                          <GarageMoreMenu
+                            key={`${quote.id}-${label}`}
+                            onViewGarageProfile={() => router.push('/garages')}
+                            onViewReviews={() => {
+                              document.getElementById('compare-details')?.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            onViewServices={() => {
+                              document.getElementById('compare-details')?.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            onPriceBreakup={() => {
+                              document.getElementById('price-breakup')?.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            onCompareDetails={() => {
+                              document.getElementById('compare-details')?.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            onRemove={() => toggleQuote(quote.id)}
+                          />
+                        );
+                      }
+
+                      return (
+                        <button
+                          key={`${quote.id}-${label}`}
+                          type="button"
+                          className="flex flex-col items-center gap-2 text-center"
                         >
-                          <Icon className="h-4 w-4" />
-                        </span>
-                        <span
-                          className={cn(
-                            'text-[10px] font-medium leading-4',
-                            tone === 'purple' ? 'text-[#8f53d8]' : 'text-[#2451f6]'
-                          )}
-                        >
-                          {label}
-                        </span>
-                      </button>
-                    ))}
+                          <span
+                            className={cn(
+                              'flex h-[32px] w-[32px] items-center justify-center rounded-full border bg-white',
+                              tone === 'purple'
+                                ? 'border-[#eedaff] text-[#d145ff]'
+                                : 'border-[#dbe5ff] text-[#2451f6]'
+                            )}
+                          >
+                            <Icon className="h-4 w-4" />
+                          </span>
+                          <span
+                            className={cn(
+                              'text-[10px] font-medium leading-4',
+                              tone === 'purple' ? 'text-[#8f53d8]' : 'text-[#2451f6]'
+                            )}
+                          >
+                            {label}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
 
                 </Card>
@@ -513,14 +537,14 @@ export function CompareQuotesPage({ ids }: { ids?: string }) {
               ) : null}
             </div>
 
-            <Card className="overflow-hidden rounded-[16px] border-[#e3eafc] bg-white shadow-[0_8px_24px_rgba(37,73,153,0.04)]">
+            <Card id="price-breakup" className="overflow-hidden rounded-[16px] border-[#e3eafc] bg-white shadow-[0_8px_24px_rgba(37,73,153,0.04)]">
               <div className="grid border-b border-[#e9eefb] bg-white" style={tableGridStyle}>
                 <div className="px-4 py-3 text-[13px] font-semibold text-[#173cab]">
                   Price Breakup{' '}
                   <span className="text-[11px] font-medium text-[#7c8bb5]">(Incl. taxes)</span>
                 </div>
                 <div className="px-3 py-3 text-center text-[12px] font-semibold leading-5 text-[#3d56aa]">
-                  Wrectfai Estimated Price
+                  WrectifAI Estimated Price
                   <div className="text-[11px] font-medium text-[#7c8bb5]">(For reference)</div>
                 </div>
                 {selectedQuotes.map((quote) => (
@@ -579,7 +603,7 @@ export function CompareQuotesPage({ ids }: { ids?: string }) {
               ))}
             </Card>
 
-            <Card className="overflow-hidden rounded-[16px] border-[#e3eafc] bg-white shadow-[0_8px_24px_rgba(37,73,153,0.04)]">
+            <Card id="compare-details" className="overflow-hidden rounded-[16px] border-[#e3eafc] bg-white shadow-[0_8px_24px_rgba(37,73,153,0.04)]">
               <div className="border-b border-[#e9eefb] px-4 py-3 text-[13px] font-semibold text-[#173cab]">
                 Service &amp; Other Details
               </div>

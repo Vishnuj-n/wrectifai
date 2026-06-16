@@ -24,6 +24,9 @@ import { DashboardShell } from '@/components/home/dashboard-shell';
 import { TopNavbar } from '@/components/home/top-navbar';
 import { cn } from '@/utils/cn';
 import { PageLoader } from '@/components/common/page-loader';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { quotesList, aiEstimatedQuoteRange } from '@/components/quotes/quotes-shared';
+import { resultIssues } from '@/components/ai-diagnose/diagnose-flow-shared';
 
 import { GarageDetailPage } from '@/components/garages/garage-detail-page';
 
@@ -461,6 +464,8 @@ function GarageCard({
 }
 
 function GaragesContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [selectedGarage, setSelectedGarage] = useState<Garage | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [sortBy, setSortBy] = useState<SortOption>('best');
@@ -578,6 +583,51 @@ function GaragesContent() {
   };
 
   const activeFiltersCount = Object.values(filters).filter((v) => v !== 'all').length;
+
+  const quoteContext = useMemo(() => {
+    const source = searchParams?.get('source');
+    const quoteId = searchParams?.get('quote');
+
+    if (source !== 'quotes' || !quoteId) {
+      return null;
+    }
+
+    const quote = quotesList.find((item) => item.id === quoteId);
+    const garageFromQuote = quote ? garages.find((item) => item.name === quote.garage) : null;
+    const issueIds = (searchParams?.get('issues') || '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const issues = resultIssues.filter((issue) => issueIds.includes(issue.id));
+
+    if (!quote || !garageFromQuote) {
+      return null;
+    }
+
+    return {
+      garage: garageFromQuote,
+      quote,
+      issues,
+      issueIds,
+      aiEstimateRange: aiEstimatedQuoteRange,
+    };
+  }, [searchParams]);
+
+  if (quoteContext) {
+    return (
+      <GarageDetailPage
+        garage={quoteContext.garage}
+        mode="quote-context"
+        quoteContext={{
+          quote: quoteContext.quote,
+          issues: quoteContext.issues,
+          issueIds: quoteContext.issueIds,
+          aiEstimateRange: quoteContext.aiEstimateRange,
+        }}
+        onBack={() => router.push('/quotes')}
+      />
+    );
+  }
 
   if (selectedGarage) {
     return (

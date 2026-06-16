@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   BellRing,
   ChevronDown,
@@ -21,7 +21,9 @@ import {
 import { DashboardShell } from '@/components/home/dashboard-shell';
 import { TopNavbar } from '@/components/home/top-navbar';
 import { Card } from '@/components/common/card';
-import { quotesList } from '@/components/quotes/quotes-shared';
+import { GarageMoreMenu } from '@/components/quotes/garage-more-menu';
+import { aiEstimatedQuoteRange, quoteContextDefaultIssueIds, quotesList } from '@/components/quotes/quotes-shared';
+import { resultIssues } from '@/components/ai-diagnose/diagnose-flow-shared';
 import { cn } from '@/utils/cn';
 import type { QuoteStatus } from '@/components/quotes/quotes-shared';
 
@@ -42,6 +44,7 @@ const actionItems = [
 export function QuotesPage() {
   const quotesPerPage = 5;
   const router = useRouter();
+  const searchParams = useSearchParams();
   const pageRootRef = useRef<HTMLDivElement>(null);
   const [compareMode, setCompareMode] = useState(false);
   const [selectedQuoteIds, setSelectedQuoteIds] = useState<string[]>([]);
@@ -80,6 +83,18 @@ export function QuotesPage() {
   const selectedQuoteCount = selectedQuoteIds.length;
   const canCompare = selectedQuoteCount >= 2;
   const selectedLimitReached = selectedQuoteCount >= 3;
+  const issueIds = useMemo(
+    () =>
+      (searchParams?.get('issues') || quoteContextDefaultIssueIds.join(','))
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean),
+    [searchParams]
+  );
+  const requestedIssues = useMemo(
+    () => resultIssues.filter((issue) => issueIds.includes(issue.id)),
+    [issueIds]
+  );
 
   useEffect(() => {
     setCurrentPage(1);
@@ -184,16 +199,16 @@ export function QuotesPage() {
                   <span className="flex h-[50px] w-[50px] items-center justify-center rounded-[14px] border border-[#dce5ff] bg-[#fbfdff] text-[#2451f6]">
                     <Image
                       src="/assets/Robo_icon.png"
-                      alt="Wrectfai"
+                      alt="WrectifAI"
                       width={42}
                       height={42}
                       className="h-[36px] w-[36px] object-contain"
                     />
                   </span>
                   <div>
-                    <div className="text-[13px] font-semibold text-[#173cab]">Wrectfai Estimated Quote</div>
+                    <div className="text-[13px] font-semibold text-[#173cab]">WrectifAI Estimated Quote</div>
                     <p className="mt-1.5 text-[11px] leading-5 text-[#62749f]">
-                      This is a Wrectfai generated estimate based on your selected issues and market data.
+                      This is a WrectifAI generated estimate based on your selected issues and market data.
                     </p>
                   </div>
                 </div>
@@ -202,7 +217,7 @@ export function QuotesPage() {
                   <div>
                     <div className="text-[12px] font-medium text-[#5d6f9b]">Estimated Price Range</div>
                     <div className="mt-1.5 whitespace-nowrap text-[15.5px] font-semibold tracking-[-0.02em] text-[#159a5d]">
-                      {RUPEE}2,800 - {RUPEE}3,600
+                      {aiEstimatedQuoteRange}
                     </div>
                   </div>
                   <button
@@ -300,32 +315,56 @@ export function QuotesPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-4 sm:gap-x-1">
-                      {actionItems.map(({ label, icon: Icon, tone }) => (
-                        <button
-                          key={`${quote.id}-${label}`}
-                          type="button"
-                          className="flex w-[72px] flex-col items-center gap-2 justify-self-center text-center"
-                        >
-                          <span
-                            className={cn(
-                              'flex h-[48px] w-[48px] items-center justify-center rounded-full border bg-white',
-                              tone === 'purple'
-                                ? 'border-[#efd8ff] text-[#cb45ff]'
-                                : 'border-[#dfe7fb] text-[#2451f6]'
-                            )}
+                      {actionItems.map(({ label, icon: Icon, tone }) =>
+                        label === 'More Options' ? (
+                          <GarageMoreMenu
+                            key={`${quote.id}-${label}`}
+                            triggerLabel={label}
+                            onViewGarageProfile={() => router.push('/garages')}
+                            onViewReviews={() => {}}
+                            onViewServices={() => {}}
+                            onPriceBreakup={() => {}}
+                            onCompareDetails={() => {}}
+                            onSaveGarage={() => {}}
+                            onShareGarage={() => {}}
+                            onRemove={() => {
+                              setSelectedQuoteIds((current) => current.filter((item) => item !== quote.id));
+                            }}
+                          />
+                        ) : (
+                          <button
+                            key={`${quote.id}-${label}`}
+                            type="button"
+                            onClick={() => {
+                              if (label === 'Select Garage') {
+                                router.push(
+                                  `/garages?source=quotes&quote=${quote.id}&issues=${issueIds.join(',')}`
+                                );
+                              }
+                            }}
+                            className="flex w-[72px] flex-col items-center gap-2 justify-self-center text-center"
                           >
-                            <Icon className="h-5 w-5" />
-                          </span>
-                          <span
-                            className={cn(
-                              'text-[10.5px] leading-4',
-                              tone === 'purple' ? 'text-[#8f53d8]' : 'text-[#5f7099]'
-                            )}
-                          >
-                            {label}
-                          </span>
-                        </button>
-                      ))}
+                            <span
+                              className={cn(
+                                'flex h-[48px] w-[48px] items-center justify-center rounded-full border bg-white',
+                                tone === 'purple'
+                                  ? 'border-[#efd8ff] text-[#cb45ff]'
+                                  : 'border-[#dfe7fb] text-[#2451f6]'
+                              )}
+                            >
+                              <Icon className="h-5 w-5" />
+                            </span>
+                            <span
+                              className={cn(
+                                'text-[10.5px] leading-4',
+                                tone === 'purple' ? 'text-[#8f53d8]' : 'text-[#5f7099]'
+                              )}
+                            >
+                              {label}
+                            </span>
+                          </button>
+                        )
+                      )}
                     </div>
                   </div>
                 </Card>
@@ -433,10 +472,13 @@ export function QuotesPage() {
                 </div>
 
                 <div>
-                  <div className="text-[12px] font-medium text-[#62749f]">Issues Requested (2)</div>
+                  <div className="text-[12px] font-medium text-[#62749f]">Issues Requested ({requestedIssues.length})</div>
                   <div className="mt-3 space-y-3 text-[12px] text-[#173cab]">
-                    <div>{BULLET}&nbsp; Wheel Balancing Issue</div>
-                    <div>{BULLET}&nbsp; Wheel Alignment Issue</div>
+                    {requestedIssues.map((issue) => (
+                      <div key={issue.id}>
+                        {BULLET}&nbsp; {issue.title}
+                      </div>
+                    ))}
                   </div>
                 </div>
 

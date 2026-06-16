@@ -18,6 +18,9 @@ export type QuoteItem = {
 
 const RUPEE = '\u20B9';
 
+export const quoteContextDefaultIssueIds = ['wheel-balance', 'wheel-alignment'];
+export const aiEstimatedQuoteRange = `${RUPEE}2,800 - ${RUPEE}3,600`;
+
 export const quotesList: QuoteItem[] = [
   {
     id: 'quickpit',

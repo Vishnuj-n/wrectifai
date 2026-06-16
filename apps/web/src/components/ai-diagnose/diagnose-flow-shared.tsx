@@ -1,6 +1,7 @@
 'use client';
 
-import { BadgeCheck, Check, CircleAlert, Gauge, Info, Lock, PhoneCall, Send, Shield, ShieldCheck, Wrench } from 'lucide-react';
+import { BadgeCheck, Check, CircleAlert, Gauge, Info, Lock, PhoneCall, Send, Settings, Shield, ShieldCheck, Tag, Wrench } from 'lucide-react';
+import { issueCategories } from '@/components/ai-diagnose/issue-intake-config';
 import { cn } from '@/utils/cn';
 
 export type DiagnoseIssue = {
@@ -15,7 +16,7 @@ export type DiagnoseIssue = {
   imageSrc: string;
 };
 
-export const resultIssues: DiagnoseIssue[] = [
+const legacyResultIssues: DiagnoseIssue[] = [
   {
     id: 'wheel-balance',
     title: 'Wheel Balancing Issue',
@@ -54,6 +55,8 @@ export const resultIssues: DiagnoseIssue[] = [
   },
 ];
 
+export const resultIssues: DiagnoseIssue[] = issueCategories.flatMap((category) => category.possibleIssues);
+
 export const resultSummaryItems = [
   {
     title: 'Top Concern',
@@ -75,10 +78,10 @@ export const resultSummaryItems = [
   },
   {
     title: 'What This Means',
-    heading: 'Address this issue early',
-    body: 'Addressing these issues early can prevent further damage and ensure safety.',
+    heading: 'Addressing these issues early can prevent further damage and ensure safety.',
+    body: '',
     pill: 'Important',
-    pillClass: 'bg-[#e8f8eb] text-[#23a249]',
+    pillClass: 'bg-[#e8f8eb] text-[#25a24a]',
     icon: Info,
     iconClass: 'bg-[#edf2ff] text-[#4974ff]',
   },
@@ -120,12 +123,12 @@ export const resultTrustItems = [
   {
     title: 'Trusted Garages Only',
     description: 'Verified & rated garages',
-    icon: BadgeCheck,
+    icon: Settings,
   },
   {
     title: 'Best Price Guarantee',
     description: 'Get the best deals',
-    icon: Gauge,
+    icon: Tag,
   },
   {
     title: 'Secure & Private',
@@ -135,40 +138,42 @@ export const resultTrustItems = [
 ];
 
 export function ConfidenceGauge({ value }: { value: number }) {
-  const radius = 52;
+  const radius = 72;
   const circumference = Math.PI * radius;
   const dashOffset = circumference - (circumference * value) / 100;
 
   return (
-    <div className="relative mx-auto h-[126px] w-[190px] overflow-hidden">
-      <svg className="absolute inset-0" viewBox="0 0 190 126" aria-hidden="true">
-        <path
-          d="M 31 95 A 64 64 0 0 1 159 95"
-          fill="none"
-          stroke="#e7edff"
-          strokeWidth="13"
-          strokeLinecap="round"
-        />
-        <path
-          d="M 31 95 A 64 64 0 0 1 159 95"
-          fill="none"
-          stroke="url(#confidence-gradient)"
-          strokeWidth="13"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={dashOffset}
-        />
-        <defs>
-          <linearGradient id="confidence-gradient" x1="0%" x2="100%">
-            <stop offset="0%" stopColor="#1533d5" />
-            <stop offset="100%" stopColor="#5a8bff" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <div className="absolute inset-x-0 top-[38px] text-center">
-        <div className="text-[44px] font-semibold tracking-[-0.05em] text-[#1d37b9]">{value}%</div>
-        <div className="mt-2 text-[18px] font-semibold text-[#2aaa4c]">High Confidence</div>
+    <div className="relative mx-auto flex flex-col items-center">
+      <div className="relative h-[95px] w-[180px] overflow-hidden">
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 180 95" aria-hidden="true">
+          <path
+            d="M 18 90 A 72 72 0 0 1 162 90"
+            fill="none"
+            stroke="#e7edff"
+            strokeWidth="11"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 18 90 A 72 72 0 0 1 162 90"
+            fill="none"
+            stroke="url(#confidence-gradient)"
+            strokeWidth="11"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+          />
+          <defs>
+            <linearGradient id="confidence-gradient" x1="0%" x2="100%">
+              <stop offset="0%" stopColor="#1533d5" />
+              <stop offset="100%" stopColor="#5a8bff" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div className="absolute inset-x-0 bottom-1 text-center">
+          <div className="text-[38px] font-bold tracking-tight text-[#17307a] leading-none">{value}%</div>
+        </div>
       </div>
+      <div className="mt-4 text-[13px] font-bold text-[#1ea15f]">High Confidence</div>
     </div>
   );
 }
@@ -210,12 +215,12 @@ export function StepRibbon({
             key={step.id}
             className={cn(
               'relative flex items-center gap-4 px-6 py-6',
-              index < steps.length - 1 ? 'border-b border-[#eef2ff] md:border-b-0 md:border-r' : '',
+              index < steps.length - 1 ? 'border-b border-[#eef2ff] md:border-b-0' : '',
               index < steps.length - 1 ? 'border-[#eef2ff]' : ''
             )}
           >
             {index < steps.length - 1 ? (
-              <div className="pointer-events-none absolute right-[-23px] top-0 z-10 hidden h-full w-[46px] bg-white md:block [clip-path:polygon(0_0,100%_50%,0_100%,18%_100%,72%_50%,18%_0)]" />
+              <div className="pointer-events-none absolute right-[-23px] top-0 z-10 hidden h-full w-[46px] bg-[#e6ecfb] md:block [clip-path:polygon(0_0,100%_50%,0_100%,4%_100%,96%_50%,4%_0)]" />
             ) : null}
             <div
               className={cn(
@@ -230,11 +235,16 @@ export function StepRibbon({
               {step.complete && !step.active ? <Check className="h-5 w-5 stroke-[3]" /> : step.id}
             </div>
             <div className="relative z-20">
-              <div className={cn('text-[14px] font-semibold', step.active ? 'text-[#1e46ce]' : 'text-[#1f3275]')}>
+              <div className={cn('text-[14px] font-semibold', step.active ? 'text-[#2350f6]' : 'text-[#1f3275]')}>
                 {step.title}
               </div>
               <div className="mt-1 text-[13px] text-[#7384af]">{step.description}</div>
             </div>
+            {step.complete && !step.active && (
+              <div className="ml-auto hidden md:flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1ea84a] text-white">
+                <Check className="h-3 w-3 stroke-[3]" />
+              </div>
+            )}
           </div>
         ))}
       </div>

@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import {
   Bot,
@@ -36,7 +36,19 @@ import {
   BadgeCheck,
   Shield,
   CarFront,
+  type LucideIcon,
 } from 'lucide-react';
+import {
+  fallbackCategoryQuestion,
+  getCategoryById,
+  getCategoryByLabel,
+  issueCategories,
+  MAX_DIAGNOSE_QUESTIONS,
+  rankIssueCategories,
+  type DiagnosticIssueResult,
+  type IssueCategoryConfig,
+  type IssueQuestion,
+} from '@/components/ai-diagnose/issue-intake-config';
 import { DashboardShell } from '@/components/home/dashboard-shell';
 import { TopNavbar } from '@/components/home/top-navbar';
 import { Card } from '@/components/common/card';
@@ -109,7 +121,7 @@ const footerFeatures = [
   },
 ];
 
-const resultIssues = [
+const legacyResultIssues = [
   {
     id: 'wheel-balance',
     title: 'Wheel Balancing Issue',
@@ -148,7 +160,7 @@ const resultIssues = [
   },
 ];
 
-const resultSummaryItems = [
+const legacyResultSummaryItems = [
   {
     title: 'Top Concern',
     heading: 'Wheel Balancing Issue',
@@ -228,6 +240,183 @@ const resultTrustItems = [
   },
 ];
 
+const CATEGORY_MATCH_QUESTION_ID = 'category_match';
+const FALLBACK_NONE_OPTION = 'None of these';
+const DEFAULT_ISSUE_TEXT = 'I need help diagnosing my car issue.';
+
+type AnswerMap = Record<string, string>;
+
+type AnswerSummaryItem = {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+};
+
+type ResultSummaryItem = {
+  title: string;
+  heading: string;
+  body: string;
+  pill: string;
+  pillClass: string;
+  icon: LucideIcon;
+  iconClass: string;
+};
+
+type InitialFlowState = {
+  issueText: string;
+  introText: string;
+  initialQuestion: IssueQuestion;
+  activeCategoryId: string | null;
+};
+
+const summaryIcons: LucideIcon[] = [Gauge, CheckCircle2, Clock3, Wrench, Info];
+
+function getCurrentTimeLabel() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function createQuestionEntry(question: IssueQuestion): ChatEntry {
+  return {
+    id: question.id,
+    sender: 'assistant',
+    time: getCurrentTimeLabel(),
+    kind: 'question',
+    question: question.question,
+    options: question.options,
+    selected: '',
+  };
+}
+
+function buildInitialFlow(issueText: string): InitialFlowState {
+  const trimmedIssue = issueText.trim();
+  const rankedMatches = rankIssueCategories(trimmedIssue);
+  const candidateCategories = rankedMatches.slice(0, 3).map((entry) => entry.category);
+
+  if (candidateCategories.length === 1) {
+    return {
+      issueText: trimmedIssue || DEFAULT_ISSUE_TEXT,
+      introText: `This sounds like ${candidateCategories[0].label.toLowerCase()}. I will ask a few targeted questions.`,
+      initialQuestion: candidateCategories[0].questions[0],
+      activeCategoryId: candidateCategories[0].id,
+    };
+  }
+
+  if (candidateCategories.length > 1) {
+    return {
+      issueText: trimmedIssue || DEFAULT_ISSUE_TEXT,
+      introText: 'I found a few likely issue groups. Pick the closest one so I can ask the right questions.',
+      initialQuestion: {
+        id: CATEGORY_MATCH_QUESTION_ID,
+        label: 'Best match',
+        question: 'Which of these best matches the issue you typed?',
+        options: [...candidateCategories.map((category) => category.label), FALLBACK_NONE_OPTION],
+      },
+      activeCategoryId: null,
+    };
+  }
+
+  return {
+    issueText: trimmedIssue || DEFAULT_ISSUE_TEXT,
+    introText: trimmedIssue
+      ? 'I could not classify that directly, so I will narrow it down with a few issue-specific questions.'
+      : 'Describe the issue and I will narrow it down with a few issue-specific questions.',
+    initialQuestion: fallbackCategoryQuestion,
+    activeCategoryId: null,
+  };
+}
+
+function getNextQuestion(activeCategoryId: string | null, answers: AnswerMap) {
+  const category = activeCategoryId ? getCategoryById(activeCategoryId) : undefined;
+  if (!category) {
+    return null;
+  }
+
+  return category.questions.find((question) => !answers[question.id]) ?? null;
+}
+
+function getResolvedIssues(activeCategoryId: string | null) {
+  return getCategoryById(activeCategoryId ?? '')?.possibleIssues ?? issueCategories[0].possibleIssues;
+}
+
+function getResultSummaryItems(
+  activeCategory: IssueCategoryConfig | undefined,
+  issues: DiagnosticIssueResult[]
+): ResultSummaryItem[] {
+  if (!activeCategory && issues.length === legacyResultIssues.length) {
+    return legacyResultSummaryItems as ResultSummaryItem[];
+  }
+
+  const topIssue = issues[0];
+  const secondaryIssues = issues.slice(1);
+
+  return [
+    {
+      title: 'Top Concern',
+      heading: topIssue?.title ?? 'Further inspection needed',
+      body: topIssue?.description ?? 'Your answers suggest a primary issue, but a garage inspection is still recommended.',
+      pill: 'High Priority',
+      pillClass: 'bg-[#ffe9ec] text-[#ff5a63]',
+      icon: CircleAlert,
+      iconClass: 'bg-[#fff1f1] text-[#ff5d67]',
+    },
+    {
+      title: 'Other Possible Issues',
+      heading: secondaryIssues.length ? secondaryIssues.map((issue) => issue.title).join(', ') : 'No strong secondary match',
+      body: secondaryIssues.length
+        ? `These ${activeCategory?.label.toLowerCase() ?? 'related'} issues can also produce similar symptoms.`
+        : 'Your answers point more strongly to one primary issue than multiple competing matches.',
+      pill: 'Medium Priority',
+      pillClass: 'bg-[#fff1de] text-[#f39b20]',
+      icon: Wrench,
+      iconClass: 'bg-[#fff5e8] text-[#f39b20]',
+    },
+    {
+      title: 'What This Means',
+      heading: activeCategory ? `${activeCategory.label} is the most likely issue family` : 'Targeted inspection recommended',
+      body:
+        activeCategory?.summaryMeaning ??
+        'The follow-up answers are enough to narrow the issue family, but a physical inspection is still required for confirmation.',
+      pill: 'Important',
+      pillClass: 'bg-[#e8f8eb] text-[#23a249]',
+      icon: Info,
+      iconClass: 'bg-[#edf2ff] text-[#4974ff]',
+    },
+  ];
+}
+
+function buildAnswerSummaryItems(answers: AnswerMap) {
+  const questionLookup = new Map<string, IssueQuestion>();
+
+  issueCategories.forEach((category) => {
+    category.questions.forEach((question) => {
+      questionLookup.set(question.id, question);
+    });
+  });
+
+  questionLookup.set(CATEGORY_MATCH_QUESTION_ID, {
+    id: CATEGORY_MATCH_QUESTION_ID,
+    label: 'Best match',
+    question: '',
+    options: [],
+  });
+  questionLookup.set(fallbackCategoryQuestion.id, fallbackCategoryQuestion);
+
+  return Object.entries(answers)
+    .map(([questionId, value], index) => {
+      const question = questionLookup.get(questionId);
+      if (!question || !value) {
+        return null;
+      }
+
+      return {
+        label: question.label,
+        value,
+        icon: summaryIcons[index % summaryIcons.length],
+      };
+    })
+    .filter((item): item is AnswerSummaryItem => item !== null);
+}
+
 function ProgressRing({ progress }: { progress: number }) {
   const radius = 31;
   const circumference = 2 * Math.PI * radius;
@@ -271,7 +460,25 @@ function AssistantPill() {
   );
 }
 
-function DiagnoseAnalyzingScreen() {
+function DiagnoseAnalyzingScreen({ onComplete }: { onComplete?: () => void }) {
+  const [currentStep, setCurrentStep] = useState(0);
+
+  useEffect(() => {
+    const step1 = setTimeout(() => setCurrentStep(1), 1000);
+    const step2 = setTimeout(() => setCurrentStep(2), 2000);
+    const step3 = setTimeout(() => setCurrentStep(3), 3000);
+    const done = setTimeout(() => {
+      if (onComplete) onComplete();
+    }, 4000);
+
+    return () => {
+      clearTimeout(step1);
+      clearTimeout(step2);
+      clearTimeout(step3);
+      clearTimeout(done);
+    };
+  }, [onComplete]);
+
   const analyzingSteps = [
     {
       title: 'Analyzing issue',
@@ -296,56 +503,101 @@ function DiagnoseAnalyzingScreen() {
   ];
 
   return (
-    <div className="px-4 pb-5 pt-2 md:px-7">
-      <div className="overflow-hidden rounded-[24px] border border-[#e8eefc] bg-[radial-gradient(circle_at_top,#f7f9ff_0%,#ffffff_60%)] px-4 py-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] md:px-8 md:py-10">
+    <div className="px-4 pb-4 pt-1 md:px-7">
+      <div className="overflow-hidden rounded-[24px] border border-[#e8eefc] bg-[radial-gradient(circle_at_top,#f7f9ff_0%,#ffffff_60%)] px-4 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] md:px-8 md:py-6">
         <div className="relative mx-auto flex max-w-[760px] flex-col items-center text-center">
-          <div className="pointer-events-none absolute left-1/2 top-[84px] hidden h-px w-[72%] -translate-x-1/2 bg-[linear-gradient(90deg,rgba(72,117,255,0)_0%,rgba(72,117,255,0.2)_18%,rgba(72,117,255,0.42)_50%,rgba(72,117,255,0.2)_82%,rgba(72,117,255,0)_100%)] md:block" />
+          <div className="pointer-events-none absolute left-1/2 top-[69px] hidden h-px w-[72%] -translate-x-1/2 bg-[linear-gradient(90deg,rgba(72,117,255,0)_0%,rgba(72,117,255,0.2)_18%,rgba(72,117,255,0.42)_50%,rgba(72,117,255,0.2)_82%,rgba(72,117,255,0)_100%)] md:block" />
 
-          <div className="relative flex h-[180px] w-[180px] items-center justify-center">
-            <div className="absolute inset-[10px] rounded-full border-[6px] border-[#edf3ff]" />
+          <div className="relative flex h-[150px] w-[150px] items-center justify-center">
+            <div className="absolute inset-[8px] rounded-full border-[6px] border-[#edf3ff]" />
             <div className="absolute inset-0 rounded-full border-[6px] border-[#2f67ff] border-t-transparent border-l-transparent animate-spin [animation-duration:2.4s]" />
-            <div className="absolute inset-[28px] rounded-full border border-[#dae6ff] bg-white/70 shadow-[0_24px_48px_rgba(39,73,154,0.08)] backdrop-blur-sm" />
-            <div className="absolute inset-[42px] rounded-full bg-[radial-gradient(circle_at_30%_30%,#275dff_0%,#143fb8_58%,#0d2f8f_100%)] shadow-[0_20px_40px_rgba(24,69,198,0.28)]" />
-            <div className="relative flex h-[92px] w-[92px] items-center justify-center rounded-full border border-white/25 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.18),rgba(255,255,255,0.04))] text-[42px] font-bold tracking-[-0.04em] text-white">
-              AI
+            <div className="absolute inset-[24px] rounded-full border border-[#dae6ff] bg-white/70 shadow-[0_24px_48px_rgba(39,73,154,0.08)] backdrop-blur-sm" />
+            <div className="absolute inset-[36px] rounded-full bg-[radial-gradient(circle_at_30%_30%,#275dff_0%,#143fb8_58%,#0d2f8f_100%)] shadow-[0_20px_40px_rgba(24,69,198,0.28)]" />
+            <div className="relative flex h-[78px] w-[78px] items-center justify-center rounded-full border border-white/25 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.18),rgba(255,255,255,0.04))]">
+              <Image
+                src="/Logo_noBg.png"
+                alt="WrectifAI Logo"
+                width={50}
+                height={50}
+                priority
+                className="object-contain"
+              />
             </div>
           </div>
 
-          <h2 className="mt-3 text-[28px] font-semibold tracking-[-0.04em] text-[#1f43a8]">
+          <h2 className="mt-2 text-[26px] font-semibold tracking-[-0.04em] text-[#1f43a8]">
             Analyzing your issue...
           </h2>
-          <p className="mt-3 max-w-[520px] text-[15px] leading-7 text-[#46619d]">
-            Our AI is checking possible causes and preparing the best solutions for you.
+          <p className="mt-2 max-w-[520px] text-[14.5px] leading-relaxed text-[#46619d]">
+            WrectifAI is checking possible causes and preparing the best solutions for you.
           </p>
 
-          <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#e3ebff] bg-white/90 px-4 py-2 text-[13px] font-medium text-[#4b63a0] shadow-[0_10px_26px_rgba(39,73,154,0.06)]">
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#e3ebff] bg-white/90 px-4 py-2 text-[13px] font-medium text-[#4b63a0] shadow-[0_10px_26px_rgba(39,73,154,0.06)]">
             <Clock3 className="h-4 w-4 text-[#416cff]" />
             <span>This may take a few seconds, please wait.</span>
           </div>
 
-          <div className="mt-9 grid w-full gap-4 md:grid-cols-4">
-            {analyzingSteps.map(({ title, description, icon: Icon }, index) => (
-              <div key={title} className="relative flex flex-col items-center text-center">
-                {index < analyzingSteps.length - 1 ? (
-                  <div className="absolute left-[calc(50%+28px)] top-[22px] hidden h-px w-[calc(100%-56px)] bg-[#d9e4ff] md:block" />
-                ) : null}
-                <div className="relative z-10 flex h-11 w-11 items-center justify-center rounded-full border border-[#dce7ff] bg-white text-[#3263f4] shadow-[0_10px_24px_rgba(39,73,154,0.08)]">
-                  <Icon className={cn('h-5 w-5', index === 0 ? 'animate-pulse' : '')} />
+          <div className="mt-6 grid w-full gap-4 md:grid-cols-4">
+            {analyzingSteps.map(({ title, description, icon: Icon }, index) => {
+              const isComplete = index < currentStep;
+              const isActive = index === currentStep;
+              return (
+                <div key={title} className="relative flex flex-col items-center text-center">
+                  {index < analyzingSteps.length - 1 ? (
+                    <div className="absolute left-[calc(50%+22px)] top-[22px] hidden h-px w-[calc(100%-44px)] bg-[#d9e4ff] md:block">
+                      <div
+                        className={cn(
+                          'h-full bg-[#2350f6] transition-all duration-500 ease-out',
+                          index < currentStep ? 'w-full' : 'w-0'
+                        )}
+                      />
+                    </div>
+                  ) : null}
+                  <div
+                    className={cn(
+                      'relative z-10 flex h-11 w-11 items-center justify-center rounded-full border transition-all duration-300',
+                      isComplete
+                        ? 'border-[#1ea84a] bg-[#1ea84a] text-white shadow-[0_8px_20px_rgba(30,168,74,0.15)]'
+                        : isActive
+                          ? 'border-[#2350f6] bg-[#2350f6] text-white shadow-[0_8px_20px_rgba(35,80,246,0.25)] scale-110'
+                          : 'border-[#dce7ff] bg-white text-[#7d8bb0]'
+                    )}
+                  >
+                    {isComplete ? (
+                      <Check className="h-5 w-5 stroke-[3]" />
+                    ) : (
+                      <Icon className={cn('h-5 w-5', isActive ? 'animate-pulse' : '')} />
+                    )}
+                  </div>
+                  <div
+                    className={cn(
+                      'mt-3 text-[13px] font-semibold transition-colors duration-300',
+                      isActive ? 'text-[#2350f6]' : isComplete ? 'text-[#1ea84a]' : 'text-[#21419a]'
+                    )}
+                  >
+                    {title}
+                  </div>
+                  <div
+                    className={cn(
+                      'mt-1 text-[12px] transition-colors duration-300',
+                      isActive ? 'text-[#5a8bff]' : 'text-[#647aa8]'
+                    )}
+                  >
+                    {description}
+                  </div>
                 </div>
-                <div className="mt-3 text-[13px] font-semibold text-[#21419a]">{title}</div>
-                <div className="mt-1 text-[12px] text-[#647aa8]">{description}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          <div className="mt-8 w-full rounded-[18px] border border-[#e8eefc] bg-white/90 px-4 py-4 shadow-[0_10px_28px_rgba(39,73,154,0.04)]">
+          <div className="mt-6 w-full rounded-[18px] border border-[#e8eefc] bg-white/90 px-4 py-3.5 shadow-[0_10px_28px_rgba(39,73,154,0.04)]">
             <div className="flex items-center justify-center gap-2 text-[13px] font-medium text-[#2d59d3]">
               <ShieldCheck className="h-4.5 w-4.5" />
-              <span>AI scans thousands of data points to provide accurate diagnosis and recommendations.</span>
+              <span>WrectifAI scans thousands of data points to provide accurate diagnosis and recommendations.</span>
             </div>
           </div>
 
-          <div className="mt-6 flex items-center justify-center gap-2 text-[12px] text-[#6c7fa8]">
+          <div className="mt-4 flex items-center justify-center gap-2 text-[12px] text-[#6c7fa8]">
             <Lock className="h-3.5 w-3.5" />
             <span>100% Secure</span>
             <span>•</span>
@@ -397,11 +649,10 @@ function ConfidenceGauge({ value }: { value: number }) {
 }
 
 type DiagnoseResultsScreenProps = {
-  answers: {
-    occursAt: string;
-    wheelShakes: string;
-    started: string;
-  };
+  issueText: string;
+  answerSummaryItems: AnswerSummaryItem[];
+  activeCategory: IssueCategoryConfig | undefined;
+  resultIssues: DiagnosticIssueResult[];
   selectedIssues: string[];
   detailsText: string;
   onDetailsTextChange: (value: string) => void;
@@ -411,7 +662,10 @@ type DiagnoseResultsScreenProps = {
 };
 
 function DiagnoseResultsScreen({
-  answers,
+  issueText,
+  answerSummaryItems,
+  activeCategory,
+  resultIssues,
   selectedIssues,
   detailsText,
   onDetailsTextChange,
@@ -421,6 +675,10 @@ function DiagnoseResultsScreen({
 }: DiagnoseResultsScreenProps) {
   const selectedCount = selectedIssues.length;
   const detailsTabs = ['Text Details', 'Photo', 'Video', 'Audio'];
+  const resultSummaryItems = getResultSummaryItems(activeCategory, resultIssues);
+  const collectedSummaryText = answerSummaryItems.length
+    ? answerSummaryItems.map((item) => `${item.label}: ${item.value}`).join(' | ')
+    : 'No structured follow-up answers were captured.';
 
   return (
     <div className="space-y-5 pb-6">
@@ -434,83 +692,50 @@ function DiagnoseResultsScreen({
         </Link>
         <div>
           <h1 className="text-[37px] font-semibold tracking-[-0.045em] text-[#183db1]">
-            AI Diagnoses Results
+            WrectifAI Diagnosis Results
           </h1>
-          <p className="mt-1 text-[16px] text-[#6176ac]">Here&apos;s what our AI found based on your input</p>
+          <p className="mt-1 text-[16px] text-[#6176ac]">Here&apos;s what WrectifAI found based on your input</p>
         </div>
       </div>
 
-      <Card className="overflow-hidden rounded-[22px] border-[#e6ecfb] bg-white p-0 shadow-[0_14px_32px_rgba(37,73,153,0.04)]">
-        <div className="grid md:grid-cols-3">
-          {[
-            {
-              id: '1',
-              title: 'Describe Issue',
-              description: "Tell us what's wrong",
-              complete: true,
-              active: false,
-            },
-            {
-              id: '2',
-              title: 'AI Analysis',
-              description: 'AI is analyzing the issue',
-              complete: true,
-              active: true,
-            },
-            {
-              id: '3',
-              title: 'Results',
-              description: 'Solutions & recommendations',
-              complete: false,
-              active: false,
-            },
-          ].map((step, index) => (
-            <div
-              key={step.id}
-              className={cn(
-                'relative flex items-center gap-4 px-6 py-6',
-                index < 2 ? 'border-b border-[#eef2ff] md:border-b-0 md:border-r' : '',
-                index < 2 ? 'border-[#eef2ff]' : ''
-              )}
-            >
-              {index < 2 ? (
-                <div className="pointer-events-none absolute right-[-23px] top-0 z-10 hidden h-full w-[46px] bg-white md:block [clip-path:polygon(0_0,100%_50%,0_100%,18%_100%,72%_50%,18%_0)]" />
-              ) : null}
-              <div
-                className={cn(
-                  'relative z-20 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[16px] font-semibold',
-                  step.complete && !step.active
-                    ? 'bg-[#1ea84a] text-white'
-                    : step.active
-                      ? 'bg-[#2350f6] text-white'
-                      : 'bg-[#eef1fb] text-[#9da8c6]'
-                )}
-              >
-                {step.complete && !step.active ? <Check className="h-5 w-5 stroke-[3]" /> : step.id}
-              </div>
-              <div className="relative z-20">
-                <div className={cn('text-[14px] font-semibold', step.active ? 'text-[#1e46ce]' : 'text-[#1f3275]')}>
-                  {step.title}
-                </div>
-                <div className="mt-1 text-[13px] text-[#7384af]">{step.description}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
       <Card className="rounded-[22px] border-[#e6ecfb] bg-white px-6 py-5 shadow-[0_12px_28px_rgba(37,73,153,0.04)]">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
+        <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+          <div className="min-w-0 flex-1">
             <div className="text-[18px] font-semibold text-[#1f3da4]">Your Issue</div>
             <p className="mt-3 text-[14px] leading-7 text-[#3d568f]">
-              Car is shaking at 70-80 kmph and I can feel vibration in the steering wheel.
+              {issueText}
             </p>
+            <p className="mt-3 text-[13px] leading-6 text-[#6c7ca6]">
+              WrectifAI used the issue you typed and the follow-up chat answers below to build this diagnosis.
+            </p>
+            {activeCategory ? (
+              <div className="mt-4 inline-flex rounded-full bg-[#eef4ff] px-3 py-1 text-[12px] font-semibold text-[#2853e8]">
+                Detected issue family: {activeCategory.label}
+              </div>
+            ) : null}
+            <div className="mt-5 rounded-[16px] border border-[#e8eefc] bg-[#fbfcff] px-4 py-4">
+              <div className="text-[13px] font-semibold text-[#24459f]">Collected From Chat</div>
+              <p className="mt-2 text-[13px] leading-6 text-[#60729d]">
+                {collectedSummaryText}
+              </p>
+              {answerSummaryItems.length ? (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {answerSummaryItems.map(({ label, value }) => (
+                    <span
+                      key={label}
+                      className="rounded-full border border-[#dbe6ff] bg-white px-3 py-1.5 text-[12px] font-medium text-[#31508f]"
+                    >
+                      {label}: {value}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </div>
           <button
             type="button"
             onClick={onEditIssue}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-[12px] border border-[#dde6ff] px-5 text-[14px] font-medium text-[#2451e5] transition-colors hover:bg-[#f8fbff]"
+            className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-[12px] border border-[#dde6ff] px-5 text-[14px] font-medium text-[#2451e5] transition-colors hover:bg-[#f8fbff]"
           >
             <PenLine className="h-4 w-4" />
             <span>Edit Issue</span>
@@ -522,7 +747,7 @@ function DiagnoseResultsScreen({
         <div className="space-y-5">
           <Card className="rounded-[22px] border-[#e6ecfb] bg-white px-6 py-6 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
             <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-[18px] font-semibold text-[#183db1]">AI Diagnosis Summary</h2>
+              <h2 className="text-[18px] font-semibold text-[#183db1]">WrectifAI Diagnosis Summary</h2>
               <span className="rounded-full bg-[#e8f8eb] px-3 py-1 text-[11px] font-semibold text-[#25a24a]">
                 Analysis completed in 8.4s
               </span>
@@ -547,7 +772,7 @@ function DiagnoseResultsScreen({
 
               <div>
                 <p className="text-center text-[13px] text-[#687ba8] lg:text-left">
-                  Our AI analysis indicates potential issues that need immediate attention.
+                  WrectifAI analysis indicates potential issues that need immediate attention.
                 </p>
                 <div className="mt-6 space-y-5">
                   {resultSummaryItems.map(({ title, heading, body, pill, pillClass, icon: Icon, iconClass }) => (
@@ -689,7 +914,7 @@ function DiagnoseResultsScreen({
               <ConfidenceGauge value={92} />
             </div>
             <p className="mx-auto mt-4 max-w-[180px] text-[13px] leading-7 text-[#6a7ca9]">
-              Based on AI analysis of your issue description and thousands of similar cases.
+              Based on WrectifAI analysis of your issue description and thousands of similar cases.
             </p>
           </Card>
 
@@ -739,32 +964,32 @@ function DiagnoseResultsScreen({
         </div>
       </div>
 
-      <Card className="rounded-[22px] border-[#e6ecfb] bg-[linear-gradient(180deg,#fbfcff_0%,#ffffff_100%)] px-6 py-5 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-4">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#f2f5ff] text-[#365ff1]">
-              <ShieldCheck className="h-6 w-6" />
+      <Card className="rounded-[22px] border-[#e6ecfb] bg-[linear-gradient(180deg,#fbfcff_0%,#ffffff_100%)] px-6 py-4 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#f2f5ff] text-[#365ff1]">
+              <ShieldCheck className="h-5.5 w-5.5" />
             </span>
             <div>
-              <div className="text-[21px] font-semibold tracking-[-0.03em] text-[#173cab]">
+              <div className="text-[17px] font-bold text-[#17307a]">
                 Ready to get the best quotes from trusted garages?
               </div>
-              <p className="mt-2 text-[14px] text-[#61729f]">
+              <p className="mt-1 text-[13px] text-[#5f7099]">
                 Send your selected issues and compare the best offers.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col items-start gap-2 lg:items-end">
+          <div className="flex flex-col items-start gap-1.5 lg:items-end">
             <button
               type="button"
               onClick={onRequestQuotes}
-              className="flex h-[56px] items-center justify-center gap-3 rounded-[14px] bg-[linear-gradient(90deg,#1a46e8_0%,#245cff_100%)] px-8 text-[18px] font-semibold text-white shadow-[0_18px_36px_rgba(37,82,235,0.22)] transition-transform hover:scale-[1.01]"
+              className="flex h-[46px] items-center justify-center gap-2 rounded-[12px] bg-[linear-gradient(90deg,#1a46e8_0%,#245cff_100%)] px-6 text-[14.5px] font-semibold text-white shadow-[0_10px_24px_rgba(37,82,235,0.18)] transition-transform hover:scale-[1.01]"
             >
-              <Send className="h-5 w-5" />
+              <Send className="h-4.5 w-4.5" />
               <span>Request Quotes ({selectedCount})</span>
             </button>
-            <div className="text-[12px] text-[#7f8eb5]">You will receive quotes within 30 mins</div>
+            <div className="text-[11.5px] text-[#7f8eb5]">You will receive quotes within 30 mins</div>
           </div>
         </div>
       </Card>
@@ -787,12 +1012,26 @@ function DiagnoseResultsScreen({
 }
 
 type FindingQuotesScreenProps = {
+  resultIssues: DiagnosticIssueResult[];
   selectedIssues: string[];
   onBack: () => void;
 };
 
-function FindingQuotesScreen({ selectedIssues, onBack }: FindingQuotesScreenProps) {
+function FindingQuotesScreen({ resultIssues, selectedIssues, onBack }: FindingQuotesScreenProps) {
   const chosenIssues = resultIssues.filter((issue) => selectedIssues.includes(issue.id));
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState(0);
+
+  useEffect(() => {
+    if (currentStep < 4) {
+      const timer = setTimeout(() => {
+        setCurrentStep((prev) => prev + 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      router.push(`/request-aent?issues=${selectedIssues.join(',')}`);
+    }
+  }, [currentStep, selectedIssues, router]);
 
   return (
     <div className="space-y-5 pb-6">
@@ -803,7 +1042,7 @@ function FindingQuotesScreen({ selectedIssues, onBack }: FindingQuotesScreenProp
           className="inline-flex items-center gap-2 text-[13px] font-medium text-[#2f54d1] transition-colors hover:text-[#163cb3]"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          <span>Back to AI Diagnose Results</span>
+          <span>Back to WrectifAI Diagnosis Results</span>
         </button>
       </div>
 
@@ -818,8 +1057,15 @@ function FindingQuotesScreen({ selectedIssues, onBack }: FindingQuotesScreenProp
             <div className="absolute inset-x-1/2 top-0 h-[124px] w-[124px] -translate-x-1/2 rounded-[26px] border border-[#cfe0ff] bg-[radial-gradient(circle_at_top,#ffffff_0%,#edf3ff_78%)] shadow-[0_16px_40px_rgba(44,92,255,0.12)]">
               <div className="absolute inset-0 rounded-[26px] border border-[#edf3ff]" />
               <div className="absolute inset-[13px] rounded-[18px] border-2 border-dashed border-[#b6cbff]" />
-              <div className="absolute inset-0 flex items-center justify-center text-[58px] font-semibold tracking-[-0.08em] text-[#2551ea]">
-                AI
+              <div className="absolute inset-0 flex items-center justify-center p-4">
+                <Image
+                  src="/Logo_noBg.png"
+                  alt="WrectifAI Logo"
+                  width={80}
+                  height={80}
+                  priority
+                  className="object-contain"
+                />
               </div>
             </div>
             <div className="absolute left-1/2 top-[92px] h-[95px] w-[320px] -translate-x-1/2 rounded-[999px] bg-[radial-gradient(ellipse_at_center,rgba(74,121,255,0.16)_0%,rgba(74,121,255,0)_72%)] blur-md" />
@@ -847,35 +1093,43 @@ function FindingQuotesScreen({ selectedIssues, onBack }: FindingQuotesScreenProp
       <Card className="rounded-[22px] border-[#e7edfd] bg-white px-5 py-0 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
         <div className="grid md:grid-cols-4">
           {[
-            { label: 'Analyzing your issue', complete: true, active: false },
-            { label: 'Finding nearby trusted garages', complete: true, active: false },
-            { label: 'Matching with best service providers', complete: false, active: true },
-            { label: 'Sending your request', complete: false, active: false },
-          ].map((step, index) => (
-            <div
-              key={step.label}
-              className={cn(
-                'flex items-center gap-4 px-5 py-7',
-                index < 3 ? 'border-b border-[#eef2ff] md:border-b-0 md:border-r md:border-[#eef2ff]' : ''
-              )}
-            >
-              <span
+            { label: 'Analyzing your issue' },
+            { label: 'Finding nearby trusted garages' },
+            { label: 'Matching with best service providers' },
+            { label: 'Sending your request' },
+          ].map((step, index) => {
+            const isComplete = index < currentStep;
+            const isActive = index === currentStep;
+            return (
+              <div
+                key={step.label}
                 className={cn(
-                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2',
-                  step.complete
-                    ? 'border-[#17884f] bg-[#17884f] text-white'
-                    : step.active
-                      ? 'border-[#2351f6] bg-white text-[#2351f6]'
-                      : 'border-[#7d85ba] bg-white text-transparent'
+                  'flex items-center gap-4 px-5 py-7',
+                  index < 3 ? 'border-b border-[#eef2ff] md:border-b-0 md:border-r md:border-[#eef2ff]' : ''
                 )}
               >
-                {step.complete ? <Check className="h-4 w-4 stroke-[3]" /> : <span className="h-3 w-3 rounded-full bg-current" />}
-              </span>
-              <div className={cn('text-[14px] font-medium', step.active ? 'text-[#1e46ce]' : 'text-[#213882]')}>
-                {step.label}
+                <span
+                  className={cn(
+                    'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-300',
+                    isComplete
+                      ? 'border-[#17884f] bg-[#17884f] text-white'
+                      : isActive
+                        ? 'border-[#2351f6] bg-white text-[#2351f6]'
+                        : 'border-[#7d85ba] bg-white text-transparent'
+                  )}
+                >
+                  {isComplete ? (
+                    <Check className="h-4 w-4 stroke-[3]" />
+                  ) : (
+                    <span className="h-3 w-3 rounded-full bg-current" />
+                  )}
+                </span>
+                <div className={cn('text-[14px] font-medium transition-colors duration-300', isActive ? 'text-[#1e46ce]' : 'text-[#213882]')}>
+                  {step.label}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Card>
 
@@ -944,64 +1198,49 @@ function FindingQuotesScreen({ selectedIssues, onBack }: FindingQuotesScreenProp
           <h3 className="text-[18px] font-semibold text-[#183db1]">What&apos;s Happening?</h3>
           <div className="mt-8 space-y-7">
             {[
-              {
-                title: 'Analyzing your issue',
-                status: 'Completed',
-                complete: true,
-                active: false,
-                pending: false,
-              },
-              {
-                title: 'Finding nearby trusted garages',
-                status: 'Completed',
-                complete: true,
-                active: false,
-                pending: false,
-              },
-              {
-                title: 'Matching with best service providers',
-                status: 'In progress',
-                complete: false,
-                active: true,
-                pending: false,
-              },
-              {
-                title: 'Sending your request',
-                status: 'Pending',
-                complete: false,
-                active: false,
-                pending: true,
-              },
-            ].map((step, index, array) => (
-              <div key={step.title} className="relative flex gap-4">
-                {index < array.length - 1 ? (
-                  <div className="absolute left-[13px] top-[32px] h-[34px] w-px border-l border-dashed border-[#d8e4ff]" />
-                ) : null}
-                <span
-                  className={cn(
-                    'relative z-10 mt-0.5 flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full border-2',
-                    step.complete
-                      ? 'border-[#17884f] bg-[#17884f] text-white'
-                      : step.active
-                        ? 'border-[#2351f6] bg-white text-[#2351f6]'
-                        : 'border-[#707ab3] bg-white text-transparent'
-                  )}
-                >
-                  {step.complete ? <Check className="h-3.5 w-3.5 stroke-[3]" /> : <span className="h-2.5 w-2.5 rounded-full bg-current" />}
-                </span>
-                <div>
-                  <div className="text-[16px] font-medium text-[#183aa7]">{step.title}</div>
-                  <div
+              { title: 'Analyzing your issue' },
+              { title: 'Finding nearby trusted garages' },
+              { title: 'Matching with best service providers' },
+              { title: 'Sending your request' },
+            ].map((step, index, array) => {
+              const isComplete = index < currentStep;
+              const isActive = index === currentStep;
+              const status = isComplete ? 'Completed' : isActive ? 'In progress' : 'Pending';
+              return (
+                <div key={step.title} className="relative flex gap-4">
+                  {index < array.length - 1 ? (
+                    <div className="absolute left-[13px] top-[32px] h-[34px] w-px border-l border-dashed border-[#d8e4ff]" />
+                  ) : null}
+                  <span
                     className={cn(
-                      'mt-2 text-[14px] font-medium',
-                      step.complete ? 'text-[#6477a6]' : step.active ? 'text-[#2351f6]' : 'text-[#7f8db3]'
+                      'relative z-10 mt-0.5 flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-300',
+                      isComplete
+                        ? 'border-[#17884f] bg-[#17884f] text-white'
+                        : isActive
+                          ? 'border-[#2351f6] bg-white text-[#2351f6]'
+                          : 'border-[#707ab3] bg-white text-transparent'
                     )}
                   >
-                    {step.status}
+                    {isComplete ? (
+                      <Check className="h-3.5 w-3.5 stroke-[3]" />
+                    ) : (
+                      <span className="h-2.5 w-2.5 rounded-full bg-current" />
+                    )}
+                  </span>
+                  <div>
+                    <div className="text-[16px] font-medium text-[#183aa7]">{step.title}</div>
+                    <div
+                      className={cn(
+                        'mt-2 text-[14px] font-medium transition-colors duration-300',
+                        isComplete ? 'text-[#6477a6]' : isActive ? 'text-[#2351f6]' : 'text-[#7f8db3]'
+                      )}
+                    >
+                      {status}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
       </div>
@@ -1025,31 +1264,24 @@ function FindingQuotesScreen({ selectedIssues, onBack }: FindingQuotesScreenProp
 
 export function AIDiagnosePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialIssueParam = searchParams?.get('issue')?.trim() ?? '';
+  const initialFlow = buildInitialFlow(initialIssueParam);
+  const [issueText, setIssueText] = useState(initialFlow.issueText);
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(initialFlow.activeCategoryId);
   const [messages, setMessages] = useState<ChatEntry[]>([
     {
       id: 'message-1',
       sender: 'assistant',
       time: '10:30 AM',
       kind: 'message',
-      text: "Thanks! Let's narrow this down ✨",
+      text: initialFlow.introText,
       highlighted: true,
     },
-    {
-      id: 'question-1',
-      sender: 'assistant',
-      time: '10:30 AM',
-      kind: 'question',
-      question: 'When do you feel the vibration?',
-      options: ['Only while braking', 'While accelerating', 'At constant speed', 'Always'],
-      selected: '',
-    },
+    createQuestionEntry(initialFlow.initialQuestion),
   ]);
 
-  const [answers, setAnswers] = useState({
-    occursAt: '-',
-    wheelShakes: '-',
-    started: '-',
-  });
+  const [answers, setAnswers] = useState<AnswerMap>({});
 
   const [progress, setProgress] = useState(60);
   const [isTyping, setIsTyping] = useState(false);
@@ -1059,7 +1291,7 @@ export function AIDiagnosePage() {
   const [isFindingQuotes, setIsFindingQuotes] = useState(false);
   const [isAnalyzingResults, setIsAnalyzingResults] = useState(false);
   const [typedMessage, setTypedMessage] = useState('');
-  const [selectedIssues, setSelectedIssues] = useState<string[]>(['wheel-balance', 'wheel-alignment']);
+  const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
   const [detailsText, setDetailsText] = useState('');
   
   const pageRootRef = useRef<HTMLDivElement>(null);
@@ -1094,7 +1326,48 @@ export function AIDiagnosePage() {
     chatScroller.scrollTo({ top: chatScroller.scrollHeight, behavior: 'smooth' });
   }, [messages, isTyping]);
 
+  const applyDiagnoseFlow = (nextIssue: string) => {
+    const flow = buildInitialFlow(nextIssue);
+
+    setMessages([
+      {
+        id: 'message-1',
+        sender: 'assistant',
+        time: '10:30 AM',
+        kind: 'message',
+        text: flow.introText,
+        highlighted: true,
+      },
+      createQuestionEntry(flow.initialQuestion),
+    ]);
+    setIssueText(flow.issueText);
+    setActiveCategoryId(flow.activeCategoryId);
+    setAnswers({});
+    setProgress(60);
+    setIsTyping(false);
+    setTypingText('WrectifAI is thinking...');
+    setActiveStepId('2');
+    setIsDiagnosed(false);
+    setIsFindingQuotes(false);
+    setIsAnalyzingResults(false);
+    setTypedMessage('');
+    setSelectedIssues(
+      flow.activeCategoryId
+        ? getResolvedIssues(flow.activeCategoryId)
+            .slice(0, 2)
+            .map((issue) => issue.id)
+        : []
+    );
+    setDetailsText('');
+  };
+
+  useEffect(() => {
+    applyDiagnoseFlow(initialIssueParam);
+  }, [initialIssueParam]);
+
   const resetDiagnoseFlow = () => {
+    applyDiagnoseFlow(initialIssueParam);
+    return;
     setMessages([
       {
         id: 'message-1',
@@ -1135,12 +1408,102 @@ export function AIDiagnosePage() {
     );
   };
 
+  const activeCategory = activeCategoryId ? getCategoryById(activeCategoryId) : undefined;
+  const resultIssues = activeCategoryId ? getResolvedIssues(activeCategoryId) : legacyResultIssues;
+  const answerSummaryItems = buildAnswerSummaryItems(answers);
+
   const handleSelectOption = (questionId: string, option: string) => {
     if (isAnalyzingResults) return;
 
     // Prevent re-selecting options once chosen
     const question = messages.find(m => m.id === questionId);
     if (question && question.kind === 'question' && question.selected) return;
+
+    const nextAnswers = { ...answers, [questionId]: option };
+    const nextAnsweredCount = Object.keys(nextAnswers).length;
+    const nextProgress = Math.min(95, 55 + nextAnsweredCount * 10);
+
+    setMessages((prev) =>
+      [
+        ...prev.map((msg) =>
+          msg.id === questionId && msg.kind === 'question'
+            ? { ...msg, selected: option }
+            : msg
+        ),
+        {
+          id: `reply-${questionId}`,
+          sender: 'user',
+          time: getCurrentTimeLabel(),
+          kind: 'reply',
+          text: option,
+        } satisfies ChatEntry,
+      ]
+    );
+    setAnswers(nextAnswers);
+    setProgress(nextProgress);
+
+    const queueNextQuestion = (nextQuestion: IssueQuestion, nextCategoryId?: string | null) => {
+      setIsTyping(true);
+      setTypingText('WrectifAI is processing...');
+
+      setTimeout(() => {
+        setIsTyping(false);
+
+        if (typeof nextCategoryId !== 'undefined') {
+          setActiveCategoryId(nextCategoryId);
+
+          if (nextCategoryId) {
+            setSelectedIssues(getResolvedIssues(nextCategoryId).slice(0, 2).map((issue) => issue.id));
+          }
+        }
+
+        setMessages((prev) => [...prev, createQuestionEntry(nextQuestion)]);
+      }, 1000);
+    };
+
+    if (questionId === CATEGORY_MATCH_QUESTION_ID) {
+      if (option === FALLBACK_NONE_OPTION) {
+        queueNextQuestion(fallbackCategoryQuestion, null);
+        return;
+      }
+
+      const matchedCategory = getCategoryByLabel(option);
+      const nextQuestion = matchedCategory?.questions[0];
+
+      if (!matchedCategory || !nextQuestion || nextAnsweredCount >= MAX_DIAGNOSE_QUESTIONS) {
+        setActiveStepId('2');
+        setIsAnalyzingResults(true);
+        return;
+      }
+
+      queueNextQuestion(nextQuestion, matchedCategory.id);
+      return;
+    }
+
+    if (questionId === fallbackCategoryQuestion.id) {
+      const matchedCategory = getCategoryByLabel(option);
+      const nextQuestion = matchedCategory?.questions[0];
+
+      if (!matchedCategory || !nextQuestion || nextAnsweredCount >= MAX_DIAGNOSE_QUESTIONS) {
+        setActiveStepId('2');
+        setIsAnalyzingResults(true);
+        return;
+      }
+
+      queueNextQuestion(nextQuestion, matchedCategory.id);
+      return;
+    }
+
+    const nextQuestion = getNextQuestion(activeCategoryId, nextAnswers);
+
+    if (!nextQuestion || nextAnsweredCount >= MAX_DIAGNOSE_QUESTIONS) {
+      setActiveStepId('2');
+      setIsAnalyzingResults(true);
+      return;
+    }
+
+    queueNextQuestion(nextQuestion);
+    return;
 
     // 1. Update selected option in the question bubble
     setMessages((prev) =>
@@ -1211,41 +1574,13 @@ export function AIDiagnosePage() {
       setProgress(95);
       setActiveStepId('2'); // AI Analysis Step
       setIsAnalyzingResults(true);
-
-      setTimeout(() => {
-        setIsAnalyzingResults(false);
-        setProgress(100);
-        setActiveStepId('3'); // Results/Completed Step
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: 'message-diag-complete',
-            sender: 'assistant',
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            kind: 'message',
-            text: `Diagnostic Complete! 🛠️
-
-Based on WrectifAI's evaluation of your inputs against 2M+ real-world automotive cases, we detected:
-
-1. ⚠️ **Wheel Unbalance** (88% match)
-   *Potential cause:* Uneven tyre wear or loss of wheel weights.
-   *Urgency:* Medium - requires wheel alignment & balancing service.
-
-2. ⚠️ **Worn Brake Rotors** (42% match)
-   *Potential cause:* Distorted brake disc surface.
-   *Urgency:* Low to Medium - inspect brake pads & discs.
-
-            You can now connect with our verified service partners to resolve this.`,
-          },
-        ]);
-        router.push('/ai-diagnose-results');
-      }, 2200);
     }
   };
 
   const handleSendMessage = () => {
     if (isAnalyzingResults) return;
     if (!typedMessage.trim()) return;
+
 
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const userMsg: ChatEntry = {
@@ -1306,7 +1641,7 @@ Based on WrectifAI's evaluation of your inputs against 2M+ real-world automotive
               "text-[13px] font-semibold transition-colors duration-300",
               activeStepId === '3' ? "text-[#2b61f0]" : "text-[#1a56db] font-bold"
             )}>
-              AI Analysis
+              WrectifAI Analysis
             </span>
           </div>
           
@@ -1340,7 +1675,7 @@ Based on WrectifAI's evaluation of your inputs against 2M+ real-world automotive
 
   // Next Steps Tracker
   const nextSteps = [
-    { id: '1', title: 'Analyzing', description: 'AI is analyzing your inputs', active: !isDiagnosed },
+    { id: '1', title: 'Analyzing', description: 'WrectifAI is analyzing your inputs', active: !isDiagnosed },
     { id: '2', title: 'Detecting Issues', description: 'Identifying possible root causes', active: activeStepId === '2' },
     { id: '3', title: 'Matching Garages', description: 'Finding best garages for you', active: activeStepId === '3' },
     { id: '4', title: 'Getting Quotes', description: "We'll notify you once quotes are ready", active: false },
@@ -1352,6 +1687,7 @@ Based on WrectifAI's evaluation of your inputs against 2M+ real-world automotive
         <DashboardShell header={<TopNavbar />}>
           <div ref={pageRootRef} className="pt-1">
             <FindingQuotesScreen
+              resultIssues={resultIssues}
               selectedIssues={selectedIssues}
               onBack={() => setIsFindingQuotes(false)}
             />
@@ -1364,14 +1700,34 @@ Based on WrectifAI's evaluation of your inputs against 2M+ real-world automotive
       <DashboardShell header={<TopNavbar />}>
         <div ref={pageRootRef} className="pt-1">
           <DiagnoseResultsScreen
-            answers={answers}
+            issueText={issueText}
+            answerSummaryItems={answerSummaryItems}
+            activeCategory={activeCategory}
+            resultIssues={resultIssues}
             selectedIssues={selectedIssues}
             detailsText={detailsText}
             onDetailsTextChange={setDetailsText}
             onToggleIssue={toggleSelectedIssue}
             onEditIssue={resetDiagnoseFlow}
-            onRequestQuotes={() => setIsFindingQuotes(true)}
+            onRequestQuotes={() => router.push(`/finding-quotes?issues=${selectedIssues.join(',')}`)}
           />
+        </div>
+      </DashboardShell>
+    );
+  }
+
+  const handleAnalysisComplete = () => {
+    setIsAnalyzingResults(false);
+    setProgress(100);
+    setActiveStepId('3'); // Completed
+    setIsDiagnosed(true);
+  };
+
+  if (isAnalyzingResults) {
+    return (
+      <DashboardShell header={<TopNavbar />}>
+        <div ref={pageRootRef} className="pt-1">
+          <DiagnoseAnalyzingScreen onComplete={handleAnalysisComplete} />
         </div>
       </DashboardShell>
     );
@@ -1382,7 +1738,7 @@ Based on WrectifAI's evaluation of your inputs against 2M+ real-world automotive
       <div ref={pageRootRef} className="space-y-4 pb-6 pt-1">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-[26px] font-semibold tracking-[-0.03em] text-[#21419a]">
-            AI Diagnose
+            WrectifAI Diagnose
           </h1>
           <button
             type="button"
@@ -1415,7 +1771,7 @@ Based on WrectifAI's evaluation of your inputs against 2M+ real-world automotive
                     <div className="pb-4">
                       <h2 className="text-[14px] font-semibold text-[#2447a2]">
                         {isDiagnosed
-                          ? "AI Diagnostics Complete!"
+                          ? "WrectifAI Diagnostics Complete!"
                           : isAnalyzingResults
                             ? "WrectifAI is analyzing your issue."
                             : "I need a bit more information to diagnose accurately."}
@@ -1445,7 +1801,7 @@ Based on WrectifAI's evaluation of your inputs against 2M+ real-world automotive
                             <span className="text-[#a4b1cb]">10:30 AM</span>
                           </div>
                           <p className="text-[13px] leading-6 text-[#35518d]">
-                            Car is shaking at 70-80 kmph and I can feel vibration in the steering wheel.
+                            {issueText}
                           </p>
                         </div>
                       </div>
@@ -1693,6 +2049,8 @@ Based on WrectifAI's evaluation of your inputs against 2M+ real-world automotive
                 <button
                   type="button"
                   onClick={() => {
+                    resetDiagnoseFlow();
+                    return;
                     // Reset back to initial state
                     setMessages([
                       {
@@ -1730,18 +2088,14 @@ Based on WrectifAI's evaluation of your inputs against 2M+ real-world automotive
                 <div>
                   <div className="text-[12px] font-semibold text-[#2747a0]">Original Issue</div>
                   <p className="mt-3 max-w-[235px] text-[13px] leading-6 text-[#273f75]">
-                    Car is shaking at 70-80 kmph and I can feel vibration in the steering wheel.
+                    {issueText}
                   </p>
                 </div>
 
                 <div className="mt-5 space-y-4 border-t border-[#eef2fb] pt-4">
-                  {[
-                    { label: 'Occurs at', value: answers.occursAt, icon: Gauge },
-                    { label: 'Steering wheel shakes', value: answers.wheelShakes, icon: CheckCircle2 },
-                    { label: 'Started', value: answers.started, icon: Clock3 },
-                  ].map(({ label, value, icon: Icon }) => (
+                  {answerSummaryItems.map(({ label, value, icon: Icon }) => (
                     <div key={label} className="flex items-start justify-between gap-4">
-                      <div className="flex items-center gap-2 text-[12px] text-[#273f75]">
+                      <div className="flex items-center gap-2 text-[#273f75]">
                         <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full border border-[#cfe0ff] text-[#3566f0]">
                           <Icon className="h-2.5 w-2.5" />
                         </span>
@@ -1764,56 +2118,6 @@ Based on WrectifAI's evaluation of your inputs against 2M+ real-world automotive
                     Accurate answers help us improve accuracy and match you with the right garages.
                   </p>
                 </div>
-              </div>
-            </Card>
-
-            {/* Next steps Panel */}
-            <Card className="rounded-[18px] border-[#e8edf8] bg-white p-5 shadow-[0_12px_28px_rgba(35,64,143,0.04)]">
-              <h2 className="text-[13px] font-semibold text-[#21419a]">What happens next?</h2>
-              <div className="mt-5 space-y-6">
-                {nextSteps.map((step) => (
-                  <div key={step.id} className="flex gap-3">
-                    <div
-                      className={cn(
-                        'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold transition-all duration-300',
-                        step.active
-                          ? 'border-[#d9e5ff] bg-white text-[#2b61f0] shadow-[0_8px_18px_rgba(43,97,240,0.08)]'
-                          : 'border-[#eef1f7] bg-[#f7f9fd] text-[#a2aec8]'
-                      )}
-                    >
-                      {step.active ? <span className="h-2.5 w-2.5 rounded-full bg-[#2b61f0] animate-ping" /> : step.id}
-                    </div>
-                    <div>
-                      <h3
-                        className={cn(
-                          'text-[13px] font-medium transition-colors',
-                          step.active ? 'text-[#2b61f0] font-bold' : 'text-[#516692]'
-                        )}
-                      >
-                        {step.title}
-                      </h3>
-                      <p className="mt-1 text-[12px] leading-5 text-[#516692]">{step.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* Trust Panel */}
-            <Card className="rounded-[18px] border-[#e8edf8] bg-white p-5 shadow-[0_12px_28px_rgba(35,64,143,0.04)]">
-              <h2 className="text-[13px] font-semibold text-[#21419a]">Trusted by 35,000+ Car Owners</h2>
-              <p className="mt-2 text-[12px] leading-5 text-[#4c6090]">
-                We use advanced AI to provide accurate diagnosis and reliable recommendations.
-              </p>
-              <div className="mt-5 space-y-4">
-                {trustItems.map(({ label, icon: Icon, iconClass }) => (
-                  <div key={label} className="flex items-center gap-3 text-[12px] font-medium text-[#2b4278]">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center">
-                      <Icon className={cn("h-4.5 w-4.5", iconClass)} />
-                    </span>
-                    <span>{label}</span>
-                  </div>
-                ))}
               </div>
             </Card>
           </div>

@@ -33,6 +33,7 @@ import {
   seasonalDeals,
 } from '@/components/home/data';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/utils/cn';
 
 function SectionHeader({
@@ -230,6 +231,7 @@ function CategoriesModal({
 }
 
 function HeroBanner() {
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const [imageIndex, setImageIndex] = useState(0);
 
@@ -252,18 +254,12 @@ function HeroBanner() {
       model: '330i M Sport',
       year: '2024',
     },
-    {
-      src: 'https://images.unsplash.com/photo-1600661653561-629509216228?auto=format&fit=crop&w=600&q=80',
-      name: 'Audi e-tron GT',
-      model: 'Quattro',
-      year: '2024',
-    },
   ];
 
-  const activeBanner = bannerImages[imageIndex];
+  const activeBanner = bannerImages[imageIndex] || bannerImages[0];
 
-  const nextImage = () => setImageIndex((i) => (i + 1) % bannerImages.length);
-  const prevImage = () => setImageIndex((i) => (i - 1 + bannerImages.length) % bannerImages.length);
+  const nextImage = () => setImageIndex((i) => Math.min(i + 1, bannerImages.length - 1));
+  const prevImage = () => setImageIndex((i) => Math.max(i - 1, 0));
   const examples = [
     { label: 'Engine noise', value: 'Engine noise' },
     { label: 'AC cooling', value: 'AC not cooling' },
@@ -272,11 +268,14 @@ function HeroBanner() {
   ];
 
   const runDiagnoseSearch = () => {
-    window.dispatchEvent(
-      new CustomEvent('dashboard-search', {
-        detail: query.trim(),
-      })
-    );
+    const nextIssue = query.trim();
+
+    if (nextIssue) {
+      router.push(`/ai-diagnose?issue=${encodeURIComponent(nextIssue)}`);
+      return;
+    }
+
+    router.push('/ai-diagnose');
   };
 
   return (
@@ -295,23 +294,27 @@ function HeroBanner() {
             className="h-full w-full object-cover"
           />
 
-          <button
-            type="button"
-            onClick={prevImage}
-            aria-label="Previous image"
-            className="absolute left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/38 text-white/85 backdrop-blur-md transition-colors hover:bg-black/52 hover:text-white"
-          >
-            <ChevronLeft className="h-4.5 w-4.5" />
-          </button>
+          {imageIndex > 0 && (
+            <button
+              type="button"
+              onClick={prevImage}
+              aria-label="Previous image"
+              className="absolute left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/38 text-white/85 backdrop-blur-md transition-colors hover:bg-black/52 hover:text-white"
+            >
+              <ChevronLeft className="h-4.5 w-4.5" />
+            </button>
+          )}
 
-          <button
-            type="button"
-            onClick={nextImage}
-            aria-label="Next image"
-            className="absolute right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/38 text-white/85 backdrop-blur-md transition-colors hover:bg-black/52 hover:text-white"
-          >
-            <ChevronRight className="h-4.5 w-4.5" />
-          </button>
+          {imageIndex < bannerImages.length - 1 && (
+            <button
+              type="button"
+              onClick={nextImage}
+              aria-label="Next image"
+              className="absolute right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/38 text-white/85 backdrop-blur-md transition-colors hover:bg-black/52 hover:text-white"
+            >
+              <ChevronRight className="h-4.5 w-4.5" />
+            </button>
+          )}
 
           <div className="absolute bottom-0 left-0 right-0 border-t border-white/12 bg-[linear-gradient(180deg,rgba(9,16,38,0.08),rgba(9,16,38,0.46))] px-4 py-3 backdrop-blur-md">
             <div className="grid grid-cols-3 gap-3 text-white">
