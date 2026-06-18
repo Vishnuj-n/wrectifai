@@ -16,6 +16,19 @@
   --secondary-foreground: 222.2 47.4% 11.2%;
   --radius: 0.5rem;
   --font-sans: var(--font-plus-jakarta-sans), 'Segoe UI', sans-serif;
+  --app-color-text-primary: #17307a;
+  --app-color-text-muted: #5f7099;
+  --app-color-link: #1a56db;
+  --app-color-success: #159a5d;
+  --app-tracking-tight: -0.03em;
+  --app-fs-page-title: 15.5px;
+  --app-fs-hero-title: 19.5px;
+  --app-fs-card-title: 14.5px;
+  --app-fs-subheading: 13px;
+  --app-fs-body: 12px;
+  --app-fs-caption: 11px;
+  --app-fw-semibold: 600;
+  --app-fw-medium: 500;
 }
 
 .dark {
@@ -43,14 +56,79 @@ html {
 body {
   @apply bg-background text-foreground;
   font-family: var(--font-sans);
-  background:
-    radial-gradient(circle at top left, rgba(26, 86, 219, 0.06), transparent 24%),
+  background: radial-gradient(
+      circle at top left,
+      rgba(26, 86, 219, 0.06),
+      transparent 24%
+    ),
     linear-gradient(180deg, #fbfcff 0%, #f5f8fe 100%);
 }
 
 button,
 input {
   font: inherit;
+}
+
+@layer components {
+  .ui-page-title {
+    color: var(--app-color-text-primary);
+    font-size: var(--app-fs-page-title);
+    font-weight: var(--app-fw-semibold);
+    letter-spacing: var(--app-tracking-tight);
+  }
+
+  .ui-hero-title {
+    color: var(--app-color-text-primary);
+    font-size: var(--app-fs-hero-title);
+    font-weight: 700;
+    letter-spacing: var(--app-tracking-tight);
+  }
+
+  .ui-card-title {
+    color: var(--app-color-text-primary);
+    font-size: var(--app-fs-card-title);
+    font-weight: var(--app-fw-semibold);
+    letter-spacing: var(--app-tracking-tight);
+  }
+
+  .ui-subheading {
+    color: var(--app-color-text-primary);
+    font-size: var(--app-fs-subheading);
+    font-weight: var(--app-fw-semibold);
+    letter-spacing: var(--app-tracking-tight);
+  }
+
+  .ui-body {
+    color: var(--app-color-text-muted);
+    font-size: var(--app-fs-body);
+  }
+
+  .ui-body-strong {
+    color: var(--app-color-text-primary);
+    font-size: var(--app-fs-body);
+    font-weight: var(--app-fw-semibold);
+  }
+
+  .ui-caption {
+    color: var(--app-color-text-muted);
+    font-size: var(--app-fs-caption);
+  }
+
+  .ui-caption-medium {
+    color: var(--app-color-text-muted);
+    font-size: var(--app-fs-caption);
+    font-weight: var(--app-fw-medium);
+  }
+
+  .ui-link {
+    color: var(--app-color-link);
+    font-size: var(--app-fs-body);
+    font-weight: var(--app-fw-semibold);
+  }
+
+  .ui-success-text {
+    color: var(--app-color-success);
+  }
 }
 
 ::-webkit-scrollbar {

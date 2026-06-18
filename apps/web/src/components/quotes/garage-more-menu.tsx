@@ -61,20 +61,30 @@ export function GarageMoreMenu({
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className={compact ? 'flex items-center justify-center text-[#2451f6]' : 'flex flex-col items-center gap-2 text-center'}
+        className={
+          compact
+            ? 'flex items-center justify-center text-[#2451f6]'
+            : 'flex w-[72px] flex-col items-center gap-2 text-center'
+        }
       >
         <span
           className={
             compact
               ? 'flex h-[32px] w-[32px] items-center justify-center rounded-full border border-[#dbe5ff] bg-white text-[#2451f6] transition-colors hover:bg-[#f5f8ff]'
-              : `flex h-[32px] w-[32px] items-center justify-center rounded-full border bg-white transition-colors ${
-                  open ? 'border-[#2451f6] bg-[#f5f8ff] text-[#2451f6]' : 'border-[#dbe5ff] text-[#2451f6] hover:bg-[#f5f8ff]'
+              : `flex h-[48px] w-[48px] items-center justify-center rounded-full border bg-white transition-colors ${
+                  open
+                    ? 'border-[#1a56db] bg-[#f5f8ff] text-[#1a56db]'
+                    : 'border-[#dfe7fb] text-[#1a56db] hover:bg-[#f5f8ff]'
                 }`
           }
         >
-          <MoreHorizontal className="h-4 w-4" />
+          <MoreHorizontal className={compact ? 'h-4 w-4' : 'h-5 w-5'} />
         </span>
-        {!compact ? <span className="text-[10px] font-medium leading-4 text-[#2451f6]">{triggerLabel}</span> : null}
+        {!compact ? (
+          <span className="text-[10.5px] leading-4 text-[#5f7099]">
+            {triggerLabel}
+          </span>
+        ) : null}
       </button>
 
       {open ? (

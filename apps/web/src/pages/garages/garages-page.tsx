@@ -25,12 +25,21 @@ import { TopNavbar } from '@/components/home/top-navbar';
 import { cn } from '@/utils/cn';
 import { PageLoader } from '@/components/common/page-loader';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { quotesList, aiEstimatedQuoteRange } from '@/components/quotes/quotes-shared';
+import {
+  quotesList,
+  aiEstimatedQuoteRange,
+} from '@/components/quotes/quotes-shared';
 import { resultIssues } from '@/components/ai-diagnose/diagnose-flow-shared';
 
 import { GarageDetailPage } from '@/components/garages/garage-detail-page';
 
-type FilterKey = 'rating' | 'distance' | 'serviceType' | 'responseTime' | 'offers' | 'moreFilters';
+type FilterKey =
+  | 'rating'
+  | 'distance'
+  | 'serviceType'
+  | 'responseTime'
+  | 'offers'
+  | 'moreFilters';
 type ViewMode = 'list' | 'map';
 type SortOption = 'best' | 'rating' | 'distance' | 'response';
 
@@ -118,7 +127,12 @@ const garages: Garage[] = [
     location: 'Madhapur, Hyderabad',
     distanceKm: 3.1,
     responseMins: 40,
-    chips: ['1 Month Warranty', 'Free Inspection', 'Free Pickup', 'Pay After Service'],
+    chips: [
+      '1 Month Warranty',
+      'Free Inspection',
+      'Free Pickup',
+      'Pay After Service',
+    ],
     facade: 'QuickPit',
     tone: 'from-[#0d1118] via-[#43301c] to-[#0b0f16]',
     verified: true,
@@ -133,7 +147,12 @@ const garages: Garage[] = [
     location: 'Kondapur, Hyderabad',
     distanceKm: 2.2,
     responseMins: 30,
-    chips: ['Warranty Available', 'Free Pickup', 'Original Parts', 'Pay After Service'],
+    chips: [
+      'Warranty Available',
+      'Free Pickup',
+      'Original Parts',
+      'Pay After Service',
+    ],
     facade: 'SpeedFix',
     tone: 'from-[#1b2734] via-[#2a3e49] to-[#101721]',
     verified: true,
@@ -148,7 +167,12 @@ const garages: Garage[] = [
     location: 'Gachibowli, Hyderabad',
     distanceKm: 4.2,
     responseMins: 45,
-    chips: ['1 Month Warranty', 'Free Inspection', 'Original Parts', 'Pay After Service'],
+    chips: [
+      '1 Month Warranty',
+      'Free Inspection',
+      'Original Parts',
+      'Pay After Service',
+    ],
     facade: 'AutoWorks',
     tone: 'from-[#151820] via-[#32271c] to-[#11141c]',
     verified: true,
@@ -163,7 +187,12 @@ const garages: Garage[] = [
     location: 'Banjara Hills, Hyderabad',
     distanceKm: 5.2,
     responseMins: 50,
-    chips: ['Free Inspection', 'Pay After Service', 'Free Pickup', '1 Month Warranty'],
+    chips: [
+      'Free Inspection',
+      'Pay After Service',
+      'Free Pickup',
+      '1 Month Warranty',
+    ],
     facade: 'Five Star',
     tone: 'from-[#161616] via-[#353535] to-[#12151c]',
     verified: true,
@@ -178,7 +207,12 @@ const garages: Garage[] = [
     location: 'Jubilee Hills, Hyderabad',
     distanceKm: 3.8,
     responseMins: 35,
-    chips: ['1 Month Warranty', 'AC Service Expert', 'Free Pickup', 'Quality Parts'],
+    chips: [
+      '1 Month Warranty',
+      'AC Service Expert',
+      'Free Pickup',
+      'Quality Parts',
+    ],
     facade: 'ROYAL MOTOR',
     tone: 'from-[#20222a] via-[#4a3026] to-[#1b1d24]',
     verified: true,
@@ -193,7 +227,12 @@ const garages: Garage[] = [
     location: 'Kukatpally, Hyderabad',
     distanceKm: 4.9,
     responseMins: 40,
-    chips: ['Free Inspection', 'Quick Service', 'Pay After Service', '1 Month Warranty'],
+    chips: [
+      'Free Inspection',
+      'Quick Service',
+      'Pay After Service',
+      '1 Month Warranty',
+    ],
     facade: 'PitStop',
     tone: 'from-[#11141d] via-[#2f3640] to-[#0d1118]',
     verified: true,
@@ -208,7 +247,12 @@ const garages: Garage[] = [
     location: 'Miyapur, Hyderabad',
     distanceKm: 3.6,
     responseMins: 55,
-    chips: ['1 Month Warranty', 'Pick & Drop', 'Genuine Parts', 'Free Inspection'],
+    chips: [
+      '1 Month Warranty',
+      'Pick & Drop',
+      'Genuine Parts',
+      'Free Inspection',
+    ],
     facade: 'Galaxy Auto',
     tone: 'from-[#1a2027] via-[#2d353d] to-[#0f131b]',
     verified: true,
@@ -223,7 +267,12 @@ const garages: Garage[] = [
     location: 'Ameerpet, Hyderabad',
     distanceKm: 6.1,
     responseMins: 60,
-    chips: ['Warranty Available', 'Genuine Parts', 'Pick & Drop', 'Pay After Service'],
+    chips: [
+      'Warranty Available',
+      'Genuine Parts',
+      'Pick & Drop',
+      'Pay After Service',
+    ],
     facade: 'TorquePlus',
     tone: 'from-[#151922] via-[#25394a] to-[#10151d]',
     verified: true,
@@ -238,7 +287,12 @@ const garages: Garage[] = [
     location: 'Hitech City, Hyderabad',
     distanceKm: 2.8,
     responseMins: 25,
-    chips: ['Free Inspection', 'Warranty Available', 'Free Pickup', 'Quick Service'],
+    chips: [
+      'Free Inspection',
+      'Warranty Available',
+      'Free Pickup',
+      'Quick Service',
+    ],
     facade: 'Metro Auto',
     tone: 'from-[#17202e] via-[#22415e] to-[#0c1220]',
     verified: true,
@@ -253,7 +307,12 @@ const garages: Garage[] = [
     location: 'Begumpet, Hyderabad',
     distanceKm: 5.8,
     responseMins: 55,
-    chips: ['Pay After Service', 'Free Pickup', 'Quality Parts', 'AC Service Expert'],
+    chips: [
+      'Pay After Service',
+      'Free Pickup',
+      'Quality Parts',
+      'AC Service Expert',
+    ],
     facade: 'Urban Works',
     tone: 'from-[#211d20] via-[#3e3840] to-[#17161a]',
     verified: false,
@@ -268,7 +327,12 @@ const garages: Garage[] = [
     location: 'Secunderabad, Hyderabad',
     distanceKm: 4.4,
     responseMins: 35,
-    chips: ['Original Parts', 'Pay After Service', 'Free Inspection', 'Pick & Drop'],
+    chips: [
+      'Original Parts',
+      'Pay After Service',
+      'Free Inspection',
+      'Pick & Drop',
+    ],
     facade: 'Prime Service',
     tone: 'from-[#20252a] via-[#3b3028] to-[#11161c]',
     verified: true,
@@ -320,7 +384,8 @@ function FilterMenu({
   onSelect: (value: string) => void;
   align?: 'left' | 'right';
 }) {
-  const selected = options.find((option) => option.value === value) ?? options[0];
+  const selected =
+    options.find((option) => option.value === value) ?? options[0];
 
   return (
     <div className="relative">
@@ -333,14 +398,16 @@ function FilterMenu({
         )}
       >
         <Icon className="h-4 w-4 shrink-0 text-[#1a56db]" />
-        <span className="truncate">{selected.value === 'all' ? label : selected.label}</span>
+        <span className="truncate">
+          {selected.value === 'all' ? label : selected.label}
+        </span>
         <ChevronDown className="h-4 w-4 shrink-0 text-[#6173a1]" />
       </button>
       {open ? (
-        <div 
+        <div
           className={cn(
-            "absolute top-[39px] z-20 min-w-[200px] sm:min-w-[220px] rounded-[12px] border border-[#dbe6ff] bg-white p-2 shadow-[0_16px_36px_rgba(30,58,138,0.11)]",
-            align === 'right' ? "right-0" : "left-0"
+            'absolute top-[39px] z-20 min-w-[200px] sm:min-w-[220px] rounded-[12px] border border-[#dbe6ff] bg-white p-2 shadow-[0_16px_36px_rgba(30,58,138,0.11)]',
+            align === 'right' ? 'right-0' : 'left-0'
           )}
         >
           {options.map((option) => (
@@ -359,7 +426,9 @@ function FilterMenu({
               )}
             >
               <span>{option.label}</span>
-              {option.value === value ? <BadgeCheck className="h-4 w-4 fill-[#1a56db] text-white" /> : null}
+              {option.value === value ? (
+                <BadgeCheck className="h-4 w-4 fill-[#1a56db] text-white" />
+              ) : null}
             </button>
           ))}
         </div>
@@ -386,15 +455,32 @@ function GarageCard({
   onClick,
 }: Garage & { compact?: boolean; onClick?: () => void }) {
   return (
-    <Card 
+    <Card
       onClick={onClick}
       className="overflow-hidden rounded-[18px] border-[#e7eefc] shadow-[0_14px_34px_rgba(21,48,122,0.08)] cursor-pointer hover:border-[#1a56db]/20 transition-all duration-300 hover:scale-[1.01]"
     >
-      <div className={cn('relative bg-gradient-to-r', tone, compact ? 'h-[110px]' : 'h-[128px]')}>
-        {image && <img src={image} alt={name} className="absolute inset-0 h-full w-full object-cover" />}
+      <div
+        className={cn(
+          'relative bg-gradient-to-r',
+          tone,
+          compact ? 'h-[110px]' : 'h-[128px]'
+        )}
+      >
+        {image && (
+          <img
+            src={image}
+            alt={name}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(5,8,17,0.4))]" />
         {badge ? (
-          <div className={cn('absolute left-4 top-3 rounded-[10px] px-3 py-1 text-[11px] font-bold text-white', badgeTone)}>
+          <div
+            className={cn(
+              'absolute left-4 top-3 rounded-[10px] px-3 py-1 text-[11px] font-bold text-white',
+              badgeTone
+            )}
+          >
             {badge}
           </div>
         ) : null}
@@ -402,7 +488,9 @@ function GarageCard({
           <Heart className="h-5 w-5" />
         </div>
         <div className="absolute inset-x-4 bottom-4 flex items-end justify-between">
-          <div className="text-[11.5px] font-bold tracking-[0.01em] text-white/92">{facade}</div>
+          <div className="text-[11.5px] font-bold tracking-[0.01em] text-white/92">
+            {facade}
+          </div>
           <div className="flex gap-2 opacity-85">
             <div className="h-8 w-10 rounded bg-white/10" />
             <div className="h-8 w-12 rounded bg-white/10" />
@@ -413,14 +501,20 @@ function GarageCard({
 
       <div className="p-4">
         <div className="flex items-center gap-2">
-          <h3 className="text-[14.5px] font-bold tracking-[-0.03em] text-[#17307a]">{name}</h3>
-          {verified ? <BadgeCheck className="h-4 w-4 fill-[#1a56db] text-white" /> : null}
+          <h3 className="text-[14.5px] font-bold tracking-[-0.03em] text-[#17307a]">
+            {name}
+          </h3>
+          {verified ? (
+            <BadgeCheck className="h-4 w-4 fill-[#1a56db] text-white" />
+          ) : null}
         </div>
 
         <div className="mt-2 flex items-center gap-3 text-[11px] text-[#6173a1]">
           <div className="flex shrink-0 items-center gap-1.5">
             <Star className="h-4 w-4 fill-[#ff9f1a] text-[#ff9f1a]" />
-            <span className="font-semibold text-[#f28c28]">{rating.toFixed(1)}</span>
+            <span className="font-semibold text-[#f28c28]">
+              {rating.toFixed(1)}
+            </span>
             <span>({reviews})</span>
           </div>
           <span className="shrink-0 text-[#9aa8c6]">•</span>
@@ -440,7 +534,10 @@ function GarageCard({
 
         <div className="mt-2.5 flex flex-wrap gap-2">
           {chips.map((chip) => (
-            <span key={chip} className="rounded-full bg-[#e9f8ef] px-3 py-1.5 text-[10px] font-semibold text-[#238453]">
+            <span
+              key={chip}
+              className="rounded-full bg-[#e9f8ef] px-3 py-1.5 text-[10px] font-semibold text-[#238453]"
+            >
               {chip}
             </span>
           ))}
@@ -454,7 +551,11 @@ function GarageCard({
               <div>Final quote after inspection</div>
             </div>
           </div>
-          <Button type="button" variant="outline" className="h-8 shrink-0 rounded-[9px] px-2 text-[10.5px] font-semibold">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-8 shrink-0 rounded-[9px] px-2 text-[10.5px] font-semibold"
+          >
             Book Appointment
           </Button>
         </div>
@@ -495,19 +596,36 @@ function GaragesContent() {
       if (filters.distance === '6+' && garage.distanceKm < 6) {
         return false;
       }
-      if (filters.serviceType === 'Inspection' && !garage.chips.some((chip) => chip.includes('Inspection'))) {
+      if (
+        filters.serviceType === 'Inspection' &&
+        !garage.chips.some((chip) => chip.includes('Inspection'))
+      ) {
         return false;
       }
-      if (filters.serviceType === 'Pickup' && !garage.chips.some((chip) => chip.includes('Pickup') || chip.includes('Drop'))) {
+      if (
+        filters.serviceType === 'Pickup' &&
+        !garage.chips.some(
+          (chip) => chip.includes('Pickup') || chip.includes('Drop')
+        )
+      ) {
         return false;
       }
-      if (filters.serviceType === 'Warranty' && !garage.chips.some((chip) => chip.includes('Warranty'))) {
+      if (
+        filters.serviceType === 'Warranty' &&
+        !garage.chips.some((chip) => chip.includes('Warranty'))
+      ) {
         return false;
       }
-      if (filters.serviceType === 'Parts' && !garage.chips.some((chip) => chip.includes('Parts'))) {
+      if (
+        filters.serviceType === 'Parts' &&
+        !garage.chips.some((chip) => chip.includes('Parts'))
+      ) {
         return false;
       }
-      if (filters.responseTime !== 'all' && garage.responseMins > Number(filters.responseTime)) {
+      if (
+        filters.responseTime !== 'all' &&
+        garage.responseMins > Number(filters.responseTime)
+      ) {
         return false;
       }
       if (filters.offers !== 'all' && !garage.chips.includes(filters.offers)) {
@@ -519,10 +637,18 @@ function GaragesContent() {
       if (filters.moreFilters === 'top-rated' && garage.badge !== 'Top Rated') {
         return false;
       }
-      if (filters.moreFilters === 'warranty' && !garage.chips.some((chip) => chip.includes('Warranty'))) {
+      if (
+        filters.moreFilters === 'warranty' &&
+        !garage.chips.some((chip) => chip.includes('Warranty'))
+      ) {
         return false;
       }
-      if (filters.moreFilters === 'pickup' && !garage.chips.some((chip) => chip.includes('Pickup') || chip.includes('Drop'))) {
+      if (
+        filters.moreFilters === 'pickup' &&
+        !garage.chips.some(
+          (chip) => chip.includes('Pickup') || chip.includes('Drop')
+        )
+      ) {
         return false;
       }
       return true;
@@ -538,14 +664,22 @@ function GaragesContent() {
       if (sortBy === 'response') {
         return a.responseMins - b.responseMins;
       }
-      return b.rating * 10 + b.reviews / 100 - (a.rating * 10 + a.reviews / 100);
+      return (
+        b.rating * 10 + b.reviews / 100 - (a.rating * 10 + a.reviews / 100)
+      );
     });
   }, [filters, sortBy]);
 
   const itemsPerPage = viewMode === 'map' ? 6 : 8;
-  const totalPages = Math.max(1, Math.ceil(filteredGarages.length / itemsPerPage));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredGarages.length / itemsPerPage)
+  );
   const currentPage = Math.min(page, totalPages);
-  const paginatedGarages = filteredGarages.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const paginatedGarages = filteredGarages.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const pageButtons = useMemo(() => {
     if (totalPages <= 5) {
@@ -555,12 +689,19 @@ function GaragesContent() {
       return [1, 2, 3, 'ellipsis', totalPages] as const;
     }
     if (currentPage >= totalPages - 2) {
-      return [1, 'ellipsis', totalPages - 2, totalPages - 1, totalPages] as const;
+      return [
+        1,
+        'ellipsis',
+        totalPages - 2,
+        totalPages - 1,
+        totalPages,
+      ] as const;
     }
     return [1, 'ellipsis', currentPage, 'ellipsis-2', totalPages] as const;
   }, [currentPage, totalPages]);
 
-  const startIndex = filteredGarages.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const startIndex =
+    filteredGarages.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endIndex = Math.min(currentPage * itemsPerPage, filteredGarages.length);
 
   const resetPageAndSetFilter = (key: FilterKey, value: string) => {
@@ -582,7 +723,9 @@ function GaragesContent() {
     setSortOpen(false);
   };
 
-  const activeFiltersCount = Object.values(filters).filter((v) => v !== 'all').length;
+  const activeFiltersCount = Object.values(filters).filter(
+    (v) => v !== 'all'
+  ).length;
 
   const quoteContext = useMemo(() => {
     const source = searchParams?.get('source');
@@ -593,7 +736,9 @@ function GaragesContent() {
     }
 
     const quote = quotesList.find((item) => item.id === quoteId);
-    const garageFromQuote = quote ? garages.find((item) => item.name === quote.garage) : null;
+    const garageFromQuote = quote
+      ? garages.find((item) => item.name === quote.garage)
+      : null;
     const issueIds = (searchParams?.get('issues') || '')
       .split(',')
       .map((item) => item.trim())
@@ -613,10 +758,22 @@ function GaragesContent() {
     };
   }, [searchParams]);
 
+  const garageFromQuery = useMemo(() => {
+    const garageName = searchParams?.get('garage');
+
+    if (!garageName) {
+      return null;
+    }
+
+    return garages.find((garage) => garage.name === garageName) ?? null;
+  }, [searchParams]);
+  const sourceFromQuery = searchParams?.get('source');
+
   if (quoteContext) {
     return (
       <GarageDetailPage
         garage={quoteContext.garage}
+        backLabel="Back to Quotes"
         mode="quote-context"
         quoteContext={{
           quote: quoteContext.quote,
@@ -625,6 +782,20 @@ function GaragesContent() {
           aiEstimateRange: quoteContext.aiEstimateRange,
         }}
         onBack={() => router.push('/quotes')}
+      />
+    );
+  }
+
+  if (garageFromQuery) {
+    return (
+      <GarageDetailPage
+        garage={garageFromQuery}
+        backLabel={
+          sourceFromQuery === 'quotes' || sourceFromQuery === 'request-aent'
+            ? 'Back to Quotes'
+            : 'Back to Garages'
+        }
+        onBack={() => router.push('/garages')}
       />
     );
   }
@@ -642,9 +813,12 @@ function GaragesContent() {
     <div className="space-y-6 pb-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-[17.5px] font-bold tracking-[-0.03em] text-[#17307a]">View All Garages</h1>
+          <h1 className="text-[17.5px] font-bold tracking-[-0.03em] text-[#17307a]">
+            View All Garages
+          </h1>
           <p className="mt-1.5 text-[12.5px] font-medium text-[#4f67a2]">
-            Showing {filteredGarages.length} garages near <span className="font-bold text-[#1a56db]">Hyderabad</span>
+            Showing {filteredGarages.length} garages near{' '}
+            <span className="font-bold text-[#1a56db]">Hyderabad</span>
           </p>
         </div>
 
@@ -658,7 +832,9 @@ function GaragesContent() {
               }}
               className={cn(
                 'flex h-[30px] items-center gap-1.5 rounded-[8px] px-3 text-[11px] font-semibold transition-colors',
-                viewMode === 'list' ? 'bg-[#1a56db] text-white' : 'text-[#17307a]'
+                viewMode === 'list'
+                  ? 'bg-[#1a56db] text-white'
+                  : 'text-[#17307a]'
               )}
             >
               <List className="h-4 w-4" />
@@ -673,7 +849,9 @@ function GaragesContent() {
               }}
               className={cn(
                 'flex h-[30px] items-center gap-1.5 rounded-[8px] px-3 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50',
-                viewMode === 'map' ? 'bg-[#1a56db] text-white' : 'text-[#17307a]'
+                viewMode === 'map'
+                  ? 'bg-[#1a56db] text-white'
+                  : 'text-[#17307a]'
               )}
             >
               <Map className="h-4 w-4" />
@@ -682,7 +860,9 @@ function GaragesContent() {
           </div>
 
           <div className="relative flex items-center gap-1">
-            <span className="text-[12px] font-semibold text-[#17307a]">Sort By:</span>
+            <span className="text-[12px] font-semibold text-[#17307a]">
+              Sort By:
+            </span>
             <button
               type="button"
               onClick={() => {
@@ -707,11 +887,15 @@ function GaragesContent() {
                     }}
                     className={cn(
                       'flex w-full items-center justify-between rounded-[10px] px-3 py-2.5 text-left text-[12px] font-medium transition-colors',
-                      option.value === sortBy ? 'bg-[#eef4ff] text-[#1a56db]' : 'text-[#17307a] hover:bg-[#f8fbff]'
+                      option.value === sortBy
+                        ? 'bg-[#eef4ff] text-[#1a56db]'
+                        : 'text-[#17307a] hover:bg-[#f8fbff]'
                     )}
                   >
                     <span>{option.label}</span>
-                    {option.value === sortBy ? <BadgeCheck className="h-4 w-4 fill-[#1a56db] text-white" /> : null}
+                    {option.value === sortBy ? (
+                      <BadgeCheck className="h-4 w-4 fill-[#1a56db] text-white" />
+                    ) : null}
                   </button>
                 ))}
               </div>
@@ -766,8 +950,12 @@ function GaragesContent() {
           </div>
           <Card className="sticky top-0 flex min-h-[720px] flex-col overflow-hidden rounded-[18px] border-[#e7eefc] bg-[linear-gradient(180deg,#edf5ff_0%,#dfefff_100%)] shadow-[0_14px_34px_rgba(21,48,122,0.08)]">
             <div className="border-b border-[#d9e6ff] px-5 py-4">
-              <h3 className="text-[14.5px] font-bold text-[#17307a]">Map View</h3>
-              <p className="mt-1 text-[11.5px] text-[#6173a1]">Garage markers update from current filters.</p>
+              <h3 className="text-[14.5px] font-bold text-[#17307a]">
+                Map View
+              </h3>
+              <p className="mt-1 text-[11.5px] text-[#6173a1]">
+                Garage markers update from current filters.
+              </p>
             </div>
             <div className="relative flex-1 overflow-hidden bg-[radial-gradient(circle_at_20%_25%,rgba(83,143,255,0.22),transparent_18%),radial-gradient(circle_at_72%_38%,rgba(26,86,219,0.18),transparent_20%),linear-gradient(180deg,#f4f8ff_0%,#e4efff_100%)]">
               <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(145,170,221,0.18)_1px,transparent_1px),linear-gradient(rgba(145,170,221,0.18)_1px,transparent_1px)] bg-[size:42px_42px]" />
@@ -776,7 +964,9 @@ function GaragesContent() {
                   key={garage.name}
                   className="absolute flex h-10 w-10 items-center justify-center rounded-full bg-[#1a56db] text-white shadow-[0_10px_20px_rgba(26,86,219,0.24)] cursor-pointer transition-transform hover:scale-105"
                   style={{
-                    left: `${18 + (index % 2) * 38 + Math.floor(index / 2) * 6}%`,
+                    left: `${
+                      18 + (index % 2) * 38 + Math.floor(index / 2) * 6
+                    }%`,
                     top: `${14 + (index % 3) * 22}%`,
                   }}
                   onClick={() => setSelectedGarage(garage)}
@@ -836,7 +1026,9 @@ function GaragesContent() {
           )}
           <button
             type="button"
-            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            onClick={() =>
+              setPage((current) => Math.min(totalPages, current + 1))
+            }
             disabled={currentPage === totalPages}
             className="flex h-10 w-10 items-center justify-center rounded-[12px] border border-[#dbe6ff] bg-white text-[#17307a] shadow-[0_8px_20px_rgba(30,58,138,0.04)] disabled:cursor-not-allowed disabled:opacity-45"
           >
@@ -854,7 +1046,9 @@ function GaragesContent() {
 
 const garagesImageSources = Array.from(
   new Set(
-    garages.map((item) => item.image).filter((src): src is string => Boolean(src))
+    garages
+      .map((item) => item.image)
+      .filter((src): src is string => Boolean(src))
   )
 );
 

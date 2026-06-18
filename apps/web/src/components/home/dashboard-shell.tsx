@@ -24,7 +24,8 @@ export function DashboardShell({
   useEffect(() => {
     const handleToggleMobile = () => setMobileOpen((curr) => !curr);
     window.addEventListener('toggle-mobile-sidebar', handleToggleMobile);
-    return () => window.removeEventListener('toggle-mobile-sidebar', handleToggleMobile);
+    return () =>
+      window.removeEventListener('toggle-mobile-sidebar', handleToggleMobile);
   }, []);
 
   return (
@@ -47,13 +48,19 @@ export function DashboardShell({
             />
           ) : null}
 
-          <div 
+          <div
             className={cn(
-              "fixed inset-y-0 left-0 z-[70] w-[280px] transform transition-transform duration-300 ease-in-out lg:static lg:z-auto lg:w-auto lg:transform-none lg:sticky lg:top-0 lg:h-screen",
-              mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+              'fixed inset-y-0 left-0 z-[70] w-[280px] transform transition-transform duration-300 ease-in-out lg:static lg:z-auto lg:w-auto lg:transform-none lg:sticky lg:top-0 lg:h-screen',
+              mobileOpen
+                ? 'translate-x-0'
+                : '-translate-x-full lg:translate-x-0'
             )}
           >
-            <Sidebar collapsed={collapsed} onToggle={handleToggle} onMobileClose={() => setMobileOpen(false)} />
+            <Sidebar
+              collapsed={collapsed}
+              onToggle={handleToggle}
+              onMobileClose={() => setMobileOpen(false)}
+            />
           </div>
 
           <div className="flex min-h-0 flex-col gap-4 lg:h-full lg:overflow-y-auto lg:px-4 lg:pr-1">
