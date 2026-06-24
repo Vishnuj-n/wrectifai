@@ -7,7 +7,6 @@ import {
   Bot,
   Check,
   CheckCircle2,
-  CirclePlay,
   Clock3,
   Edit3,
   Gauge,
@@ -2141,34 +2140,25 @@ export function AIDiagnosePage() {
       <div ref={pageRootRef} className="space-y-4 pb-6 pt-1">
         <div className="flex items-center justify-between gap-4">
           <h1 className={homeHeroHeadingClass}>WrectifAI Diagnose</h1>
-          <button
-            type="button"
-            className="flex h-11 items-center gap-2 rounded-[12px] border border-[#e3eaf9] bg-white px-4 text-[12px] font-semibold text-[#1a56db] shadow-[0_10px_20px_rgba(35,64,143,0.03)] hover:bg-[#fbfcff]"
-          >
-            <CirclePlay className="h-4.5 w-4.5 text-[#4472ff]" />
-            <span>How it works</span>
-          </button>
         </div>
 
-        <StepTracker />
-
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_286px]">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,860px)_286px] xl:items-start">
           {/* LEFT CHAT CONTAINER */}
-          <div className="min-w-0 flex flex-col h-full lg:h-[1280px]">
+          <div className="min-w-0 flex min-h-[560px] flex-col md:h-[calc(100dvh-172px)] md:min-h-0 xl:h-[calc(100dvh-124px)]">
             <div className="flex-1 flex flex-col rounded-[18px] border border-[#edf1fa] bg-white p-3 shadow-[0_12px_28px_rgba(35,64,143,0.03)] h-full overflow-hidden">
               <div className="flex-1 flex flex-col rounded-[18px] bg-[radial-gradient(circle_at_top,#f5f7ff_0%,#ffffff_62%)] p-0 overflow-hidden">
                 {/* Bot Header Card */}
-                <div className="shrink-0 rounded-[18px] bg-[linear-gradient(90deg,#dce3ff_0%,#e7e9ff_48%,#e7e4ff_100%)] px-6 pt-4 pb-0 shadow-[0_14px_34px_rgba(39,73,154,0.08)]">
-                  <div className="flex items-end gap-4">
+                <div className="shrink-0 w-full rounded-[18px] bg-[linear-gradient(90deg,#dce3ff_0%,#e7e9ff_48%,#e7e4ff_100%)] px-3 py-2 pr-7 shadow-[0_14px_34px_rgba(39,73,154,0.08)]">
+                  <div className="flex items-center gap-3">
                     <Image
                       src="/assets/New_chatbot.png"
                       alt="WrectifAI assistant"
                       width={90}
                       height={90}
-                      className="h-[90px] w-[90px] object-contain shrink-0 block -mb-[4px]"
+                      className="h-[58px] w-[58px] object-contain shrink-0 block"
                       priority
                     />
-                    <div className="pb-4">
+                    <div>
                       <h2 className={homeCardHeadingClass}>
                         {isDiagnosed
                           ? 'WrectifAI Diagnostics Complete!'
@@ -2176,7 +2166,7 @@ export function AIDiagnosePage() {
                           ? 'WrectifAI is analyzing your issue.'
                           : 'I need a bit more information to diagnose accurately.'}
                       </h2>
-                      <p className="mt-1 text-[11px] text-[#5f7099]">
+                      <p className="mt-0.5 text-[11px] text-[#5f7099]">
                         {isDiagnosed
                           ? 'Review your results and connect with garages below.'
                           : isAnalyzingResults
@@ -2422,11 +2412,11 @@ export function AIDiagnosePage() {
               </div>
 
               {/* Chat Input section */}
-              <div className="shrink-0 mt-3 rounded-[16px] border border-[#edf1fa] bg-white p-3.5 shadow-[0_8px_20px_rgba(35,64,143,0.03)]">
+              <div className="sticky bottom-0 z-10 mt-2 shrink-0 rounded-[16px] border border-[#edf1fa] bg-white px-3 py-2.5 shadow-[0_8px_20px_rgba(35,64,143,0.08)]">
                 <div className="text-[10px] font-medium text-[#8f9cbc]">
                   Add more details (optional)
                 </div>
-                <div className="mt-3 flex flex-wrap gap-3 text-[10px] font-medium text-[#7284ab]">
+                <div className="mt-2 flex flex-wrap gap-3 text-[10px] font-medium text-[#7284ab]">
                   <button
                     type="button"
                     className="flex items-center gap-1.5 hover:text-[#1a56db] transition-colors"
@@ -2450,7 +2440,7 @@ export function AIDiagnosePage() {
                   </button>
                 </div>
 
-                <div className="mt-3 flex items-center gap-3 rounded-[12px] border border-[#e4eafb] bg-[#fbfcff] px-4 py-1.5">
+                <div className="mt-2 flex items-center gap-3 rounded-[12px] border border-[#e4eafb] bg-[#fbfcff] px-4 py-1">
                   <input
                     type="text"
                     value={typedMessage}
@@ -2470,10 +2460,6 @@ export function AIDiagnosePage() {
                   </button>
                 </div>
 
-                <div className="mt-3 flex items-center justify-center gap-1.5 text-[10px] text-[#98a5c1]">
-                  <Lock className="h-3 w-3" />
-                  <span>Your information is 100% secure and private</span>
-                </div>
               </div>
             </div>
           </div>

@@ -523,6 +523,7 @@ export function CompareQuotesPage({ ids }: { ids?: string }) {
                         return (
                           <GarageMoreMenu
                             key={`${quote.id}-${label}`}
+                            smallTrigger
                             onViewGarageProfile={() => router.push('/garages')}
                             onViewReviews={() => {
                               document
