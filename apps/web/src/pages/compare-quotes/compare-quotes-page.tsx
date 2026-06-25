@@ -4,12 +4,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowLeft,
   BadgePlus,
   BadgeCheck,
   CalendarClock,
   CarFront,
   CheckCircle2,
+  ChevronLeft,
   FileText,
   Info,
   MessageCircleMore,
@@ -349,6 +349,14 @@ export function CompareQuotesPage({ ids }: { ids?: string }) {
   return (
     <DashboardShell header={<TopNavbar />}>
       <div ref={pageRootRef} className="space-y-4 pb-6">
+        <Link
+          href="/quotes"
+          className="group inline-flex items-center gap-1.5 text-[12px] font-bold text-[#1a56db] transition-colors hover:text-[#0b43c4]"
+        >
+          <ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
+          Back to Quotes
+        </Link>
+
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_250px] xl:items-start">
           <div className="space-y-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -369,14 +377,6 @@ export function CompareQuotesPage({ ids }: { ids?: string }) {
               </div>
 
               <div className="flex flex-col items-start gap-4 lg:items-end">
-                <Link
-                  href="/quotes"
-                  className="inline-flex h-[40px] items-center justify-center gap-2 rounded-[12px] border border-[#cad7ff] bg-white px-5 text-[12px] font-semibold text-[#1a56db]"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  <span>Back to My Quotes</span>
-                </Link>
-
                 <div className="flex items-center gap-3 text-[12px] font-medium text-[#5f7099]">
                   <span className="inline-flex items-center gap-1.5">
                     Show only key differences
