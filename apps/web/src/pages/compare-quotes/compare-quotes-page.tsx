@@ -10,7 +10,6 @@ import {
   CalendarClock,
   CarFront,
   CheckCircle2,
-  ChevronRight,
   FileText,
   Info,
   MessageCircleMore,
@@ -349,25 +348,15 @@ export function CompareQuotesPage({ ids }: { ids?: string }) {
 
   return (
     <DashboardShell header={<TopNavbar />}>
-      <div ref={pageRootRef} className="space-y-4 pb-6 pt-1">
-        <div className="flex items-center gap-2 text-[12px] font-medium text-[#5f7099]">
-          <Link href="/home" className="hover:text-[#17307a]">
-            Home
-          </Link>
-          <ChevronRight className="h-3.5 w-3.5 text-[#8ea0c7]" />
-          <Link href="/quotes" className="hover:text-[#17307a]">
-            My Quotes
-          </Link>
-          <ChevronRight className="h-3.5 w-3.5 text-[#8ea0c7]" />
-          <span className="text-[#5f7099]">Compare Quotes</span>
-        </div>
-
+      <div ref={pageRootRef} className="space-y-4 pb-6">
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_250px] xl:items-start">
           <div className="space-y-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <h1 className="ui-hero-title">Compare Quotes</h1>
+                  <h1 className="text-[17.5px] font-bold tracking-[-0.03em] text-[#17307a]">
+                    Compare Quotes
+                  </h1>
                   <span className="rounded-full bg-[#dff5e7] px-3 py-1 text-[12px] font-semibold text-[#18965c]">
                     {selectedCount} {selectedCount === 1 ? 'Garage' : 'Garages'}{' '}
                     Selected

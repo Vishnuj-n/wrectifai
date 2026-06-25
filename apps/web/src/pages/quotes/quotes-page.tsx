@@ -1,14 +1,12 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   BellRing,
   CheckCircle2,
   ChevronDown,
-  ChevronRight,
   CircleHelp,
   FileText,
   Gauge,
@@ -140,18 +138,12 @@ export function QuotesPage() {
 
   return (
     <DashboardShell header={<TopNavbar />}>
-      <div ref={pageRootRef} className="space-y-5 pb-6 pt-1">
-        <div className="flex items-center gap-2 text-[12px] text-[#5f7099]">
-          <Link href="/home" className="hover:text-[#17307a]">
-            Home
-          </Link>
-          <ChevronRight className="h-3.5 w-3.5" />
-          <span className="font-medium text-[#5f7099]">My Quotes</span>
-        </div>
-
-        <div className="mt-1">
+      <div ref={pageRootRef} className="space-y-5 pb-6">
+        <div>
           <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className={homeSectionHeadingClass}>My Quotes</h1>
+            <h1 className="text-[17.5px] font-bold tracking-[-0.03em] text-[#17307a]">
+              My Quotes
+            </h1>
             <span className="rounded-full bg-[#dff4e7] px-2.5 py-1 text-[11px] font-medium text-[#18965c]">
               3 New Quotes
             </span>
