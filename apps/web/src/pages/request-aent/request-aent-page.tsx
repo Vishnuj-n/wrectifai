@@ -418,24 +418,6 @@ export function RequestAentPage({ issues }: { issues?: string }) {
           </Card>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
-          <button
-            type="button"
-            onClick={() => router.push('/home')}
-            className="inline-flex h-[40px] min-w-[132px] items-center justify-center rounded-[12px] border border-[#c9d8ff] bg-white px-5 text-[12px] font-semibold text-[#1a56db] transition-colors hover:bg-[#f7faff]"
-          >
-            Go to Home
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              router.push(`/quotes?issues=${selectedIssueIds.join(',')}`)
-            }
-            className="inline-flex h-[40px] min-w-[132px] items-center justify-center rounded-[12px] border border-[#1a56db] bg-[#1a56db] px-5 text-[12px] font-semibold text-white transition-colors hover:bg-[#184bcb]"
-          >
-            View Quotes
-          </button>
-        </div>
       </div>
     </DashboardShell>
   );
