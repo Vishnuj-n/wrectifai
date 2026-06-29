@@ -4,32 +4,27 @@
   "sourceRoot": "apps/web/src",
   "projectType": "application",
   "tags": [],
-  "// targets": "to see all targets run: nx show project apps --web",
+  "// targets": "to see all targets run: nx show project web",
   "targets": {
-    "dev": {
+    "build": {
       "executor": "nx:run-commands",
-      "continuous": true,
       "options": {
         "cwd": "apps/web",
-        "command": "next dev -p 4200"
+        "command": "next build"
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/web",
+        "command": "next dev"
       }
     },
     "start": {
       "executor": "nx:run-commands",
-      "continuous": true,
-      "dependsOn": ["build"],
       "options": {
         "cwd": "apps/web",
-        "command": "next start -p 4200"
-      }
-    },
-    "serve-static": {
-      "executor": "nx:run-commands",
-      "continuous": true,
-      "dependsOn": ["build"],
-      "options": {
-        "cwd": "apps/web",
-        "command": "next start -p 4200"
+        "command": "next start"
       }
     }
   }

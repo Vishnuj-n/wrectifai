@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { HomePage } from '@/pages/home/home-page';
 
-export default function HomePage() {
-  redirect('/auth/register');
+export default function Page() {
+  return <HomePage />;
 }

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: wrectifai-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx nx build api
+    startCommand: node dist/api/main.js
+    envVars:
+      - key: NODE_VERSION
+        value: 22.11.0
+  - type: web
+    name: wrectifai-web
+    runtime: node
+    plan: free
+    buildCommand: pnpm install --frozen-lockfile && pnpm --dir apps/web build
+    startCommand: pnpm --dir apps/web start
+    envVars:
+      - key: NODE_VERSION
+        value: 22.11.0

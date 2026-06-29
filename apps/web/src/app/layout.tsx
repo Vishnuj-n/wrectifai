@@ -1,22 +1,19 @@
 import './global.css';
-import { Inter, Manrope } from 'next/font/google';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 
-const fontSans = Inter({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  variable: '--font-sans',
-  display: 'swap',
-});
-
-const fontDisplay = Manrope({
-  subsets: ['latin'],
-  weight: ['500', '600', '700', '800'],
-  variable: '--font-display',
-  display: 'swap',
+  variable: '--font-plus-jakarta-sans',
 });
 
 export const metadata = {
-  title: 'Wrectifai Web',
-  description: 'Wrectifai Next.js frontend',
+  title: 'WrectifAI',
+  description: 'WrectifAI automotive services platform',
+  icons: {
+    icon: '/Logo_noBg.png',
+    shortcut: '/Logo_noBg.png',
+    apple: '/Logo_noBg.png',
+  },
 };
 
 export default function RootLayout({
@@ -25,6 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
+<<<<<<< HEAD
     <html lang="en">
       <head>
         <link rel="icon" href="/wrectifai_logo.png" type="image/png" />
@@ -34,6 +32,10 @@ export default function RootLayout({
       >
         {children}
       </body>
+=======
+    <html lang="en" className={plusJakartaSans.variable}>
+      <body className="bg-background text-foreground antialiased">{children}</body>
+>>>>>>> Feat/new-screens
     </html>
   );
 }

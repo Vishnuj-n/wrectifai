@@ -12,27 +12,23 @@
   --popover-foreground: 209 61% 11%;
   --primary: 211 73% 58%; /* #4894e2 precision blue */
   --primary-foreground: 210 40% 98%;
-  --secondary: 218 100% 97%; /* #eef4ff */
-  --secondary-foreground: 213 24% 29%; /* #38485a */
-  --muted: 218 100% 97%; /* tonal layer */
-  --muted-foreground: 213 18% 40%;
-  --accent: 218 100% 97%;
-  --accent-foreground: 209 61% 11%;
-  --destructive: 0 72% 48%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 213 24% 29%; /* ghost border base tint */
-  --input: 218 100% 97%;
-  --ring: 211 73% 58%;
-  --radius: 0.25rem;
-
-  --sidebar: 210 100% 9%; /* #00162c deep navy */
-  --sidebar-foreground: 210 40% 96%;
-  --sidebar-primary: 213 90% 18%;
-  --sidebar-primary-foreground: 210 40% 98%;
-  --sidebar-accent: 213 90% 22%;
-  --sidebar-accent-foreground: 210 40% 96%;
-  --sidebar-border: 213 38% 30%;
-  --sidebar-ring: 211 73% 58%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --radius: 0.5rem;
+  --font-sans: var(--font-plus-jakarta-sans), 'Segoe UI', sans-serif;
+  --app-color-text-primary: #17307a;
+  --app-color-text-muted: #5f7099;
+  --app-color-link: #1a56db;
+  --app-color-success: #159a5d;
+  --app-tracking-tight: -0.03em;
+  --app-fs-page-title: 15.5px;
+  --app-fs-hero-title: 19.5px;
+  --app-fs-card-title: 14.5px;
+  --app-fs-subheading: 13px;
+  --app-fs-body: 12px;
+  --app-fs-caption: 11px;
+  --app-fw-semibold: 600;
+  --app-fw-medium: 500;
 }
 
 .dark {
@@ -70,39 +66,100 @@
   @apply border-border;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  @apply bg-background font-sans text-foreground;
-  background-image: radial-gradient(circle at top left, hsl(218 100% 99%) 0%, hsl(var(--background)) 52%);
+  @apply bg-background text-foreground;
+  font-family: var(--font-sans);
+  background: radial-gradient(
+      circle at top left,
+      rgba(26, 86, 219, 0.06),
+      transparent 24%
+    ),
+    linear-gradient(180deg, #fbfcff 0%, #f5f8fe 100%);
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  @apply font-display;
-  color: hsl(var(--foreground));
+button,
+input {
+  font: inherit;
 }
 
-/* DESIGN.md ambient depth + glass treatment */
-.surface-low {
-  background-color: hsl(218 100% 97%); /* #eef4ff */
+@layer components {
+  .ui-page-title {
+    color: var(--app-color-text-primary);
+    font-size: var(--app-fs-page-title);
+    font-weight: var(--app-fw-semibold);
+    letter-spacing: var(--app-tracking-tight);
+  }
+
+  .ui-hero-title {
+    color: var(--app-color-text-primary);
+    font-size: var(--app-fs-hero-title);
+    font-weight: 700;
+    letter-spacing: var(--app-tracking-tight);
+  }
+
+  .ui-card-title {
+    color: var(--app-color-text-primary);
+    font-size: var(--app-fs-card-title);
+    font-weight: var(--app-fw-semibold);
+    letter-spacing: var(--app-tracking-tight);
+  }
+
+  .ui-subheading {
+    color: var(--app-color-text-primary);
+    font-size: var(--app-fs-subheading);
+    font-weight: var(--app-fw-semibold);
+    letter-spacing: var(--app-tracking-tight);
+  }
+
+  .ui-body {
+    color: var(--app-color-text-muted);
+    font-size: var(--app-fs-body);
+  }
+
+  .ui-body-strong {
+    color: var(--app-color-text-primary);
+    font-size: var(--app-fs-body);
+    font-weight: var(--app-fw-semibold);
+  }
+
+  .ui-caption {
+    color: var(--app-color-text-muted);
+    font-size: var(--app-fs-caption);
+  }
+
+  .ui-caption-medium {
+    color: var(--app-color-text-muted);
+    font-size: var(--app-fs-caption);
+    font-weight: var(--app-fw-medium);
+  }
+
+  .ui-link {
+    color: var(--app-color-link);
+    font-size: var(--app-fs-body);
+    font-weight: var(--app-fw-semibold);
+  }
+
+  .ui-success-text {
+    color: var(--app-color-success);
+  }
 }
 
-.surface-lowest {
-  background-color: hsl(0 0% 100%);
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
 }
 
-.glass {
-  backdrop-filter: blur(12px);
-  background: rgb(255 255 255 / 70%);
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background: rgba(26, 86, 219, 0.2);
+  background-clip: padding-box;
 }
 
-.shadow-ambient {
-  box-shadow: 0 10px 40px rgb(11 29 45 / 5%);
-}
-
-.ghost-border {
-  border: 1px solid rgb(56 72 90 / 15%);
+::-webkit-scrollbar-track {
+  background: transparent;
 }
