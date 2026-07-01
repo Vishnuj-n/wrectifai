@@ -1,158 +1,124 @@
 # Wrectifai
 
+Full-stack monorepo with a Next.js frontend, React Native (Expo) mobile app, and an Express.js + PostgreSQL API.
+
+## Stack
+
+- **apps/web** — Next.js frontend
+- **apps/mobile** — React Native (Expo) mobile app
+- **apps/api** — Express.js backend with PostgreSQL (via `pg`)
+
+Database tables are auto-created on API startup (~20 tables: users, profiles, garages, vehicles, quotes, bookings, payments, etc.). Sample seed data is also available.
+
+## Local Development Setup
+
+### Prerequisites
+
+- **Node.js 22.x**
+- **pnpm** (install: `npm install -g pnpm`)
+- **PostgreSQL** (running instance)
+
+### 1. Install dependencies
+
+```bash
+pnpm install
+```
+
+### 2. Configure environment
+
+Copy the example env file and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+At minimum, set a valid `DATABASE_URL` pointing to your PostgreSQL instance.
+
+### 3. Start the database
+
+The API auto-creates all required tables on startup. Make sure PostgreSQL is running and `DATABASE_URL` is correct.
+
+### 4. Start development servers
+
+```bash
+# Start API (port 3000) and Web (port 4200) in parallel
+pnpm serve:all
+
+# Or run individually:
+pnpm api    # nx serve api
+pnpm web    # nx dev web
+pnpm mobile # nx start mobile
+```
+
+The API will bootstrap the database tables on first launch.
+
+## Available Scripts
+
+| Script | Description |
+| --- | --- |
+| `pnpm serve:all` | Start API and Web in parallel |
+| `pnpm api` | Start API server (port 3000) |
+| `pnpm web` | Start Web dev server (port 4200) |
+| `pnpm mobile` | Start Expo mobile dev server |
+| `pnpm build:all` | Build API and Web for production |
+| `pnpm serve:prod` | Run both API and Web in production mode |
+| `pnpm lint` | Lint all projects |
+
 ## Production Deployment
 
-### Build and Serve Commands
+### Build and Serve
 
-- **Build both API and Web:** `pnpm build:all`
-  - Builds API to `dist/apps/api/main.js`
-  - Builds Web to `apps/web/.next`
+```bash
+pnpm build:all
+pnpm serve:prod
+```
 
-- **Serve both in production:** `pnpm serve:prod`
-  - Runs API on port 3000 (or `PORT` env var) - publicly accessible
-  - Runs Web on port 3001 (internal port) - for local testing
-  - Requires both projects to be built first
-
-- **Build and serve in one command:**
-  ```bash
-  pnpm build:all
-  pnpm serve:prod
-  ```
+- Builds API to `dist/apps/api/main.js`
+- Builds Web to `apps/web/.next`
+- API runs on port 3000 (or `PORT` env var)
+- Web runs on port 3001 internally
 
 ### Environment Variables
 
-Required environment variables for production:
+| Variable | Required | Description |
+| --- | --- | --- |
+| `DATABASE_URL` | Yes | Postgres connection string |
+| `WEB_ORIGINS` | Yes | Comma-separated allowed origins for CORS |
+| `NEXT_PUBLIC_API_BASE_URL` | Yes | API base URL used by web app |
+| `COOKIE_SAME_SITE` | Yes | `lax` for same-site, `none` for cross-site |
+| `COOKIE_DOMAIN` | No | Shared cookie domain (e.g., `.yourdomain.com`) |
+| `HOST` | No | Server host (defaults to `0.0.0.0`) |
+| `PORT` | No | API port (defaults to `3000`) |
 
-- `DATABASE_URL`: Postgres connection string for the API.
-- `WEB_ORIGINS`: Comma-separated list of allowed web origins for CORS.
-  Example: `https://your-app.vercel.app,https://your-app-git-main-your-team.vercel.app`
-- `NEXT_PUBLIC_API_BASE_URL`: API base URL used by web app.
-  - If API is same-origin under `/api`, set to `https://your-app.vercel.app/api`.
-  - If API is on another domain, set that full `/api` URL.
-- `COOKIE_SAME_SITE`: `lax` for same-site deployments, `none` for cross-site web/api.
-- `COOKIE_DOMAIN` (optional): Shared cookie domain when needed (example: `.yourdomain.com`).
-- `HOST` (optional): Server host (defaults to `0.0.0.0` for Render).
-- `PORT` (optional): API port (defaults to `3000`).
-
-Notes:
+**Notes:**
 - `COOKIE_SAME_SITE=none` requires HTTPS and secure cookies.
-- CORS now supports an explicit allowlist via `WEB_ORIGINS`.
+- CORS supports an explicit allowlist via `WEB_ORIGINS`.
 
 ### Render Deployment
 
-For Render deployment:
 1. Connect the repository to Render
 2. Set the environment variables listed above
 3. Build command: `pnpm build:all`
 4. Start command: `pnpm serve:prod`
-5. The API will be accessible on the configured port (default: 3000)
-6. The Web app runs on port 3001 internally (for local testing only)
+5. API will be accessible on the configured port (default: 3000)
+6. Web app runs on port 3001 internally
 
-**Note:** In a typical Render deployment, you would deploy the API and Web as separate services. The API is publicly accessible, while the Web app would be deployed as a separate static site or Next.js service.
+### Vercel Deployment
 
-## Vercel Deployment (Alternative)
-
-Recommended setup for Vercel:
-
-- Create one Vercel project for `apps/web` (Root Directory = `apps/web`).
-- Create one Vercel project for `apps/api` (Root Directory = `apps/api`).
-- API project uses serverless catch-all handler at `apps/api/api/[...path].ts`.
+- Create one Vercel project for `apps/web` (Root Directory = `apps/web`)
+- Create one Vercel project for `apps/api` (Root Directory = `apps/api`)
+- API project uses serverless catch-all handler at `apps/api/api/[...path].ts`
 
 Set the same environment variables in Vercel as listed above.
 
----
+## Tech Stack Details
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
-
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
-
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/intro#learn-nx?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
-
-## Run tasks
-
-To run tasks with Nx use:
-
-```sh
-npx nx <target> <project-name>
-```
-
-For example:
-
-```sh
-npx nx build myproject
-```
-
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
-
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Add new projects
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-To install a new plugin you can use the `nx add` command. Here's an example of adding the React plugin:
-```sh
-npx nx add @nx/react
-```
-
-Use the plugin's generator to create new projects. For example, to create a new React app or library:
-
-```sh
-# Generate an app
-npx nx g @nx/react:app demo
-
-# Generate a library
-npx nx g @nx/react:lib some-lib
-```
-
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
-
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Set up CI!
-
-### Step 1
-
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
-```
-
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
-
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
-```
-
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/getting-started/intro#learn-nx?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+| Category | Technology |
+| --- | --- |
+| Monorepo | Nx + pnpm workspaces |
+| Frontend | Next.js 16, React 19, Tailwind CSS |
+| Mobile | React Native 0.76, Expo 52, NativeWind |
+| Backend | Express.js, PostgreSQL (`pg`) |
+| UI | Radix UI, Lucide icons, shadcn/ui patterns |
+| Build | esbuild, SWC |
+| Tooling | TypeScript, ESLint, Prettier |
