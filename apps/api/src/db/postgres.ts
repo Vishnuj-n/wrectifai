@@ -11,11 +11,10 @@ export function getPool() {
     throw new Error('DATABASE_URL is required');
   }
 
+  const useSsl = databaseUrl.includes('sslmode=require');
   pool = new Pool({
     connectionString: databaseUrl,
-    ssl: {
-      rejectUnauthorized: false,
-    },
+    ...(useSsl ? { ssl: { rejectUnauthorized: false } } : {}),
   });
 
   return pool;

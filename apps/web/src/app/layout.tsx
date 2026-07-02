@@ -22,20 +22,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-<<<<<<< HEAD
-    <html lang="en">
+    <html lang="en" className={plusJakartaSans.variable}>
       <head>
         <link rel="icon" href="/wrectifai_logo.png" type="image/png" />
       </head>
-      <body
-        className={`${fontSans.variable} ${fontDisplay.variable} bg-background text-foreground antialiased`}
-      >
+      <body className="bg-background text-foreground antialiased">
         {children}
       </body>
-=======
-    <html lang="en" className={plusJakartaSans.variable}>
-      <body className="bg-background text-foreground antialiased">{children}</body>
->>>>>>> Feat/new-screens
     </html>
   );
 }
