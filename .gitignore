@@ -63,3 +63,9 @@ web-build/
 cache/
 
 images/
+.env
+.agents/
+.postman/
+Docs/Notes/
+apps/api/.env
+postman/
