@@ -89,7 +89,7 @@ apps/web/src/
 
 ## Sprint Plan
 
-### Sprint 0 — Foundation (API skeleton + DB connection)
+### Sprint 0 — Foundation (API skeleton + DB connection) [DONE]
 **Status**: COMPLETED (2026-07-03)
 **Duration**: 2 days
 
@@ -105,39 +105,50 @@ apps/web/src/
 
 ---
 
-### Sprint 0.5 — Frontend Foundation (API client + auth hook)
+### Sprint 0.5 — Authentication Refactor (OTP + OAuth stubs, dedicated routes) [DONE]
 **Duration**: 1 day
 **Depends on**: Sprint 0
 
 #### Backend
-- [ ] No backend changes (Sprint 0 foundation is sufficient)
+- [x] Migrated auth from email/password to phone number OTP (`+919876543210`, `9876543210`)
+- [x] Hardcoded OTP validation against `123456`
+- [x] Stubbed Google & Apple OAuth handlers
+- [x] Removed email/password registration/login code and mock hashes
 
 #### Frontend Integration
-- [ ] Create `apps/web/src/lib/api-client.ts`
+- [x] Create `apps/web/src/lib/api-client.ts`
   - Base URL from `NEXT_PUBLIC_API_URL` env var
   - Automatic `Authorization: Bearer <token>` header injection
   - Token refresh on 401 response (silent retry)
   - Response envelope unwrapping (extract `data` from `{ data }`)
   - Error normalization (extract `error` from `{ error }`)
   - Request/response interceptors for logging
-- [ ] Update `apps/web/.env` — set `NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1`
-- [ ] Create `apps/web/src/lib/auth-context.tsx`
+- [x] Update `apps/web/.env` — set `NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1`
+- [x] Create `apps/web/src/lib/auth-context.tsx`
   - `AuthProvider` with `user`, `token`, `isAuthenticated` state
   - `login(token)` / `logout()` methods
   - Persist tokens to `localStorage` (accessible to api-client)
   - Auto-load user from stored token on app mount
-- [ ] Wrap app root in `<AuthProvider>`
-- [ ] Update `TopNavbar` to consume auth context (show user name/avatar or login button)
+- [x] Wrap app root in `<AuthProvider>`
+- [x] Update `TopNavbar` to consume auth context — removed modal, "Log In" button links to `/login`
+- [x] Created dedicated `/login` page (`apps/web/src/app/login/page.tsx`)
+- [x] Created dedicated `/signup` page (`apps/web/src/app/signup/page.tsx`)
+  - Phone entry + 6-digit OTP input stages
+  - Google & Apple OAuth stub buttons
+  - Responsive Tailwind CSS styling matching app theme
+  - Removed "Back to Home" buttons and "Demo Mode Alert Banners"
 
 #### Tests
-- [ ] `apps/web/src/lib/api-client.test.ts` — unit tests for:
+- [x] `apps/web/src/lib/api-client.test.ts` — unit tests for:
   - Base URL construction
   - Auth header injection
   - Response envelope unwrapping
   - Error normalization
   - 401 retry logic
+- [x] All 5 tests passed via `npx nx test web`
+- [x] ESLint clean on `auth.routes.ts` — all warnings/errors resolved
 
-**Deliverable**: Frontend can make authenticated API calls; auth state is global.
+**Deliverable**: Phone OTP + OAuth stubs auth system; dedicated login/signup routes; frontend API client and auth context working.
 
 ---
 
@@ -619,7 +630,7 @@ apps/web/src/
 ```
 Sprint 0 ✅ (Foundation)
     ↓
-Sprint 0.5 (Frontend Foundation) ← API client, auth context
+Sprint 0.5 (Auth Refactor) ← OTP auth, OAuth stubs, dedicated routes
     ↓
 Sprint 1 (Auth + RBAC) ← everything depends on this
     ↓
@@ -671,7 +682,7 @@ Sprint 9 (Notifications + Polish) ← final
 | Sprint | Days | Deliverable (Demo-able) |
 |--------|------|-------------------------|
 | Sprint 0 — Foundation | 2 | API boots, DB connected |
-| Sprint 0.5 — Frontend Foundation | 1 | API client + auth context working |
+| Sprint 0.5 — Auth Refactor (OTP + OAuth stubs) | 1 | OTP/OAuth auth, login/signup routes, API client |
 | Sprint 1 — Auth + RBAC | 3-4 | Login flow end-to-end |
 | Sprint 2 — Vehicles | 2-3 | Vehicle CRUD + selector in UI |
 | Sprint 3 — Diagnosis | 4-5 | AI diagnosis with real vehicle |
@@ -688,7 +699,7 @@ With parallel work (frontend + backend dev), realistic calendar time: **7-9 week
 ### Milestone Demos
 | After Sprint | You Can Demo |
 |--------------|--------------|
-| 0.5 | Frontend hitting backend API |
+| 0.5 | Phone OTP login, OAuth stubs, dedicated login/signup pages |
 | 1 | Full login flow with Google OAuth |
 | 2 | Vehicle list from DB, vehicle selector working |
 | 3 | AI diagnosis with real vehicle data |

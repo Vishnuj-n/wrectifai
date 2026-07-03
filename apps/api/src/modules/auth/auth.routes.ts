@@ -5,42 +5,61 @@ import { query } from '../../config/database';
 
 export const authRouter = Router();
 
+const HARDCODED_PHONES = ['9876543210', '1234567890'];
+const HARDCODED_OTP = '123456';
+
 authRouter.post('/register', async (req, res, next) => {
-  const { email, password, name, mobileNumber, role = 'user' } = req.body;
-  if (!email || !password || !name) {
-    return error(res, 'Email, password, and name are required', 'BAD_REQUEST', 400);
+  const { mobileNumber, name, otp, role = 'user' } = req.body;
+  if (!mobileNumber || !name || !otp) {
+    return error(res, 'Phone number, name, and OTP are required', 'BAD_REQUEST', 400);
+  }
+
+  if (otp !== HARDCODED_OTP || !HARDCODED_PHONES.includes(mobileNumber)) {
+    return error(res, 'Invalid phone number or OTP', 'UNAUTHORIZED', 401);
   }
 
   try {
-    const existingUser = await query('SELECT * FROM users WHERE email = $1', [email]);
+    const existingUser = await query('SELECT * FROM users WHERE mobile_number = $1', [mobileNumber]);
+    let user;
+    let isNew = false;
+    
     if (existingUser.rows.length > 0) {
-      return error(res, 'User with this email already exists', 'CONFLICT', 409);
+      user = existingUser.rows[0];
+      await query('UPDATE users SET name = $1 WHERE id = $2', [name, user.id]);
+      user.name = name;
+    } else {
+      const userResult = await query(
+        'INSERT INTO users (mobile_number, name, status) VALUES ($1, $2, $3) RETURNING id, email, name, mobile_number, status',
+        [mobileNumber, name, 'active']
+      );
+      user = userResult.rows[0];
+      isNew = true;
     }
 
-    const passwordHash = `mock_hash_${password}`;
-    const userResult = await query(
-      'INSERT INTO users (email, password_hash, name, mobile_number, status) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, name, mobile_number, status',
-      [email, passwordHash, name, mobileNumber || null, 'active']
+    if (isNew) {
+      const roleResult = await query('SELECT id FROM roles WHERE code = $1', [role]);
+      if (roleResult.rows.length > 0) {
+        const roleId = roleResult.rows[0].id;
+        await query('INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)', [user.id, roleId]);
+      }
+    }
+
+    const rolesResult = await query(
+      'SELECT r.code FROM roles r JOIN user_roles ur ON r.id = ur.role_id WHERE ur.user_id = $1',
+      [user.id]
     );
-    const user = userResult.rows[0];
+    const roles = rolesResult.rows.map((row) => row.code);
 
-    const roleResult = await query('SELECT id FROM roles WHERE code = $1', [role]);
-    if (roleResult.rows.length > 0) {
-      const roleId = roleResult.rows[0].id;
-      await query('INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)', [user.id, roleId]);
-    }
-
-    const accessToken = generateAccessToken({ userId: user.id, email: user.email, roles: [role] });
+    const accessToken = generateAccessToken({ userId: user.id, roles });
     const refreshToken = generateRefreshToken({ userId: user.id });
 
     return success(res, {
       user: {
         id: user.id,
-        email: user.email,
         name: user.name,
         mobileNumber: user.mobile_number,
         status: user.status,
-        roles: [role],
+        roles,
       },
       accessToken,
       refreshToken,
@@ -51,21 +70,62 @@ authRouter.post('/register', async (req, res, next) => {
 });
 
 authRouter.post('/login', async (req, res, next) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return error(res, 'Email and password are required', 'BAD_REQUEST', 400);
-  }
+  const { mobileNumber, otp, provider } = req.body;
 
   try {
-    const userResult = await query('SELECT * FROM users WHERE email = $1', [email]);
-    if (userResult.rows.length === 0) {
-      return error(res, 'Invalid email or password', 'UNAUTHORIZED', 401);
-    }
-    const user = userResult.rows[0];
+    let user;
+    const role = 'user';
+    let isNew = false;
 
-    const passwordHash = `mock_hash_${password}`;
-    if (user.password_hash !== passwordHash) {
-      return error(res, 'Invalid email or password', 'UNAUTHORIZED', 401);
+    // Handle stubbed OAuth
+    if (provider) {
+      if (provider !== 'google' && provider !== 'apple') {
+        return error(res, 'Invalid OAuth provider', 'BAD_REQUEST', 400);
+      }
+
+      const mockEmail = `${provider}-user@wrectifai.com`;
+      const mockName = provider === 'google' ? 'Google User' : 'Apple User';
+
+      const existingUser = await query('SELECT * FROM users WHERE email = $1', [mockEmail]);
+      if (existingUser.rows.length > 0) {
+        user = existingUser.rows[0];
+      } else {
+        const userResult = await query(
+          'INSERT INTO users (email, name, status) VALUES ($1, $2, $3) RETURNING id, email, name, mobile_number, status',
+          [mockEmail, mockName, 'active']
+        );
+        user = userResult.rows[0];
+        isNew = true;
+      }
+    } else {
+      // Handle phone OTP login
+      if (!mobileNumber || !otp) {
+        return error(res, 'Phone number and OTP are required', 'BAD_REQUEST', 400);
+      }
+
+      if (otp !== HARDCODED_OTP || !HARDCODED_PHONES.includes(mobileNumber)) {
+        return error(res, 'Invalid phone number or OTP', 'UNAUTHORIZED', 401);
+      }
+
+      const existingUser = await query('SELECT * FROM users WHERE mobile_number = $1', [mobileNumber]);
+      if (existingUser.rows.length > 0) {
+        user = existingUser.rows[0];
+      } else {
+        const userResult = await query(
+          'INSERT INTO users (mobile_number, name, status) VALUES ($1, $2, $3) RETURNING id, email, name, mobile_number, status',
+          [mobileNumber, 'Demo User', 'active']
+        );
+        user = userResult.rows[0];
+        isNew = true;
+      }
+    }
+
+    if (isNew) {
+      const roleResult = await query('SELECT id FROM roles WHERE code = $1', [role]);
+      if (roleResult.rows.length > 0) {
+        const roleId = roleResult.rows[0].id;
+        await query('INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)', [user.id, roleId]);
+      }
     }
 
     const rolesResult = await query(
@@ -103,7 +163,7 @@ authRouter.post('/refresh', (req, res) => {
     const decoded = verifyRefreshToken(refreshToken);
     const accessToken = generateAccessToken({ userId: decoded.userId, roles: ['user'] });
     return success(res, { accessToken });
-  } catch (err) {
+  } catch {
     return error(res, 'Invalid refresh token', 'UNAUTHORIZED', 401);
   }
 });

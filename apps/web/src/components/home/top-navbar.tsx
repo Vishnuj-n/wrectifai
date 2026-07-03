@@ -1,12 +1,12 @@
 'use client';
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { ChevronDown, Search, X } from 'lucide-react';
+import { ChevronDown, Search } from 'lucide-react';
+import Link from 'next/link';
 import { Input } from '@/components/common/input';
 import { topNavIcons } from '@/components/home/data';
 import { cn } from '@/utils/cn';
 import { useAuth } from '@/lib/auth-context';
-import { apiClient } from '@/lib/api-client';
 
 const CITIES = [
   'Hyderabad',
@@ -29,15 +29,8 @@ export function TopNavbar() {
   
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Authentication context & state
-  const { user, login, logout } = useAuth();
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Authentication context
+  const { user, logout } = useAuth();
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -52,65 +45,6 @@ export function TopNavbar() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-  };
-
-  const handleAuthSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-    setIsSubmitting(true);
-    try {
-      if (isRegisterMode) {
-        const data = await apiClient.post('/auth/register', { email, password, name });
-        login(data.accessToken, data.refreshToken, data.user);
-      } else {
-        const data = await apiClient.post('/auth/login', { email, password });
-        login(data.accessToken, data.refreshToken, data.user);
-      }
-      setIsLoginModalOpen(false);
-      // Reset form
-      setEmail('');
-      setPassword('');
-      setName('');
-    } catch (err: any) {
-      setErrorMsg(err.message || `${isRegisterMode ? 'Registration' : 'Login'} failed`);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDemoLogin = async () => {
-    setErrorMsg('');
-    setIsSubmitting(true);
-    const demoEmail = 'test@wrectifai.com';
-    const demoPassword = 'password123';
-    const demoName = 'Test User';
-
-    try {
-      // 1. Try to login
-      try {
-        const data = await apiClient.post('/auth/login', { email: demoEmail, password: demoPassword });
-        login(data.accessToken, data.refreshToken, data.user);
-        setIsLoginModalOpen(false);
-        setIsSubmitting(false);
-        return;
-      } catch (loginErr) {
-        // If not found / unauthorized, proceed to register
-      }
-
-      // 2. Try to register
-      const data = await apiClient.post('/auth/register', {
-        email: demoEmail,
-        password: demoPassword,
-        name: demoName,
-        role: 'customer'
-      });
-      login(data.accessToken, data.refreshToken, data.user);
-      setIsLoginModalOpen(false);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Demo Login failed');
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const filteredCities = CITIES.filter(city =>
@@ -269,135 +203,14 @@ export function TopNavbar() {
             </div>
           </div>
         ) : (
-          <button
-            onClick={() => {
-              setIsLoginModalOpen(true);
-              setErrorMsg('');
-            }}
+          <Link
+            href="/login"
             className="ml-[5px] flex h-9 lg:h-10 shrink-0 items-center justify-center rounded-full border border-[#1a56db] bg-[#1a56db] px-4 text-[13px] font-semibold text-white shadow-sm hover:bg-[#1546b5] transition-all focus:outline-none"
           >
             Log In
-          </button>
+          </Link>
         )}
       </div>
-
-      {/* Premium Glassmorphic Auth Modal */}
-      {isLoginModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity duration-300">
-          <div 
-            className="relative w-full max-w-md bg-white/95 rounded-2xl border border-[#e4ecff] p-6 lg:p-8 shadow-[0_20px_50px_rgba(23,48,122,0.15)] transform scale-100 transition-transform duration-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close Button */}
-            <button 
-              onClick={() => setIsLoginModalOpen(false)}
-              className="absolute right-4 top-4 text-[#8ea0c7] hover:text-[#17307a] transition-colors p-1.5 rounded-lg hover:bg-[#f2f6ff]"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            {/* Modal Header */}
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-[#17307a]">
-                {isRegisterMode ? 'Create Account' : 'Welcome Back'}
-              </h2>
-              <p className="text-sm text-[#6b7aa5] mt-1">
-                {isRegisterMode ? 'Sign up to access specialized vehicle services' : 'Log in to manage your bookings and quotes'}
-              </p>
-            </div>
-
-            {/* Error Message */}
-            {errorMsg && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl text-xs font-medium text-red-600">
-                {errorMsg}
-              </div>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleAuthSubmit} className="space-y-4">
-              {isRegisterMode && (
-                <div>
-                  <label className="block text-xs font-semibold text-[#17307a] mb-1.5">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your full name"
-                    className="h-10 w-full rounded-lg border border-[#dbe6ff] bg-white px-3.5 text-[13px] text-[#17307a] placeholder-[#8ea0c7] outline-none transition-all focus:border-[#1a56db] focus:ring-1 focus:ring-[#1a56db]"
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-semibold text-[#17307a] mb-1.5">Email Address</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="h-10 w-full rounded-lg border border-[#dbe6ff] bg-white px-3.5 text-[13px] text-[#17307a] placeholder-[#8ea0c7] outline-none transition-all focus:border-[#1a56db] focus:ring-1 focus:ring-[#1a56db]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#17307a] mb-1.5">Password</label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="h-10 w-full rounded-lg border border-[#dbe6ff] bg-white px-3.5 text-[13px] text-[#17307a] placeholder-[#8ea0c7] outline-none transition-all focus:border-[#1a56db] focus:ring-1 focus:ring-[#1a56db]"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full h-10 rounded-lg bg-[#1a56db] text-white text-[13px] font-semibold hover:bg-[#1546b5] transition-all flex items-center justify-center disabled:opacity-50"
-              >
-                {isSubmitting ? 'Processing...' : isRegisterMode ? 'Sign Up' : 'Log In'}
-              </button>
-            </form>
-
-            {/* Divider */}
-            <div className="relative my-6 text-center">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#e4ecff]"></div>
-              </div>
-              <span className="relative bg-white px-3 text-xs text-[#8ea0c7] font-medium">OR</span>
-            </div>
-
-            {/* Demo Actions */}
-            <button
-              onClick={handleDemoLogin}
-              disabled={isSubmitting}
-              type="button"
-              className="w-full h-10 rounded-lg border border-[#dbe6ff] bg-white text-[#17307a] hover:bg-[#fcfdff] text-[13px] font-semibold transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
-            >
-              <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] text-[#1a56db]" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
-              </svg>
-              Quick Test Login
-            </button>
-
-            {/* Switch Mode Link */}
-            <div className="text-center mt-6">
-              <button
-                onClick={() => {
-                  setIsRegisterMode(!isRegisterMode);
-                  setErrorMsg('');
-                }}
-                className="text-[12.5px] font-semibold text-[#1a56db] hover:underline"
-              >
-                {isRegisterMode ? 'Already have an account? Log In' : "Don't have an account? Sign Up"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 }
