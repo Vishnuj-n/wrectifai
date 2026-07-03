@@ -152,7 +152,7 @@ apps/web/src/
 
 ---
 
-### Sprint 1 — Auth + RBAC (Google OAuth Only)
+### Sprint 1 — Auth + RBAC (Google OAuth Only) [DONE]
 **Duration**: 3-4 days
 **Depends on**: Sprint 0.5
 **API Endpoints**: §1 of DATA_API.md

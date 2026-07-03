@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               id: decoded.userId,
               email: decoded.email,
               roles: decoded.roles,
-              name: decoded.email ? decoded.email.split('@')[0] : 'User',
+              name: decoded.name || (decoded.email ? decoded.email.split('@')[0] : 'User'),
             };
           }
         }
@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: decoded.userId,
           email: decoded.email,
           roles: decoded.roles,
-          name: decoded.email ? decoded.email.split('@')[0] : 'User',
+          name: decoded.name || (decoded.email ? decoded.email.split('@')[0] : 'User'),
         };
       }
     }
@@ -125,16 +125,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    setUser(null);
-    setToken(null);
-    setIsAuthenticated(false);
-
     if (typeof window !== 'undefined') {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'}/auth/logout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        }).catch(() => {});
+      }
       localStorage.removeItem('accessToken');
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
     }
+
+    setUser(null);
+    setToken(null);
+    setIsAuthenticated(false);
   }, []);
 
   return (

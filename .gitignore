@@ -68,4 +68,5 @@ images/
 .postman/
 Docs/Notes/
 apps/api/.env
+apps/api/.env.test
 postman/

@@ -190,16 +190,18 @@ export function TopNavbar() {
               <span className="hidden text-[13px] font-semibold text-[#17307a] lg:block">Hi, {user.name}</span>
               <ChevronDown className="hidden h-4 w-4 text-[#17307a] lg:block group-hover:rotate-180 transition-transform duration-200" />
             </button>
-            <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-[#e4ecff] rounded-xl shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50 p-1.5">
-              <div className="px-3 py-2 text-xs text-[#8ea0c7] border-b border-[#f2f6ff] mb-1">
-                Role: <span className="font-semibold text-[#1a56db] capitalize">{user.roles.join(', ')}</span>
+            <div className="absolute right-0 top-full pt-2 w-48 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
+              <div className="bg-white border border-[#e4ecff] rounded-xl shadow-lg p-1.5">
+                <div className="px-3 py-2 text-xs text-[#8ea0c7] border-b border-[#f2f6ff] mb-1">
+                  Role: <span className="font-semibold text-[#1a56db] capitalize">{user.roles.join(', ')}</span>
+                </div>
+                <button
+                  onClick={logout}
+                  className="w-full text-left px-3 py-2 text-[13px] font-semibold text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  Log Out
+                </button>
               </div>
-              <button
-                onClick={logout}
-                className="w-full text-left px-3 py-2 text-[13px] font-semibold text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                Log Out
-              </button>
             </div>
           </div>
         ) : (

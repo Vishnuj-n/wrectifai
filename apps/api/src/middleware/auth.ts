@@ -28,18 +28,29 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+import { query } from '../config/database';
+
 export function requireRole(allowedRoles: string[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
     if (!user) {
       return error(res, 'Unauthorized', 'UNAUTHORIZED', 401);
     }
 
-    const hasRole = user.roles.some((role) => allowedRoles.includes(role));
-    if (!hasRole) {
-      return error(res, 'Forbidden: Insufficient permissions', 'FORBIDDEN', 403);
-    }
+    try {
+      const rolesResult = await query(
+        'SELECT r.code FROM roles r JOIN user_roles ur ON r.id = ur.role_id WHERE ur.user_id = $1',
+        [user.userId]
+      );
+      const dbRoles = rolesResult.rows.map((row) => row.code);
+      const hasRole = dbRoles.some((role) => allowedRoles.includes(role));
+      if (!hasRole) {
+        return error(res, 'Forbidden: Insufficient permissions', 'FORBIDDEN', 403);
+      }
 
-    next();
+      next();
+    } catch (err) {
+      return error(res, 'Internal server error during authorization', 'INTERNAL_SERVER_ERROR', 500);
+    }
   };
 }

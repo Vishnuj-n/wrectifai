@@ -6,5 +6,6 @@ export function getEnv() {
     jwtSecret: process.env.JWT_SECRET ?? 'super-secret-jwt-key',
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET ?? 'super-secret-refresh-key',
     corsOrigins: process.env.WEB_ORIGINS ? process.env.WEB_ORIGINS.split(',') : ['http://localhost:4200', 'http://localhost:3001'],
+    googleClientId: process.env.GOOGLE_CLIENT_ID,
   };
 }

@@ -1,0 +1,47 @@
+import { OAuth2Client } from 'google-auth-library';
+import { getEnv } from '../config/env';
+
+export interface GoogleUserPayload {
+  email: string;
+  name: string;
+  sub: string;
+}
+
+export async function verifyGoogleIdToken(token: string): Promise<GoogleUserPayload> {
+  const { googleClientId } = getEnv();
+
+  // Support development bypass/mock mode if client ID is default/missing, or token starts with "mock_"
+  if (!googleClientId || googleClientId === 'your-google-client-id-here' || token.startsWith('mock_')) {
+    console.warn('[auth] Using Google OAuth ID Token verification MOCK mode.');
+    let email = 'google-user@wrectifai.com';
+    let name = 'Google User';
+    let sub = 'mock-google-sub-id';
+
+    if (token.startsWith('mock_')) {
+      const parts = token.split('_');
+      if (parts[1]) {
+        email = `${parts[1]}@wrectifai.com`;
+        name = parts[1].charAt(0).toUpperCase() + parts[1].slice(1) + ' User';
+        sub = `mock-google-sub-${parts[1]}`;
+      }
+    }
+    return { email, name, sub };
+  }
+
+  const client = new OAuth2Client(googleClientId);
+  const ticket = await client.verifyIdToken({
+    idToken: token,
+    audience: googleClientId,
+  });
+
+  const payload = ticket.getPayload();
+  if (!payload || !payload.email || !payload.name || !payload.sub) {
+    throw new Error('Invalid Google ID Token payload');
+  }
+
+  return {
+    email: payload.email,
+    name: payload.name,
+    sub: payload.sub,
+  };
+}

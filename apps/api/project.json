@@ -37,6 +37,19 @@
         }
       }
     },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node -r @swc-node/register --test apps/api/src/**/*.test.ts",
+        "cwd": "{workspaceRoot}",
+        "envFile": "apps/api/.env.test"
+      },
+      "configurations": {
+        "unit": {
+          "command": "node -r @swc-node/register --test apps/api/src/**/*.test.ts --test-name-pattern '^(?!.*DB)'"
+        }
+      }
+    },
     "serve": {
       "continuous": true,
       "executor": "@nx/js:node",
