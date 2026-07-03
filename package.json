@@ -9,7 +9,11 @@
     "api": "nx serve api",
     "web": "nx dev web",
     "mobile": "nx start mobile",
-    "lint": "nx run-many -t lint --all"
+    "lint": "nx run-many -t lint --all",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:reset": "docker compose down -v && docker compose up -d",
+    "db:psql": "docker exec -it wrectifai_db psql -U postgres -d wrectifai"
   },
   "private": true,
   "devDependencies": {
