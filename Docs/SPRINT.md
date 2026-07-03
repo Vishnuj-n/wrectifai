@@ -46,12 +46,11 @@
 
 ---
 
-### Sprint 1 — Auth + RBAC
+### Sprint 1 — Auth + RBAC (Google OAuth Only)
 **Duration**: 3-4 days
 **API Endpoints**: §1 of DATA_API.md
 
-- [ ] `POST /auth/register` — create user + assign role
-- [ ] `POST /auth/login` — email/password → JWT access + refresh tokens
+- [ ] `POST /auth/google` — verify Google ID token → login/register, issue JWT access + refresh tokens
 - [ ] `POST /auth/refresh` — rotate access token
 - [ ] `POST /auth/logout` — invalidate refresh token
 - [ ] Auth middleware: extract user + roles from JWT, attach to `req.user`
@@ -60,7 +59,7 @@
 
 **Frontend Changes**:
 - [ ] Create `src/lib/api-client.ts` (fetch wrapper with auth headers, base URL)
-- [ ] Build login/register pages (or reuse existing auth UI if present)
+- [ ] Integrate Google Login button & token exchange flow on web
 - [ ] Store tokens in httpOnly cookies or secure localStorage
 - [ ] Wire TopNavbar user state to `/auth/status` or JWT payload
 
@@ -238,10 +237,10 @@
 
 ---
 
-### Sprint 9 — Notifications + Polish
+### Sprint 9 — Notifications + Polish (No Twilio SMS)
 **Duration**: 2-3 days
 
-- [ ] Notification service: SMS (Twilio), email (SendGrid/SES), push (FCM), in-app
+- [ ] Notification service: email (SendGrid/SES), push (FCM), in-app (SMS/Twilio is NOT required)
 - [ ] Notification queue processing (background worker or cron)
 - [ ] Wire notifications to key events: booking confirmed, quote received, payment succeeded
 - [ ] Replace hardcoded notification badge count ("3") in `data.tsx:389`
@@ -257,7 +256,7 @@
 ### Tech Stack (API)
 - **Runtime**: Node.js + Express (already in place)
 - **ORM**: Drizzle ORM (lightweight, type-safe, good PostGIS support)
-- **Auth**: JWT (access + refresh tokens), bcrypt for passwords
+- **Auth**: Google OAuth (via `google-auth-library`), JWT (access + refresh tokens)
 - **Storage**: S3-compatible (AWS S3 or MinIO) for media uploads
 - **Payments**: Stripe (per PRD: "US-supported like Stripe")
 - **Validation**: Zod schemas shared between API and frontend

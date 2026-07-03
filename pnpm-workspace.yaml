@@ -1,0 +1,9 @@
+allowBuilds:
+  '@parcel/watcher': true
+  '@swc/core': true
+  detox: true
+  dtrace-provider: true
+  esbuild: true
+  nx: true
+  sharp: true
+  unrs-resolver: true
