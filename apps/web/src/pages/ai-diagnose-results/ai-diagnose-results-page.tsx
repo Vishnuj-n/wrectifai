@@ -23,12 +23,27 @@ const { PhoneCall, Send, ShieldCheck } = sharedIcons;
 export function AIDiagnoseResultsPage() {
   const router = useRouter();
   const pageRootRef = useRef<HTMLDivElement>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
   const [selectedIssues, setSelectedIssues] = useState<string[]>(['wheel-balance', 'wheel-alignment']);
   const [detailsText, setDetailsText] = useState('');
   const [activeTab, setActiveTab] = useState('Text Details');
   const [uploadedPhotos, setUploadedPhotos] = useState<{ id: string; url: string; name: string }[]>([]);
   const [uploadedVideo, setUploadedVideo] = useState<{ name: string; size: string } | null>(null);
   const [uploadedAudio, setUploadedAudio] = useState<{ name: string; size: string } | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('wrectifai_selected_vehicle');
+      if (stored) {
+        try {
+          setSelectedVehicle(JSON.parse(stored));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  }, []);
+
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -135,13 +150,19 @@ export function AIDiagnoseResultsPage() {
                     height={132}
                     className="h-auto w-[180px] object-contain"
                   />
-                  <div className="mt-3 text-[14px] font-bold text-[#17307a]">Honda City (TS07 AB 1234)</div>
-                  <div className="mt-1.5 flex items-center justify-center gap-2 text-[12.5px] text-[#5f7099]">
-                    <span>Petrol</span>
-                    <span className="text-[#8ea0c7]">•</span>
-                    <span>2018</span>
+                  <div className="mt-3 text-[14px] font-bold text-[#17307a]">
+                    {selectedVehicle ? `${selectedVehicle.make} ${selectedVehicle.model} ${selectedVehicle.vin ? `(${selectedVehicle.vin.slice(-6)})` : ''}` : 'Honda City (TS07 AB 1234)'}
                   </div>
-                  <div className="mt-1 text-[12.5px] text-[#5f7099]">KM Driven: 58,320 km</div>
+                  <div className="mt-1.5 flex items-center justify-center gap-2 text-[12.5px] text-[#5f7099]">
+                    <span>{selectedVehicle ? (selectedVehicle.vin ? 'VIN Verified' : 'Petrol') : 'Petrol'}</span>
+                    <span className="text-[#8ea0c7]">•</span>
+                    <span>{selectedVehicle ? selectedVehicle.year : '2018'}</span>
+                  </div>
+                  <div className="mt-1 text-[12.5px] text-[#5f7099]">
+                    {selectedVehicle && selectedVehicle.mileage !== undefined && selectedVehicle.mileage !== null
+                      ? `Mileage: ${selectedVehicle.mileage.toLocaleString()} miles`
+                      : 'KM Driven: 58,320 km'}
+                  </div>
                 </div>
 
                 <div>

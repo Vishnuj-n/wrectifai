@@ -253,6 +253,8 @@ export function CompareQuotesPage({ ids }: { ids?: string }) {
   const router = useRouter();
   const pageRootRef = useRef<HTMLDivElement>(null);
 
+  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+
   useEffect(() => {
     const pageScroller = (() => {
       let node = pageRootRef.current?.parentElement ?? null;
@@ -265,7 +267,19 @@ export function CompareQuotesPage({ ids }: { ids?: string }) {
 
     window.scrollTo({ top: 0, behavior: 'auto' });
     pageScroller?.scrollTo({ top: 0, behavior: 'auto' });
+
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('wrectifai_selected_vehicle');
+      if (stored) {
+        try {
+          setSelectedVehicle(JSON.parse(stored));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
   }, []);
+
 
   const initialSelectedIds = useMemo(
     () =>
@@ -818,14 +832,18 @@ export function CompareQuotesPage({ ids }: { ids?: string }) {
                 <div>
                   <div className={homeBodyClass}>Vehicle</div>
                   <div className="mt-2.5 ui-card-title">
-                    Honda City (TS07 AB 1234)
+                    {selectedVehicle ? `${selectedVehicle.make} ${selectedVehicle.model} ${selectedVehicle.vin ? `(${selectedVehicle.vin.slice(-6)})` : ''}` : 'Honda City (TS07 AB 1234)'}
                   </div>
                   <div className="mt-2.5 flex flex-wrap items-center gap-2.5 text-[12px] text-[#5f7099]">
-                    <span>Petrol</span>
+                    <span>{selectedVehicle ? (selectedVehicle.vin ? 'VIN Verified' : 'Petrol') : 'Petrol'}</span>
                     <span>{BULLET}</span>
-                    <span>2018</span>
+                    <span>{selectedVehicle ? selectedVehicle.year : '2018'}</span>
                     <span>{BULLET}</span>
-                    <span>58,320 km</span>
+                    <span>
+                      {selectedVehicle && selectedVehicle.mileage !== undefined && selectedVehicle.mileage !== null
+                        ? `${selectedVehicle.mileage.toLocaleString()} mi`
+                        : '58,320 km'}
+                    </span>
                   </div>
                 </div>
 

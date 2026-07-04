@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Calendar,
   Wrench,
@@ -46,7 +46,22 @@ export function BookingConfirmed({
   onViewBookings,
 }: BookingConfirmedProps) {
   const [copied, setCopied] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
   const bookingId = `WRCT-2505${selectedDate}-0420`;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('wrectifai_selected_vehicle');
+      if (stored) {
+        try {
+          setSelectedVehicle(JSON.parse(stored));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  }, []);
+
 
   const handleCopy = () => {
     navigator.clipboard.writeText(bookingId);
@@ -267,10 +282,12 @@ export function BookingConfirmed({
                     Vehicle
                   </div>
                   <div className="text-[13px] font-extrabold text-[#0f172a]">
-                    Honda City
+                    {selectedVehicle ? `${selectedVehicle.make} ${selectedVehicle.model}` : 'Honda City'}
                   </div>
                   <div className="text-[11px] font-semibold text-[#64748b]">
-                    TS07 AB 1234 • Petrol • 2018
+                    {selectedVehicle
+                      ? `${selectedVehicle.vin ? `${selectedVehicle.vin} • ` : ''}${selectedVehicle.vin ? 'VIN Verified' : 'Petrol'} • ${selectedVehicle.year}`
+                      : 'TS07 AB 1234 • Petrol • 2018'}
                   </div>
                 </div>
               </div>

@@ -15,6 +15,21 @@ export function FindingQuotesPage({ issues }: { issues?: string }) {
   const pageRootRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
+  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('wrectifai_selected_vehicle');
+      if (stored) {
+        try {
+          setSelectedVehicle(JSON.parse(stored));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  }, []);
+
 
   const selectedIssueIds = (issues || 'wheel-balance,wheel-alignment')
     .split(',')
@@ -157,13 +172,19 @@ export function FindingQuotesPage({ issues }: { issues?: string }) {
               <span className="flex h-[92px] w-[92px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_top,#f5f8ff_0%,#edf2ff_100%)] text-[#244fe5] shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
                 <CarFront className="h-11 w-11" />
               </span>
-              <div className="mt-8 text-[15.5px] font-semibold tracking-[-0.03em] text-[#193daa]">Honda City (TS07 AB 1234)</div>
-              <div className="mt-5 flex items-center gap-4 text-[12px] text-[#6679a6]">
-                <span>Petrol</span>
-                <span className="h-1 w-1 rounded-full bg-[#8997bc]" />
-                <span>2018</span>
+              <div className="mt-8 text-[15.5px] font-semibold tracking-[-0.03em] text-[#193daa]">
+                {selectedVehicle ? `${selectedVehicle.make} ${selectedVehicle.model} ${selectedVehicle.vin ? `(${selectedVehicle.vin.slice(-6)})` : ''}` : 'Honda City (TS07 AB 1234)'}
               </div>
-              <div className="mt-4 text-[12px] text-[#546a9f]">KM Driven: 58,320 km</div>
+              <div className="mt-5 flex items-center gap-4 text-[12px] text-[#6679a6]">
+                <span>{selectedVehicle ? (selectedVehicle.vin ? 'VIN Verified' : 'Petrol') : 'Petrol'}</span>
+                <span className="h-1 w-1 rounded-full bg-[#8997bc]" />
+                <span>{selectedVehicle ? selectedVehicle.year : '2018'}</span>
+              </div>
+              <div className="mt-4 text-[12px] text-[#546a9f]">
+                {selectedVehicle && selectedVehicle.mileage !== undefined && selectedVehicle.mileage !== null
+                  ? `Mileage: ${selectedVehicle.mileage.toLocaleString()} miles`
+                  : 'KM Driven: 58,320 km'}
+              </div>
             </div>
           </Card>
 

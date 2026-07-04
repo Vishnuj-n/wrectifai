@@ -156,6 +156,21 @@ function VehiclePreview() {
 export function RequestAentPage({ issues }: { issues?: string }) {
   const router = useRouter();
   const pageRootRef = useRef<HTMLDivElement>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('wrectifai_selected_vehicle');
+      if (stored) {
+        try {
+          setSelectedVehicle(JSON.parse(stored));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  }, []);
+
 
   const selectedIssueIds = (issues || 'wheel-balance,wheel-alignment')
     .split(',')
@@ -250,7 +265,7 @@ export function RequestAentPage({ issues }: { issues?: string }) {
 
                   <div className="min-w-0">
                     <div className={homeCardHeadingClass}>
-                      Honda City (TS07 AB 1234)
+                      {selectedVehicle ? `${selectedVehicle.make} ${selectedVehicle.model} ${selectedVehicle.vin ? `(${selectedVehicle.vin.slice(-6)})` : ''}` : 'Honda City (TS07 AB 1234)'}
                     </div>
                     <div className="mt-1 text-[12px] text-[#5f7099]">
                       Active vehicle linked to this garage request
@@ -262,7 +277,7 @@ export function RequestAentPage({ issues }: { issues?: string }) {
                           Fuel
                         </div>
                         <div className="mt-1 text-[13px] font-semibold text-[#17307a]">
-                          Petrol
+                          {selectedVehicle ? (selectedVehicle.vin ? 'VIN Verified' : 'Petrol') : 'Petrol'}
                         </div>
                       </div>
                       <div className="rounded-[12px] border border-[#e3ebff] bg-white px-3 py-2">
@@ -270,7 +285,7 @@ export function RequestAentPage({ issues }: { issues?: string }) {
                           Year
                         </div>
                         <div className="mt-1 text-[13px] font-semibold text-[#17307a]">
-                          2018
+                          {selectedVehicle ? selectedVehicle.year : '2018'}
                         </div>
                       </div>
                       <div className="rounded-[12px] border border-[#e3ebff] bg-white px-3 py-2">
@@ -278,7 +293,9 @@ export function RequestAentPage({ issues }: { issues?: string }) {
                           KM Driven
                         </div>
                         <div className="mt-1 text-[13px] font-semibold text-[#17307a]">
-                          58,320 km
+                          {selectedVehicle && selectedVehicle.mileage !== undefined && selectedVehicle.mileage !== null
+                            ? `${selectedVehicle.mileage.toLocaleString()} mi`
+                            : '58,320 km'}
                         </div>
                       </div>
                     </div>
