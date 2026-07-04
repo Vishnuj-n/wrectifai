@@ -48,7 +48,12 @@ const actionItems = [
   { label: 'More Options', icon: MoreHorizontal, tone: 'blue' as const },
 ];
 
+import { VehicleSelector } from '@/components/common/vehicle-selector';
+
 export function QuotesPage() {
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
+  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+  
   const quotesPerPage = 5;
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -531,16 +536,40 @@ export function QuotesPage() {
               <div className="mt-4 space-y-4">
                 <div>
                   <div className={homeBodyClass}>Vehicle</div>
-                  <div className="ui-subheading mt-2">
-                    Honda City (TS07 AB 1234)
+                  <div className="mt-2 mb-3">
+                    <VehicleSelector 
+                      value={selectedVehicleId} 
+                      onChange={(id, vehicle) => {
+                        setSelectedVehicleId(id);
+                        setSelectedVehicle(vehicle);
+                      }} 
+                    />
                   </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-2.5 text-[11px] text-[#5f7099]">
-                    <span>Petrol</span>
-                    <span>{BULLET}</span>
-                    <span>2018</span>
-                    <span>{BULLET}</span>
-                    <span>58,320 km</span>
-                  </div>
+                  {selectedVehicle ? (
+                    <div className="mt-2 flex flex-wrap items-center gap-2.5 text-[11px] text-[#5f7099]">
+                      {selectedVehicle.vin && (
+                        <>
+                          <span className="font-mono">{selectedVehicle.vin}</span>
+                          <span>{BULLET}</span>
+                        </>
+                      )}
+                      <span>{selectedVehicle.year}</span>
+                      {selectedVehicle.mileage !== undefined && selectedVehicle.mileage !== null && (
+                        <>
+                          <span>{BULLET}</span>
+                          <span>{selectedVehicle.mileage.toLocaleString()} miles</span>
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mt-2 flex flex-wrap items-center gap-2.5 text-[11px] text-[#5f7099]">
+                      <span>Petrol</span>
+                      <span>{BULLET}</span>
+                      <span>2018</span>
+                      <span>{BULLET}</span>
+                      <span>58,320 km</span>
+                    </div>
+                  )}
                 </div>
 
                 <div>

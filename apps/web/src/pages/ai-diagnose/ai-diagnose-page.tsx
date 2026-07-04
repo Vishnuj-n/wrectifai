@@ -54,6 +54,7 @@ import { DashboardShell } from '@/components/home/dashboard-shell';
 import { TopNavbar } from '@/components/home/top-navbar';
 import { Card } from '@/components/common/card';
 import { cn } from '@/utils/cn';
+import { VehicleSelector } from '@/components/common/vehicle-selector';
 
 type ChatEntry =
   | {
@@ -884,6 +885,7 @@ type DiagnoseResultsScreenProps = {
   onToggleIssue: (issueId: string) => void;
   onEditIssue: () => void;
   onRequestQuotes: () => void;
+  selectedVehicle?: any;
 };
 
 function DiagnoseResultsScreen({
@@ -896,6 +898,7 @@ function DiagnoseResultsScreen({
   onToggleIssue,
   onEditIssue,
   onRequestQuotes,
+  selectedVehicle,
 }: DiagnoseResultsScreenProps) {
   const selectedCount = selectedIssues.length;
   const detailsTabs = ['Text Details', 'Photo', 'Video', 'Audio'];
@@ -976,12 +979,16 @@ function DiagnoseResultsScreen({
                   className="h-auto w-[190px] object-contain"
                 />
                 <div className={cn('mt-3', homeCardHeadingClass)}>
-                  Honda City (TS07 AB 1234)
+                  {selectedVehicle ? `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}` : 'Honda City (TS07 AB 1234)'}
                 </div>
                 <div className="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1.5 text-left text-[11px] text-[#5f7099]">
-                  <span>Petrol</span>
-                  <span>2018</span>
-                  <span className="col-span-2">KM Driven: 58,320 km</span>
+                  <span>{selectedVehicle?.vin ? 'VIN' : 'Petrol'}</span>
+                  <span className="font-mono truncate max-w-[80px]">{selectedVehicle?.vin ? selectedVehicle.vin.slice(-6) : '2018'}</span>
+                  <span className="col-span-2">
+                    {selectedVehicle?.mileage !== undefined && selectedVehicle?.mileage !== null 
+                      ? `Mileage: ${selectedVehicle.mileage.toLocaleString()} mi` 
+                      : 'KM Driven: 58,320 km'}
+                  </span>
                 </div>
               </div>
 
@@ -1292,12 +1299,14 @@ type FindingQuotesScreenProps = {
   resultIssues: DiagnosticIssueResult[];
   selectedIssues: string[];
   onBack: () => void;
+  selectedVehicle?: any;
 };
 
 function FindingQuotesScreen({
   resultIssues,
   selectedIssues,
   onBack,
+  selectedVehicle,
 }: FindingQuotesScreenProps) {
   const chosenIssues = resultIssues.filter((issue) =>
     selectedIssues.includes(issue.id)
@@ -1442,15 +1451,17 @@ function FindingQuotesScreen({
               <CarFront className="h-11 w-11" />
             </span>
             <div className={cn('mt-8', homeCardHeadingClass)}>
-              Honda City (TS07 AB 1234)
+              {selectedVehicle ? `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}` : 'Honda City (TS07 AB 1234)'}
             </div>
             <div className="mt-5 flex items-center gap-4 text-[11px] text-[#5f7099]">
-              <span>Petrol</span>
+              <span>{selectedVehicle?.vin ? 'VIN' : 'Petrol'}</span>
               <span className="h-1 w-1 rounded-full bg-[#8997bc]" />
-              <span>2018</span>
+              <span className="font-mono">{selectedVehicle?.vin ? selectedVehicle.vin.slice(-6) : '2018'}</span>
             </div>
             <div className="mt-4 text-[11px] text-[#5f7099]">
-              KM Driven: 58,320 km
+              {selectedVehicle?.mileage !== undefined && selectedVehicle?.mileage !== null 
+                ? `Mileage: ${selectedVehicle.mileage.toLocaleString()} mi` 
+                : 'KM Driven: 58,320 km'}
             </div>
           </div>
         </Card>
@@ -1587,6 +1598,8 @@ function FindingQuotesScreen({
 export function AIDiagnosePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
+  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
   const initialIssueParam = searchParams?.get('issue')?.trim() ?? '';
   const initialFlow = buildInitialFlow(initialIssueParam);
   const [issueText, setIssueText] = useState(initialFlow.issueText);
@@ -2091,6 +2104,7 @@ export function AIDiagnosePage() {
               resultIssues={resultIssues}
               selectedIssues={selectedIssues}
               onBack={() => setIsFindingQuotes(false)}
+              selectedVehicle={selectedVehicle}
             />
           </div>
         </DashboardShell>
@@ -2112,6 +2126,7 @@ export function AIDiagnosePage() {
             onRequestQuotes={() =>
               router.push(`/finding-quotes?issues=${selectedIssues.join(',')}`)
             }
+            selectedVehicle={selectedVehicle}
           />
         </div>
       </DashboardShell>
@@ -2466,6 +2481,20 @@ export function AIDiagnosePage() {
 
           {/* RIGHT SIDEBAR PANEL */}
           <div className="space-y-6">
+            {/* Vehicle Selector Panel */}
+            <Card className="rounded-[18px] border-[#e8edf8] bg-white p-5 shadow-[0_12px_28px_rgba(35,64,143,0.04)]">
+              <h2 className={homeSubheadingClass}>Diagnosing Vehicle</h2>
+              <div className="mt-4">
+                <VehicleSelector 
+                  value={selectedVehicleId} 
+                  onChange={(id, vehicle) => {
+                    setSelectedVehicleId(id);
+                    setSelectedVehicle(vehicle);
+                  }} 
+                />
+              </div>
+            </Card>
+
             {/* Progress Panel */}
             <Card className="rounded-[18px] border-[#e8edf8] bg-white p-5 shadow-[0_12px_28px_rgba(35,64,143,0.04)]">
               <h2 className={homeSubheadingClass}>Diagnosis in Progress</h2>
