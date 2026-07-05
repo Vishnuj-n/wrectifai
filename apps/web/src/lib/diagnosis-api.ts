@@ -42,9 +42,12 @@ export interface SubmitDiagnosisPayload {
   symptomText: string;
   media?: Array<{ mediaType: 'image' | 'video' | 'audio'; base64: string }>;
   intakeAnswers?: {
-    category: string | null;
-    answers: Record<string, string>;
+    category?: string | null;
+    answers?: Record<string, string>;
+    questions?: string[];
+    qas?: Record<string, string>;
   };
+  stage?: 'questions' | 'final';
 }
 
 export async function submitDiagnosis(payload: SubmitDiagnosisPayload): Promise<DiagnosisResponse> {

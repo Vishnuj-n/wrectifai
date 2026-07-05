@@ -5,7 +5,7 @@ import { generateObject } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { getDbPool, query } from '../../config/database';
 import { getEnv } from '../../config/env';
-import { KnowledgeService } from './knowledge.service';
+import { KnowledgeService, type RetrievedIssue } from './knowledge.service';
 
 
 // Schema matching frontend requirements and future sprints
@@ -35,6 +35,107 @@ export interface MediaInput {
 
 export class DiagnosisService {
   /**
+   * Stage 1: Generate dynamic intake questions based on database matches
+   */
+  static async generateQuestions(
+    customerId: string,
+    vehicleId: string,
+    symptomText: string
+  ) {
+    const env = getEnv();
+
+    // Verify vehicle & customer ownership check
+    const vehicleRes = await query(
+      'SELECT make, model, year FROM vehicles WHERE id = $1 AND customer_id = $2',
+      [vehicleId, customerId]
+    );
+
+    if (vehicleRes.rows.length === 0) {
+      throw new Error('Vehicle not found or does not belong to the user');
+    }
+    const vehicle = vehicleRes.rows[0];
+
+    // Fetch matching issues from database for grounding
+    let matchedIssues: RetrievedIssue[] = [];
+    try {
+      matchedIssues = await KnowledgeService.findMatchingIssues(
+        symptomText,
+        vehicle.make,
+        vehicle.year
+      );
+    } catch (dbErr) {
+      console.error('Failed to retrieve matched issues from database:', dbErr);
+    }
+
+    if (matchedIssues.length === 0) {
+      // Bypasses LLM directly on zero DB matches (Option A)
+      return {
+        questions: [],
+        matchedIssues: [],
+      };
+    }
+
+    // Call LLM to generate targeted questions based on database matches
+    let aiProvider;
+    if (env.llmProvider === 'groq') {
+      if (!env.groqApiKey) {
+        throw new Error('GROQ_API_KEY is not defined in the environment');
+      }
+      aiProvider = createOpenAI({
+        baseURL: 'https://api.groq.com/openai/v1',
+        apiKey: env.groqApiKey,
+      });
+    } else {
+      if (!env.openaiApiKey) {
+        throw new Error('OPENAI_API_KEY is not defined in the environment');
+      }
+      aiProvider = createOpenAI({
+        apiKey: env.openaiApiKey,
+      });
+    }
+
+    const modelInstance = aiProvider(env.llmModel);
+
+    const systemPrompt = `You are an expert automotive diagnostic assistant.
+The user has reported a symptom: "${symptomText}".
+Our database indicates this could be one of the following known issues:
+${matchedIssues.map(issue => `- Issue: ${issue.issue_name}\n  Description: ${issue.description}`).join('\n')}
+
+Your task is to generate exactly 3 to 5 highly specific multiple choice questions to ask the user.
+These questions should be designed to narrow down WHICH of the database issues is the correct one.
+Do not ask generic questions (e.g. "what model is your car?"). Focus strictly on symptoms, sound patterns, warning lights, or operating conditions related to the potential issues listed.
+For each question, provide 2 to 4 concise multiple choice options (e.g., ["Crank is slow", "Starter clicks only", "No crank at all"]).
+Output your response as a strict JSON array under a "questions" field, where each item is an object containing "question" (string) and "options" (array of strings).`;
+
+    const llmResponse = await generateObject({
+      model: modelInstance,
+      schema: z.object({
+        questions: z.array(z.object({
+          question: z.string(),
+          options: z.array(z.string()),
+        })),
+      }),
+      prompt: systemPrompt,
+    });
+
+    // ponytail: map dynamic questions to clean structured objects with dynamic IDs
+    const questionsWithIds = llmResponse.object.questions.map((q, idx) => ({
+      id: `dyn-q-${idx}-${Date.now()}`,
+      question: q.question,
+      options: q.options,
+    }));
+
+    return {
+      questions: questionsWithIds,
+      matchedIssues: matchedIssues.map(issue => ({
+        id: issue.id,
+        issue_name: issue.issue_name,
+        safety_critical: issue.safety_critical,
+      })),
+    };
+  }
+
+  /**
    * Run the diagnosis engine synchronously:
    * 1. Query vehicle details & recent service history.
    * 2. Save media files to local disk.
@@ -47,7 +148,12 @@ export class DiagnosisService {
     vehicleId: string,
     symptomText: string,
     mediaInputs: MediaInput[] = [],
-    intakeAnswers?: { category: string; answers: Record<string, string> }
+    intakeAnswers?: { 
+      category?: string; 
+      answers?: Record<string, string>; 
+      questions?: string[]; 
+      qas?: Record<string, string>;
+    }
   ) {
     const env = getEnv();
 
@@ -70,7 +176,7 @@ export class DiagnosisService {
     const serviceHistory = historyRes.rows;
 
     // Fetch matching issues from database for grounding
-    let matchedIssues: any[] = [];
+    let matchedIssues: RetrievedIssue[] = [];
     try {
       matchedIssues = await KnowledgeService.findMatchingIssues(
         symptomText,
@@ -92,7 +198,7 @@ export class DiagnosisService {
 
     for (const input of mediaInputs) {
       // Decode base64
-      const matches = input.base64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+      const matches = input.base64.match(/^data:([A-Za-z+/]+);base64,(.+)$/);
       let buffer: Buffer;
       let extension = 'bin';
 
@@ -186,6 +292,14 @@ Use these known issues as PRIMARY reference. Adjust confidence based on how well
 
       const finalSystemPrompt = `${systemPrompt}${groundingText}`;
 
+      let intakeText = '';
+      if (intakeAnswers) {
+        const qas = intakeAnswers.qas || intakeAnswers.answers;
+        if (qas && Object.keys(qas).length > 0) {
+          intakeText = `\nIntake Answers:\n${Object.entries(qas).map(([q, a]) => `- ${q}: ${a}`).join('\n')}`;
+        }
+      }
+
       const userPrompt = `Vehicle Context:
 - Make: ${vehicle.make}
 - Model: ${vehicle.model}
@@ -197,12 +311,13 @@ ${serviceHistoryText}
 
 Reported Symptoms:
 ${symptomText}
-${intakeAnswers ? `\nIntake Answers:\n${Object.entries(intakeAnswers.answers).map(([q, a]) => `- ${q}: ${a}`).join('\n')}` : ''}
+${intakeText}
 
 Please diagnose the issue.`;
 
       // Process media content (Vercel AI SDK handles base64 image content natively)
-      const contentPayload: any[] = [{ type: 'text', text: userPrompt }];
+      type ContentBlock = { type: 'text'; text: string } | { type: 'image'; image: string };
+      const contentPayload: ContentBlock[] = [{ type: 'text', text: userPrompt }];
       
       // Add media descriptions/links to prompt
       mediaInputs.forEach((input, index) => {
@@ -376,7 +491,7 @@ Please diagnose the issue.`;
   static applySafetyGuardrail(
     result: DiagnosisResult,
     symptomText: string,
-    matchedIssues: any[] = []
+    matchedIssues: RetrievedIssue[] = []
   ): DiagnosisResult {
     // ponytail: compile regex once with word boundaries to prevent false positives (like "absent" matching "abs")
     const safetyRegex = /\b(brake|steering|airbag|suspension|high-voltage|hybrid_battery|hybrid battery|stabilizer|abs)\b/i;

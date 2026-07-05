@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Car, ChevronDown, Plus, AlertCircle, RefreshCw } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
@@ -26,16 +26,19 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
   const [loading, setLoading] = useState(true);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const hasAutoSelected = useRef(false);
+  const activeRef = useRef(true);
 
   const fetchVehicles = useCallback(async () => {
     setLoading(true);
     setErrorText(null);
     try {
       const data = await apiClient.get<Vehicle[]>('/vehicles');
+      if (!activeRef.current) return;
       setVehicles(data || []);
-      
-      // Auto-select stored vehicle if value is not set
-      if (data && data.length > 0 && !value && typeof window !== 'undefined') {
+
+      if (!hasAutoSelected.current && data && data.length > 0 && !value && typeof window !== 'undefined') {
+        hasAutoSelected.current = true;
         const storedStr = localStorage.getItem('wrectifai_selected_vehicle');
         let selected = false;
         if (storedStr) {
@@ -56,23 +59,18 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
         }
       }
     } catch (err) {
+      if (!activeRef.current) return;
       const message = err instanceof Error ? err.message : 'Failed to load vehicles';
       setErrorText(message);
     } finally {
-      setLoading(false);
+      if (activeRef.current) setLoading(false);
     }
   }, [value, onChange]);
 
   useEffect(() => {
-    let active = true;
-    Promise.resolve().then(() => {
-      if (active) {
-        fetchVehicles();
-      }
-    });
-    return () => {
-      active = false;
-    };
+    activeRef.current = true;
+    fetchVehicles();
+    return () => { activeRef.current = false; };
   }, [fetchVehicles]);
 
   const selectedVehicle = vehicles.find((v) => v.id === value);

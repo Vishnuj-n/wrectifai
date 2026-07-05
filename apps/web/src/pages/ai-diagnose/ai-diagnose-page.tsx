@@ -35,6 +35,20 @@ interface LlmIssue {
   description?: string;
   risks?: string[];
   imageSrc?: string;
+  requiredParts?: string[];
+}
+
+interface DynamicQuestion {
+  id: string;
+  question: string;
+  options: string[];
+}
+
+interface IssueQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  type?: 'text' | 'select' | 'multi-select';
 }
 
 interface NextStep {
@@ -47,7 +61,6 @@ interface NextStep {
 import {
   ArrowRight,
   ChevronDown,
-  Target,
   Bomb,
   Settings,
   Snowflake,
@@ -67,22 +80,17 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import {
-  fallbackCategoryQuestion,
   getCategoryById,
-  getCategoryByLabel,
   issueCategories,
-  MAX_DIAGNOSE_QUESTIONS,
-  rankIssueCategories,
   type DiagnosticIssueResult,
   type IssueCategoryConfig,
-  type IssueQuestion,
 } from '@/components/ai-diagnose/issue-intake-config';
 import { DashboardShell } from '@/components/home/dashboard-shell';
 import { TopNavbar } from '@/components/home/top-navbar';
 import { Card } from '@/components/common/card';
 import { cn } from '@/utils/cn';
 import { VehicleSelector } from '@/components/common/vehicle-selector';
-import { submitDiagnosis } from '../../lib/diagnosis-api';
+import { submitDiagnosis, type DiagnosisResponse } from '../../lib/diagnosis-api';
 
 function mapLlmIssueToDiagnosticResult(llmIssue: LlmIssue, index: number): DiagnosticIssueResult {
   const match = llmIssue.confidence;
@@ -106,7 +114,7 @@ function mapLlmIssueToDiagnosticResult(llmIssue: LlmIssue, index: number): Diagn
     title,
     badge,
     badgeClass,
-    description: `Diagnosed issue: ${title}. Requires parts: ${llmIssue.requiredParts.join(', ') || 'None specified'}.`,
+    description: `Diagnosed issue: ${title}. Requires parts: ${llmIssue.requiredParts?.join(', ') || 'None specified'}.`,
     match,
     risks: [`Confidence match: ${match}%`],
     estimatedCost,
@@ -284,8 +292,6 @@ const resultTrustItems = [
   },
 ];
 
-const CATEGORY_MATCH_QUESTION_ID = 'category_match';
-const FALLBACK_NONE_OPTION = 'None of these';
 const DEFAULT_ISSUE_TEXT = 'I need help diagnosing my car issue.';
 
 type AnswerMap = Record<string, string>;
@@ -309,7 +315,7 @@ type ResultSummaryItem = {
 type InitialFlowState = {
   issueText: string;
   introText: string;
-  initialQuestion: IssueQuestion;
+  initialQuestion: IssueQuestion | null;
   activeCategoryId: string | null;
 };
 
@@ -481,25 +487,6 @@ function IssueDetailsModal({
   );
 }
 
-function getCurrentTimeLabel() {
-  return new Date().toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function createQuestionEntry(question: IssueQuestion): ChatEntry {
-  return {
-    id: question.id,
-    sender: 'assistant',
-    time: getCurrentTimeLabel(),
-    kind: 'question',
-    question: question.question,
-    options: question.options,
-    selected: '',
-  };
-}
-
 function buildInitialFlow(issueText: string): InitialFlowState {
   const trimmedIssue = issueText.trim();
   return {
@@ -507,20 +494,9 @@ function buildInitialFlow(issueText: string): InitialFlowState {
     introText: trimmedIssue
       ? `I received your symptom description: "${trimmedIssue}". Selecting your vehicle on the right will immediately begin the diagnosis.`
       : 'Hello! I am WrectifAI, your automotive diagnostic assistant. Please select your vehicle on the right, then describe the issues or symptoms your vehicle is experiencing below to start the diagnosis.',
-    initialQuestion: null as any,
+    initialQuestion: null,
     activeCategoryId: null,
   };
-}
-
-function getNextQuestion(activeCategoryId: string | null, answers: AnswerMap) {
-  const category = activeCategoryId
-    ? getCategoryById(activeCategoryId)
-    : undefined;
-  if (!category) {
-    return null;
-  }
-
-  return category.questions.find((question) => !answers[question.id]) ?? null;
 }
 
 function getResolvedIssues(activeCategoryId: string | null) {
@@ -584,32 +560,12 @@ function getResultSummaryItems(
   ];
 }
 
-function buildAnswerSummaryItems(answers: AnswerMap) {
-  const questionLookup = new Map<string, IssueQuestion>();
-
-  issueCategories.forEach((category) => {
-    category.questions.forEach((question) => {
-      questionLookup.set(question.id, question);
-    });
-  });
-
-  questionLookup.set(CATEGORY_MATCH_QUESTION_ID, {
-    id: CATEGORY_MATCH_QUESTION_ID,
-    label: 'Best match',
-    question: '',
-    options: [],
-  });
-  questionLookup.set(fallbackCategoryQuestion.id, fallbackCategoryQuestion);
-
+function buildAnswerSummaryItems(answers: AnswerMap): AnswerSummaryItem[] {
   return Object.entries(answers)
-    .map(([questionId, value], index) => {
-      const question = questionLookup.get(questionId);
-      if (!question || !value) {
-        return null;
-      }
-
+    .map(([label, value], index) => {
+      if (!value) return null;
       return {
-        label: question.label,
+        label,
         value,
         icon: summaryIcons[index % summaryIcons.length],
       };
@@ -1634,7 +1590,6 @@ export function AIDiagnosePage() {
       text: initialFlow.introText,
       highlighted: true,
     },
-    createQuestionEntry(initialFlow.initialQuestion),
   ]);
 
   const [answers, setAnswers] = useState<AnswerMap>({});
@@ -1650,8 +1605,14 @@ export function AIDiagnosePage() {
   const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
   const [detailsText, setDetailsText] = useState('');
 
+  // Dynamic Question Flow States
+  const [dynamicQuestions, setDynamicQuestions] = useState<DynamicQuestion[]>([]);
+  const [currentQuestionIdx, setCurrentQuestionIdx] = useState<number>(-1);
+  const [dynamicAnswers, setDynamicAnswers] = useState<Record<string, string>>({});
+  const [hasStartedDiagnose, setHasStartedDiagnose] = useState<boolean>(false);
+
   // Custom API Integration States
-  const [apiResult, setApiResult] = useState<unknown | null>(null);
+  const [apiResult, setApiResult] = useState<DiagnosisResponse | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [timerFinished, setTimerFinished] = useState(false);
   const [customResultIssues, setCustomResultIssues] = useState<DiagnosticIssueResult[] | null>(null);
@@ -1692,24 +1653,81 @@ export function AIDiagnosePage() {
     });
   }, [messages, isTyping]);
 
-  // Triggers real API call when transitioning to analyzing state
+  const startDiagnoseSession = async (vehicleId: string, symptom: string) => {
+    if (!vehicleId || !symptom || symptom === DEFAULT_ISSUE_TEXT) return;
+    if (hasStartedDiagnose) return;
+
+    setHasStartedDiagnose(true);
+    setIsTyping(true);
+    setTypingText('WrectifAI is fetching database matching issues...');
+
+    try {
+      const response = await submitDiagnosis({
+        vehicleId,
+        symptomText: symptom,
+        stage: 'questions',
+      });
+
+      interface QuestionsStageResponse {
+        questions: Array<{ id: string; question: string; options: string[] }>;
+        matchedIssues: Array<{ id: string; issue_name: string; safety_critical: boolean }>;
+      }
+      const resData = response as unknown as QuestionsStageResponse;
+      setIsTyping(false);
+
+      if (!resData.questions || resData.questions.length === 0) {
+        // Zero-Match Fallback - Direct Clarification
+        const clarificationMessage = "I couldn't find a direct match. Can you describe the noise it's making, or when exactly it happens?";
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `bot-clarification-${Date.now()}`,
+            sender: 'assistant',
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            kind: 'message',
+            text: clarificationMessage,
+          },
+        ]);
+        return;
+      }
+
+      setDynamicQuestions(resData.questions);
+      setCurrentQuestionIdx(0);
+      setDynamicAnswers({});
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: resData.questions[0].id || `dyn-q-0-${Date.now()}`,
+          sender: 'assistant',
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          kind: 'question',
+          question: resData.questions[0].question,
+          options: resData.questions[0].options,
+          selected: '',
+        },
+      ]);
+    } catch (err) {
+      console.error('Failed to start diagnosis session:', err);
+      setIsTyping(false);
+      setApiError(err instanceof Error ? err.message : 'Connection error');
+    }
+  };
+
+  // Triggers real API call when transitioning to analyzing state (Final Synthesis)
   useEffect(() => {
     if (isAnalyzingResults && !apiResult && !apiError) {
       const runApiDiagnosis = async () => {
         try {
-          const answersText = Object.entries(answers)
-            .map(([q, a]) => `${q}: ${a}`)
-            .join(', ');
-          const combinedSymptom = `Initial report: ${initialIssueParam || 'No initial text'}. Question answers: ${answersText}. ${detailsText ? 'Details: ' + detailsText : ''}`;
-          
           const payload = {
             vehicleId: selectedVehicleId || 'v1',
-            symptomText: combinedSymptom,
+            symptomText: issueText,
             media: attachedMedia.map(m => ({ mediaType: m.mediaType, base64: m.base64 })),
             intakeAnswers: {
-              category: activeCategoryId,
-              answers: answers,
+              questions: dynamicQuestions.map(q => q.question),
+              qas: dynamicAnswers,
             },
+            stage: 'final' as const,
           };
           
           const response = await submitDiagnosis(payload);
@@ -1731,11 +1749,12 @@ export function AIDiagnosePage() {
       
       runApiDiagnosis();
     }
-  }, [isAnalyzingResults, apiResult, apiError, answers, initialIssueParam, detailsText, selectedVehicleId, attachedMedia, activeCategoryId]);
+  }, [isAnalyzingResults, apiResult, apiError, dynamicAnswers, dynamicQuestions, issueText, selectedVehicleId, attachedMedia]);
 
   // Transition to results screen only when both timer is finished and API response has arrived
   useEffect(() => {
     if (apiResult && timerFinished) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsAnalyzingResults(false);
       setProgress(100);
       setActiveStepId('3'); // Completed
@@ -1755,7 +1774,6 @@ export function AIDiagnosePage() {
         text: flow.introText,
         highlighted: true,
       },
-      createQuestionEntry(flow.initialQuestion),
     ]);
     setIssueText(flow.issueText);
     setActiveCategoryId(flow.activeCategoryId);
@@ -1768,58 +1786,108 @@ export function AIDiagnosePage() {
     setIsFindingQuotes(false);
     setIsAnalyzingResults(false);
     setTypedMessage('');
-    setSelectedIssues(
-      flow.activeCategoryId
-        ? getResolvedIssues(flow.activeCategoryId)
-            .slice(0, 2)
-            .map((issue) => issue.id)
-        : []
-    );
+    setSelectedIssues([]);
     setDetailsText('');
+    setDynamicQuestions([]);
+    setCurrentQuestionIdx(-1);
+    setDynamicAnswers({});
+    setHasStartedDiagnose(false);
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     applyDiagnoseFlow(initialIssueParam);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialIssueParam]);
 
+  useEffect(() => {
+    if (selectedVehicleId && issueText && issueText !== DEFAULT_ISSUE_TEXT && !hasStartedDiagnose) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      startDiagnoseSession(selectedVehicleId, issueText);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedVehicleId, issueText, hasStartedDiagnose]);
+
   const resetDiagnoseFlow = () => {
+    setDynamicQuestions([]);
+    setCurrentQuestionIdx(-1);
+    setDynamicAnswers({});
+    setHasStartedDiagnose(false);
+    setApiResult(null);
+    setApiError(null);
+    setTimerFinished(false);
+    setCustomResultIssues(null);
+    setSelectedIssues([]);
     applyDiagnoseFlow(initialIssueParam);
-    return;
-    setMessages([
-      {
-        id: 'message-1',
-        sender: 'assistant',
-        time: pageLoadTime,
-        kind: 'message',
-        text: "Thanks! Let's narrow this down ✨",
-        highlighted: true,
-      },
-      {
-        id: 'question-1',
-        sender: 'assistant',
-        time: pageLoadTime,
-        kind: 'question',
-        question: 'When do you feel the vibration?',
-        options: [
-          'Only while braking',
-          'While accelerating',
-          'At constant speed',
-          'Always',
-        ],
-        selected: '',
-      },
-    ]);
-    setAnswers({ occursAt: '-', wheelShakes: '-', started: '-' });
-    setProgress(60);
-    setIsTyping(false);
-    setTypingText('WrectifAI is thinking...');
-    setActiveStepId('2');
-    setIsDiagnosed(false);
-    setIsFindingQuotes(false);
-    setIsAnalyzingResults(false);
-    setTypedMessage('');
-    setSelectedIssues(['wheel-balance', 'wheel-alignment']);
-    setDetailsText('');
+  };
+
+  const handleSelectOption = (questionId: string, option: string) => {
+    if (isAnalyzingResults) return;
+
+    // Prevent re-selecting options once chosen
+    const question = messages.find((m) => m.id === questionId);
+    if (question && question.kind === 'question' && question.selected) return;
+
+    // Update selected option in the question bubble
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === questionId && msg.kind === 'question'
+          ? { ...msg, selected: option }
+          : msg
+      )
+    );
+
+    // Add User's reply bubble
+    const currentTime = new Date().toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    const userReply: ChatEntry = {
+      id: `reply-${questionId}`,
+      sender: 'user',
+      time: currentTime,
+      kind: 'reply',
+      text: option,
+    };
+    setMessages((prev) => [...prev, userReply]);
+
+    // Save the answer
+    if (currentQuestionIdx >= 0 && currentQuestionIdx < dynamicQuestions.length) {
+      const currentQuestion = dynamicQuestions[currentQuestionIdx];
+      const nextAnswers = { ...dynamicAnswers, [currentQuestion.question]: option };
+      setDynamicAnswers(nextAnswers);
+
+      const nextIdx = currentQuestionIdx + 1;
+      if (nextIdx < dynamicQuestions.length) {
+        // Ask the next question
+        setIsTyping(true);
+        setTypingText('WrectifAI is processing...');
+        setTimeout(() => {
+          setIsTyping(false);
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: dynamicQuestions[nextIdx].id || `dyn-q-${nextIdx}-${Date.now()}`,
+              sender: 'assistant',
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              kind: 'question',
+              question: dynamicQuestions[nextIdx].question,
+              options: dynamicQuestions[nextIdx].options,
+              selected: '',
+            },
+          ]);
+          setCurrentQuestionIdx(nextIdx);
+        }, 1000);
+      } else {
+        // No more questions! Trigger final analysis synthesis
+        setIsTyping(true);
+        setTypingText('Synthesizing details...');
+        setTimeout(() => {
+          setIsTyping(false);
+          setIsAnalyzingResults(true);
+        }, 1000);
+      }
+    }
   };
 
   const toggleSelectedIssue = (issueId: string) => {
@@ -1849,206 +1917,13 @@ export function AIDiagnosePage() {
 
   const confidenceScore = apiResult?.result?.confidenceScore;
 
-  const handleSelectOption = (questionId: string, option: string) => {
-    if (isAnalyzingResults) return;
-
-    // Prevent re-selecting options once chosen
-    const question = messages.find((m) => m.id === questionId);
-    if (question && question.kind === 'question' && question.selected) return;
-
-    const nextAnswers = { ...answers, [questionId]: option };
-    const nextAnsweredCount = Object.keys(nextAnswers).length;
-    const nextProgress = Math.min(95, 55 + nextAnsweredCount * 10);
-
-    setMessages((prev) => [
-      ...prev.map((msg) =>
-        msg.id === questionId && msg.kind === 'question'
-          ? { ...msg, selected: option }
-          : msg
-      ),
-      {
-        id: `reply-${questionId}`,
-        sender: 'user',
-        time: getCurrentTimeLabel(),
-        kind: 'reply',
-        text: option,
-      } satisfies ChatEntry,
-    ]);
-    setAnswers(nextAnswers);
-    setProgress(nextProgress);
-
-    const queueNextQuestion = (
-      nextQuestion: IssueQuestion,
-      nextCategoryId?: string | null
-    ) => {
-      setIsTyping(true);
-      setTypingText('WrectifAI is processing...');
-
-      setTimeout(() => {
-        setIsTyping(false);
-
-        if (typeof nextCategoryId !== 'undefined') {
-          setActiveCategoryId(nextCategoryId);
-
-          if (nextCategoryId) {
-            setSelectedIssues(
-              getResolvedIssues(nextCategoryId)
-                .slice(0, 2)
-                .map((issue) => issue.id)
-            );
-          }
-        }
-
-        setMessages((prev) => [...prev, createQuestionEntry(nextQuestion)]);
-      }, 1000);
-    };
-
-    if (questionId === CATEGORY_MATCH_QUESTION_ID) {
-      if (option === FALLBACK_NONE_OPTION) {
-        queueNextQuestion(fallbackCategoryQuestion, null);
-        return;
-      }
-
-      const matchedCategory = getCategoryByLabel(option);
-      const nextQuestion = matchedCategory?.questions[0];
-
-      if (
-        !matchedCategory ||
-        !nextQuestion ||
-        nextAnsweredCount >= MAX_DIAGNOSE_QUESTIONS
-      ) {
-        setActiveStepId('2');
-        setIsAnalyzingResults(true);
-        return;
-      }
-
-      queueNextQuestion(nextQuestion, matchedCategory.id);
-      return;
-    }
-
-    if (questionId === fallbackCategoryQuestion.id) {
-      const matchedCategory = getCategoryByLabel(option);
-      const nextQuestion = matchedCategory?.questions[0];
-
-      if (
-        !matchedCategory ||
-        !nextQuestion ||
-        nextAnsweredCount >= MAX_DIAGNOSE_QUESTIONS
-      ) {
-        setActiveStepId('2');
-        setIsAnalyzingResults(true);
-        return;
-      }
-
-      queueNextQuestion(nextQuestion, matchedCategory.id);
-      return;
-    }
-
-    const nextQuestion = getNextQuestion(activeCategoryId, nextAnswers);
-
-    if (!nextQuestion || nextAnsweredCount >= MAX_DIAGNOSE_QUESTIONS) {
-      setActiveStepId('2');
-      setIsAnalyzingResults(true);
-      return;
-    }
-
-    queueNextQuestion(nextQuestion);
-    return;
-
-    // 1. Update selected option in the question bubble
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === questionId && msg.kind === 'question'
-          ? { ...msg, selected: option }
-          : msg
-      )
-    );
-
-    // 2. Add User's reply bubble
-    const currentTime = new Date().toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-    const userReply: ChatEntry = {
-      id: `reply-${questionId}`,
-      sender: 'user',
-      time: currentTime,
-      kind: 'reply',
-      text: option,
-    };
-
-    setMessages((prev) => [...prev, userReply]);
-
-    // 3. Chain next bot action
-    if (questionId === 'question-1') {
-      setAnswers((prev) => ({ ...prev, occursAt: option }));
-      setProgress(75);
-      setIsTyping(true);
-      setTypingText('WrectifAI is processing...');
-
-      setTimeout(() => {
-        setIsTyping(false);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: 'question-2',
-            sender: 'assistant',
-            time: new Date().toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
-            kind: 'question',
-            question: 'Does the steering wheel shake?',
-            options: ['Yes', 'No'],
-            selected: '',
-          },
-        ]);
-      }, 1000);
-    } else if (questionId === 'question-2') {
-      setAnswers((prev) => ({ ...prev, wheelShakes: option }));
-      setProgress(90);
-      setIsTyping(true);
-      setTypingText('Evaluating parameters...');
-
-      setTimeout(() => {
-        setIsTyping(false);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: 'question-3',
-            sender: 'assistant',
-            time: new Date().toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
-            kind: 'question',
-            question: 'When did this issue start?',
-            options: [
-              'Recently (within a week)',
-              'Gradually over time',
-              'Long back',
-            ],
-            selected: '',
-          },
-        ]);
-      }, 1000);
-    } else if (questionId === 'question-3') {
-      setAnswers((prev) => ({ ...prev, started: option }));
-      setProgress(95);
-      setActiveStepId('2'); // AI Analysis Step
-      setIsAnalyzingResults(true);
-    }
-  };
-
   const handleSendMessage = () => {
     if (isAnalyzingResults) return;
     if (!selectedVehicleId) return;
-    if (!typedMessage.trim()) return;
+    const inputMsg = typedMessage.trim();
+    if (!inputMsg) return;
 
-    if (issueText === DEFAULT_ISSUE_TEXT) {
-      setIssueText(typedMessage.trim());
-    }
-
+    // Show user's message in the chat
     const currentTime = new Date().toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit',
@@ -2058,15 +1933,41 @@ export function AIDiagnosePage() {
       sender: 'user',
       time: currentTime,
       kind: 'reply',
-      text: typedMessage.trim(),
+      text: inputMsg,
     };
-
     setMessages((prev) => [...prev, userMsg]);
-    const inputDetail = typedMessage.trim();
     setTypedMessage('');
+
+    // If we haven't started the session yet, this input is the initial symptom!
+    if (!hasStartedDiagnose) {
+      setIssueText(inputMsg);
+      startDiagnoseSession(selectedVehicleId, inputMsg);
+      return;
+    }
+
+    // If questions are in progress, remind user to use the MCQ buttons above
+    if (currentQuestionIdx >= 0 && currentQuestionIdx < dynamicQuestions.length) {
+      setIsTyping(true);
+      setTypingText('WrectifAI is thinking...');
+      setTimeout(() => {
+        setIsTyping(false);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `bot-hint-${Date.now()}`,
+            sender: 'assistant',
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            kind: 'message',
+            text: 'Please tap one of the options above to answer the question.',
+          },
+        ]);
+      }, 600);
+      return;
+    }
+
+    // Free-form chat context update after diagnosis is complete
     setIsTyping(true);
     setTypingText('WrectifAI is thinking...');
-
     setTimeout(() => {
       setIsTyping(false);
       setMessages((prev) => [
@@ -2074,17 +1975,12 @@ export function AIDiagnosePage() {
         {
           id: `bot-reply-${Date.now()}`,
           sender: 'assistant',
-          time: new Date().toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           kind: 'message',
-          text: isDiagnosed
-            ? `I've noted: "${inputDetail}". This extra context has been shared with your inspection summary! Feel free to book an appointment with our matching garages below.`
-            : `Understood! Let's finish the quick diagnostic questionnaire above first to ensure accurate results.`,
+          text: `I've noted: "${inputMsg}". This has been shared with your inspection summary!`,
         },
       ]);
-    }, 1200);
+    }, 1000);
   };
 
 
@@ -2515,7 +2411,7 @@ export function AIDiagnosePage() {
                   value={selectedVehicleId} 
                   onChange={(id, vehicle) => {
                     setSelectedVehicleId(id);
-                    setSelectedVehicle(vehicle);
+                    if (vehicle) setSelectedVehicle(vehicle);
                   }} 
                 />
               </div>
