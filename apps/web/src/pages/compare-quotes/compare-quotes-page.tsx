@@ -249,11 +249,32 @@ function serviceIcon(state: DetailCellState) {
   return null;
 }
 
-export function CompareQuotesPage({ ids }: { ids?: string }) {
-  const router = useRouter();
-  const pageRootRef = useRef<HTMLDivElement>(null);
+interface Vehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  vin?: string;
+  mileage?: number;
+}
 
-  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+export function CompareQuotesPage({ ids }: { ids?: string }) {
+  const pageRootRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('wrectifai_selected_vehicle');
+      if (stored) {
+        try {
+          return JSON.parse(stored) as Vehicle;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+    return null;
+  });
 
   useEffect(() => {
     const pageScroller = (() => {
@@ -267,17 +288,6 @@ export function CompareQuotesPage({ ids }: { ids?: string }) {
 
     window.scrollTo({ top: 0, behavior: 'auto' });
     pageScroller?.scrollTo({ top: 0, behavior: 'auto' });
-
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('wrectifai_selected_vehicle');
-      if (stored) {
-        try {
-          setSelectedVehicle(JSON.parse(stored));
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }
   }, []);
 
 

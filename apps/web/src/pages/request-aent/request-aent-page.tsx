@@ -104,11 +104,6 @@ function IssuePreview({
   const [currentSrc, setCurrentSrc] = useState(preferredSrc);
   const [showFallbackIcon, setShowFallbackIcon] = useState(false);
 
-  useEffect(() => {
-    setCurrentSrc(preferredSrc);
-    setShowFallbackIcon(false);
-  }, [preferredSrc]);
-
   if (showFallbackIcon) {
     return (
       <span className="flex h-[60px] w-[60px] items-center justify-center rounded-[14px] bg-[radial-gradient(circle_at_top,#f6f8ff_0%,#eef2ff_100%)] text-[#2451e5]">
@@ -153,23 +148,31 @@ function VehiclePreview() {
   );
 }
 
+interface Vehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  vin?: string;
+  mileage?: number;
+}
+
 export function RequestAentPage({ issues }: { issues?: string }) {
   const router = useRouter();
   const pageRootRef = useRef<HTMLDivElement>(null);
-  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
-
-  useEffect(() => {
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('wrectifai_selected_vehicle');
       if (stored) {
         try {
-          setSelectedVehicle(JSON.parse(stored));
+          return JSON.parse(stored) as Vehicle;
         } catch (e) {
           console.error(e);
         }
       }
     }
-  }, []);
+    return null;
+  });
 
 
   const selectedIssueIds = (issues || 'wheel-balance,wheel-alignment')
@@ -324,6 +327,7 @@ export function RequestAentPage({ issues }: { issues?: string }) {
                   >
                     <div className="flex justify-center md:justify-start">
                       <IssuePreview
+                        key={issue.id}
                         issueId={issue.id}
                         issueTitle={issue.title}
                         imageSrc={issue.imageSrc}
@@ -388,10 +392,12 @@ export function RequestAentPage({ issues }: { issues?: string }) {
                   )}
                 >
                   <div className="flex items-center justify-center md:justify-start">
-                    <img
+                    <Image
                       src={garage.image}
                       alt={garage.name}
-                      className="h-[56px] w-[96px] rounded-[10px] object-cover"
+                      width={96}
+                      height={56}
+                      className="rounded-[10px] object-cover"
                     />
                   </div>
 

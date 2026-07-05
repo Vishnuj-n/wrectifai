@@ -109,7 +109,7 @@ export class DiagnosisService {
       // ponytail: generate unique filename using stdlib
       const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${extension}`;
       const filePath = path.join(uploadsDir, filename);
-      await fs.promises.writeFile(filePath, buffer);
+      await fs.promises.writeFile(filePath, new Uint8Array(buffer));
 
       savedMediaPaths.push({
         mediaType: input.mediaType,

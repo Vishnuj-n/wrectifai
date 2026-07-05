@@ -1,20 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useCallback } from 'react';
 import { 
   Car, 
   Plus, 
   Trash2, 
   Edit3, 
-  Clock, 
   AlertTriangle, 
-  FileText, 
-  Gauge, 
   ShieldAlert,
   X,
   Sparkles,
-  ArrowRight,
   Settings
 } from 'lucide-react';
 import { DashboardShell } from '@/components/home/dashboard-shell';
@@ -31,9 +26,43 @@ interface Vehicle {
   year: number;
   vin?: string;
   mileage?: number;
-  warranty?: any;
+  warranty?: unknown;
   createdAt: string;
   updatedAt: string;
+}
+
+function useVehicles() {
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [errorText, setErrorText] = useState<string | null>(null);
+
+  const fetchVehicles = useCallback(async () => {
+    setLoading(true);
+    setErrorText(null);
+    try {
+      const data = await apiClient.get<Vehicle[]>('/vehicles');
+      setVehicles(data || []);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load vehicles';
+      setErrorText(message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) {
+        fetchVehicles();
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [fetchVehicles]);
+
+  return { vehicles, loading, errorText, fetchVehicles };
 }
 
 function FeatureHeader({ onAddClick }: { onAddClick: () => void }) {
@@ -104,10 +133,7 @@ function FeatureAside() {
 }
 
 export function VehiclesPage() {
-  const router = useRouter();
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [errorText, setErrorText] = useState<string | null>(null);
+  const { vehicles, loading, errorText, fetchVehicles } = useVehicles();
 
   // Modal control states
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -125,23 +151,6 @@ export function VehiclesPage() {
   const [mileage, setMileage] = useState<number | ''>('');
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  const fetchVehicles = async () => {
-    setLoading(true);
-    setErrorText(null);
-    try {
-      const data = await apiClient.get('/vehicles');
-      setVehicles(data || []);
-    } catch (err: any) {
-      setErrorText(err.message || 'Failed to load vehicles');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchVehicles();
-  }, []);
 
   const resetForm = () => {
     setMake('');
@@ -173,8 +182,9 @@ export function VehiclesPage() {
       setIsAddOpen(false);
       resetForm();
       fetchVehicles();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save vehicle');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save vehicle';
+      setFormError(message);
     } finally {
       setSubmitting(false);
     }
@@ -214,8 +224,9 @@ export function VehiclesPage() {
       setSelectedVehicle(null);
       resetForm();
       fetchVehicles();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to update vehicle');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update vehicle';
+      setFormError(message);
     } finally {
       setSubmitting(false);
     }
@@ -234,8 +245,9 @@ export function VehiclesPage() {
       setIsDeleteOpen(false);
       setSelectedVehicle(null);
       fetchVehicles();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete vehicle');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete vehicle';
+      alert(message);
     } finally {
       setSubmitting(false);
     }

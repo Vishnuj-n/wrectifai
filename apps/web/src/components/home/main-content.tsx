@@ -1,12 +1,12 @@
 'use client';
 
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
 import {
   BadgeIndianRupee,
   BatteryCharging,
   ChevronLeft,
   ChevronRight,
-  CreditCard,
   Heart,
   MapPin,
   Search,
@@ -18,7 +18,6 @@ import {
   Snowflake,
   X,
   FileText,
-  CarFront,
   Gift,
 } from 'lucide-react';
 import { Badge } from '@/components/common/badge';
@@ -147,10 +146,12 @@ function CategoriesModal({
                   className="flex min-h-[86px] flex-col items-center justify-center gap-2 rounded-[12px] border-[#e8eefc] px-2 py-2.5 text-center shadow-none"
                 >
                   {image ? (
-                    <img 
+                    <Image 
                       src={image} 
                       alt={label}
-                      className="h-11 w-11 object-contain"
+                      width={44}
+                      height={44}
+                      className="object-contain"
                     />
                   ) : (
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f7f9ff] text-[#173fcf]">
@@ -176,11 +177,13 @@ function CategoriesModal({
                   className="flex min-h-[54px] items-center gap-3 rounded-[12px] border-[#e8eefc] px-4 py-2 shadow-none"
                 >
                   {image ? (
-                    <img 
+                    <Image 
                       src={image} 
-                        alt={label}
-                        className="h-9 w-9 object-contain"
-                      />
+                      alt={label}
+                      width={36}
+                      height={36}
+                      className="object-contain"
+                    />
                   ) : (
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f7f9ff] text-[#1a56db]">
                       <Icon className="h-5 w-5 stroke-[1.8]" />
@@ -288,10 +291,12 @@ function HeroBanner() {
       
       <div className="absolute right-0 top-0 bottom-0 hidden lg:block w-[35%] xl:w-[42%] overflow-hidden rounded-r-[inherit] z-20">
         <div className="group relative h-full w-full">
-          <img
+          <Image
             src={activeBanner.src}
             alt="Diagnose Car"
-            className="h-full w-full object-cover"
+            fill
+            sizes="(max-width: 1024px) 100vw, 42vw"
+            className="object-cover"
           />
 
           {imageIndex > 0 && (
@@ -419,10 +424,12 @@ function CategoryGrid({
             <HoverComingSoon key={label}>
               <Card className="flex h-[110px] w-full cursor-default flex-col items-center justify-center gap-2 rounded-[12px] px-2 py-3 text-center shadow-[0_6px_16px_rgba(20,44,112,0.04)] border-[#edf2fd]">
                 {image ? (
-                  <img 
+                  <Image 
                     src={image} 
                     alt={label}
-                    className="h-16 w-16 object-contain"
+                    width={64}
+                    height={64}
+                    className="object-contain"
                   />
                 ) : (
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f4f8ff] text-[#173fcf]">
@@ -460,10 +467,12 @@ function MaintenanceStrip({
             <HoverComingSoon key={label}>
               <Card className="flex h-[60px] w-full cursor-default items-center gap-2 px-2 py-1.5 shadow-[0_8px_20px_rgba(20,44,112,0.05)]">
                 {image ? (
-                  <img 
+                  <Image 
                     src={image} 
                     alt={label}
-                    className="h-12 w-12 object-contain shrink-0"
+                    width={48}
+                    height={48}
+                    className="object-contain shrink-0"
                   />
                 ) : (
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f5f8ff] text-[#1a56db]">
@@ -500,7 +509,7 @@ function GarageCard({
   return (
     <Card className="overflow-hidden rounded-[16px] shadow-[0_12px_26px_rgba(20,44,112,0.08)]">
       <div className={cn('relative h-[86px] bg-gradient-to-r', artwork)}>
-        {image && <img src={image} alt={name} className="absolute inset-0 h-full w-full object-cover" />}
+        {image && <Image src={image} alt={name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />}
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(5,8,17,0.3))]" />
         <div className="absolute inset-x-3 top-3 flex items-start justify-between">
           {badge ? <Badge tone={tone}>{badge}</Badge> : <div />}
@@ -734,10 +743,12 @@ function SeasonalDeals({
                   >
                     {deal.image ? (
                       <>
-                        <img
+                        <Image
                            src={deal.image}
                            alt={deal.title}
-                           className="h-full w-full object-cover object-center"
+                           fill
+                           sizes="(max-width: 768px) 100vw, 15vw"
+                           className="object-cover object-center"
                         />
                         <div 
                           className="absolute inset-y-0 left-0 w-10 pointer-events-none"
@@ -824,7 +835,7 @@ function CareTips({
               <div className="relative h-full overflow-hidden">
                 {image ? (
                   <>
-                    <img src={image} alt={title} className="absolute inset-0 h-full w-full object-cover" />
+                    <Image src={image} alt={title} fill sizes="(max-width: 768px) 100vw, 10vw" className="object-cover" />
                     <div
                       className="absolute inset-y-0 left-0 w-10 pointer-events-none"
                       style={{

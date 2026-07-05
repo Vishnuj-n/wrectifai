@@ -21,30 +21,30 @@ const mockLocalStorage = {
   },
 };
 
-globalThis.localStorage = mockLocalStorage as any;
+globalThis.localStorage = mockLocalStorage as unknown as Storage;
 globalThis.window = {
   dispatchEvent: () => true,
-} as any;
+} as unknown as Window & typeof globalThis;
 
 let originalFetch: MockFetch;
-let fetchCalls: { url: string; config: any }[] = [];
+let fetchCalls: { url: string; config: RequestInit }[] = [];
 
 beforeEach(() => {
   originalFetch = globalThis.fetch;
   fetchCalls = [];
   mockLocalStorage.clear();
-  delete (process.env as any).NEXT_PUBLIC_API_URL;
+  delete process.env.NEXT_PUBLIC_API_URL;
 });
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
 });
 
-function setupMockFetch(responses: { status: number; statusText: string; headers?: Record<string, string>; json: any }[]) {
+function setupMockFetch(responses: { status: number; statusText: string; headers?: Record<string, string>; json: unknown }[]) {
   let index = 0;
-  globalThis.fetch = async (url: string | URL | Request, config: any) => {
+  globalThis.fetch = async (url: string | URL | Request, config?: RequestInit) => {
     const urlStr = url.toString();
-    fetchCalls.push({ url: urlStr, config });
+    fetchCalls.push({ url: urlStr, config: config || {} });
     const mockRes = responses[index] || responses[responses.length - 1];
     index++;
 

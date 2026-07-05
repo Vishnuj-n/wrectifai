@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { success, error } from '../../utils/response';
-import { authenticate } from '../../middleware/auth';
+import { authenticate, requireRole } from '../../middleware/auth';
 import { DiagnosisService } from './diagnosis.service';
 
 export const diagnosisRouter = Router();
 
 // Submit symptoms and run LLM diagnosis
-diagnosisRouter.post('/', authenticate, async (req, res) => {
+diagnosisRouter.post('/', authenticate, requireRole(['user', 'garage', 'vendor', 'admin']), async (req, res) => {
   try {
     const { vehicleId, symptomText, media, intakeAnswers } = req.body;
     
@@ -41,11 +41,11 @@ diagnosisRouter.post('/', authenticate, async (req, res) => {
 });
 
 // Fetch detailed diagnosis result
-diagnosisRouter.get('/:id', authenticate, async (req, res) => {
+diagnosisRouter.get('/:id', authenticate, requireRole(['user', 'garage', 'vendor', 'admin']), async (req, res) => {
   try {
     const { id } = req.params;
     const customerId = req.user?.userId;
-    const isAdmin = req.user?.role === 'admin';
+    const isAdmin = req.user?.roles.includes('admin') || false;
 
     if (!customerId) {
       return error(res, 'Authentication failed: no customer ID found', 'UNAUTHORIZED', 401);

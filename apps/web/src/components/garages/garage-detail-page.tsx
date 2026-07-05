@@ -26,6 +26,7 @@ import {
 import { Card } from '@/components/common/card';
 import { Button } from '@/components/common/button';
 import { cn } from '@/utils/cn';
+import Image from 'next/image';
 import { PageLoader } from '@/components/common/page-loader';
 import type { Garage } from '@/pages/garages/garages-page';
 import { BookingConfirmed } from '@/components/garages/booking-confirmed';
@@ -171,10 +172,12 @@ export function GarageDetailPage({
             {/* Banner Container */}
             <div className="relative h-[240px] w-full overflow-hidden rounded-[16px] border border-white/60 bg-gradient-to-r from-slate-900 to-slate-800 shadow-[0_16px_40px_rgba(22,48,112,0.08)] sm:h-[300px]">
               {garage.image && (
-                <img
+                <Image
                   src={garage.image}
                   alt={garage.name}
-                  className="absolute inset-0 h-full w-full object-cover opacity-90"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 70vw"
+                  className="object-cover opacity-90"
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
@@ -622,7 +625,7 @@ export function GarageDetailPage({
                         </div>
 
                         <p className="mt-2.5 text-[11px] font-medium leading-[1.5] text-[#536891]">
-                          "{reviews[reviewPage].text}"
+                          &quot;{reviews[reviewPage].text}&quot;
                         </p>
                       </div>
 

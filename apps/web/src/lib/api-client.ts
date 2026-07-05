@@ -1,9 +1,9 @@
 export class ApiError extends Error {
   status: number;
   code?: string;
-  details?: any;
+  details?: unknown;
 
-  constructor(message: string, status: number, code?: string, details?: any) {
+  constructor(message: string, status: number, code?: string, details?: unknown) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
@@ -42,7 +42,7 @@ if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
 
 let refreshPromise: Promise<string> | null = null;
 
-export async function apiClient(path: string, options: RequestOptions = {}): Promise<any> {
+export async function apiClient<T = unknown>(path: string, options: RequestOptions = {}): Promise<T> {
   const baseUrl = getBaseUrl();
   let url = path.startsWith('http') ? path : `${baseUrl}${path}`;
 
@@ -87,7 +87,7 @@ export async function apiClient(path: string, options: RequestOptions = {}): Pro
   // 4. Handle 401 response and attempt token refresh
   if (response.status === 401 && !config._retry && !path.includes('/auth/refresh') && !path.includes('/auth/login')) {
     config._retry = true;
-
+ 
     if (typeof window !== 'undefined') {
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
@@ -114,7 +114,7 @@ export async function apiClient(path: string, options: RequestOptions = {}): Pro
               localStorage.setItem('accessToken', newAccessToken);
               localStorage.setItem('token', newAccessToken);
               return newAccessToken;
-            } catch (refreshErr) {
+            } catch (_refreshErr) {
               localStorage.removeItem('accessToken');
               localStorage.removeItem('token');
               localStorage.removeItem('refreshToken');
@@ -127,27 +127,23 @@ export async function apiClient(path: string, options: RequestOptions = {}): Pro
           })();
         }
 
-        try {
-          const newToken = await refreshPromise;
-          const retryHeaders = {
-            ...config.headers,
-            'Authorization': `Bearer ${newToken}`
-          };
-          const retryRes = await fetch(url, { ...config, headers: retryHeaders });
-          return handleResponse(retryRes);
-        } catch (err) {
-          throw err;
-        }
+        const newToken = await refreshPromise;
+        const retryHeaders = {
+          ...config.headers,
+          'Authorization': `Bearer ${newToken}`
+        };
+        const retryRes = await fetch(url, { ...config, headers: retryHeaders });
+        return handleResponse<T>(retryRes);
       }
     }
   }
 
-  return handleResponse(response);
+  return handleResponse<T>(response);
 }
 
-async function handleResponse(response: Response): Promise<any> {
+async function handleResponse<T = unknown>(response: Response): Promise<T> {
   const contentType = response.headers.get('content-type');
-  let json: any = null;
+  let json: { data?: T; error?: { message?: string; code?: string; details?: unknown } } | null = null;
   if (contentType && contentType.includes('application/json')) {
     try {
       json = await response.json();
@@ -168,35 +164,35 @@ async function handleResponse(response: Response): Promise<any> {
     throw new ApiError(response.statusText || 'API Error', response.status);
   }
 
-  if (json && 'data' in json) {
+  if (json && json.data !== undefined) {
     return json.data;
   }
-  return json;
+  return json as unknown as T;
 }
 
-apiClient.get = (path: string, options?: RequestOptions) => 
-  apiClient(path, { ...options, method: 'GET' });
+apiClient.get = <T = unknown>(path: string, options?: RequestOptions) => 
+  apiClient<T>(path, { ...options, method: 'GET' });
 
-apiClient.post = (path: string, body?: any, options?: RequestOptions) => 
-  apiClient(path, { 
+apiClient.post = <T = unknown>(path: string, body?: unknown, options?: RequestOptions) => 
+  apiClient<T>(path, { 
     ...options, 
     method: 'POST', 
     body: body !== undefined ? JSON.stringify(body) : undefined 
   });
 
-apiClient.put = (path: string, body?: any, options?: RequestOptions) => 
-  apiClient(path, { 
+apiClient.put = <T = unknown>(path: string, body?: unknown, options?: RequestOptions) => 
+  apiClient<T>(path, { 
     ...options, 
     method: 'PUT', 
     body: body !== undefined ? JSON.stringify(body) : undefined 
   });
 
-apiClient.patch = (path: string, body?: any, options?: RequestOptions) => 
-  apiClient(path, { 
+apiClient.patch = <T = unknown>(path: string, body?: unknown, options?: RequestOptions) => 
+  apiClient<T>(path, { 
     ...options, 
     method: 'PATCH', 
     body: body !== undefined ? JSON.stringify(body) : undefined 
   });
 
-apiClient.delete = (path: string, options?: RequestOptions) => 
-  apiClient(path, { ...options, method: 'DELETE' });
+apiClient.delete = <T = unknown>(path: string, options?: RequestOptions) => 
+  apiClient<T>(path, { ...options, method: 'DELETE' });

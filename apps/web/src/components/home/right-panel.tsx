@@ -1,4 +1,5 @@
 import { ChevronDown } from 'lucide-react';
+import Image from 'next/image';
 import { Card } from '@/components/common/card';
 import { emergencyItems, overviewItems, promoItems } from '@/components/home/data';
 import { cn } from '@/utils/cn';
@@ -60,6 +61,7 @@ function EmergencyHelp() {
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {emergencyItems.map(({ title, image, imageClass }) => {
           const isLarge = imageClass?.includes('h-10');
+          const size = isLarge ? 40 : 32;
           return (
             <div
               key={title}
@@ -71,10 +73,12 @@ function EmergencyHelp() {
                   isLarge ? "h-10 w-10" : "h-8 w-8"
                 )}
               >
-                <img 
+                <Image 
                   src={image} 
                   alt={title} 
-                  className="h-full w-full object-contain" 
+                  width={size}
+                  height={size}
+                  className="object-contain" 
                 />
               </div>
               <span className="max-w-[72px] text-[10.5px] font-semibold leading-tight text-[#17307a]">
@@ -125,10 +129,12 @@ function OfferCard({
         >
           {image ? (
             <>
-              <img 
+              <Image 
                 src={image} 
                 alt={title} 
-                className="h-full w-full object-cover object-center mix-blend-multiply" 
+                fill
+                sizes="(max-width: 768px) 100vw, 15vw"
+                className="object-cover object-center mix-blend-multiply" 
               />
               <div 
                 className="absolute inset-y-0 left-0 w-20 pointer-events-none"

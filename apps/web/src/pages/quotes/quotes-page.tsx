@@ -50,9 +50,18 @@ const actionItems = [
 
 import { VehicleSelector } from '@/components/common/vehicle-selector';
 
+interface Vehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  vin?: string;
+  mileage?: number;
+}
+
 export function QuotesPage() {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
-  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   
   const quotesPerPage = 5;
   const router = useRouter();
@@ -110,9 +119,12 @@ export function QuotesPage() {
     1,
     Math.ceil(filteredQuotes.length / quotesPerPage)
   );
+  
+  // Clamping pagination page derived from current page state
+  const activePage = Math.min(currentPage, totalPages);
   const paginatedQuotes = filteredQuotes.slice(
-    (currentPage - 1) * quotesPerPage,
-    currentPage * quotesPerPage
+    (activePage - 1) * quotesPerPage,
+    activePage * quotesPerPage
   );
 
   const selectedQuoteCount = selectedQuoteIds.length;
@@ -131,16 +143,6 @@ export function QuotesPage() {
     [issueIds]
   );
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
-
   return (
     <DashboardShell header={<TopNavbar />}>
       <div ref={pageRootRef} className="space-y-5 pb-6">
@@ -154,7 +156,7 @@ export function QuotesPage() {
             </span>
           </div>
           <p className="mt-2 ui-caption">
-            Compare quotes from trusted garages and choose the best one for your
+             Compare quotes from trusted garages and choose the best one for your
             car.
           </p>
         </div>
@@ -167,7 +169,10 @@ export function QuotesPage() {
                   <button
                     key={tab.key}
                     type="button"
-                    onClick={() => setActiveTab(tab.key)}
+                    onClick={() => {
+                      setActiveTab(tab.key);
+                      setCurrentPage(1);
+                    }}
                     className={cn(
                       'border-b-2 pb-4 text-[12px] font-medium transition-colors',
                       activeTab === tab.key
@@ -443,18 +448,18 @@ export function QuotesPage() {
                   onClick={() =>
                     setCurrentPage((page) => Math.max(1, page - 1))
                   }
-                  disabled={currentPage === 1}
+                  disabled={activePage === 1}
                   className={cn(
                     'flex h-[30px] min-w-[30px] items-center justify-center rounded-[8px] border px-2 text-[11px] font-medium',
-                    currentPage === 1
+                    activePage === 1
                       ? 'cursor-not-allowed border-[#edf2fb] bg-[#f8faff] text-[#a7b4d3]'
                       : 'border-[#e1e8fb] bg-white text-[#5f7099]'
                   )}
                 >
                   {PREV}
                 </button>
-
-                {Array.from(
+ 
+                 {Array.from(
                   { length: totalPages },
                   (_, index) => index + 1
                 ).map((page) => (
@@ -464,7 +469,7 @@ export function QuotesPage() {
                     onClick={() => setCurrentPage(page)}
                     className={cn(
                       'flex h-[30px] min-w-[30px] items-center justify-center rounded-[8px] border px-2 text-[11px] font-medium',
-                      page === currentPage
+                      page === activePage
                         ? 'border-[#1a56db] bg-[#1a56db] text-white'
                         : 'border-[#e1e8fb] bg-white text-[#5f7099]'
                     )}
@@ -478,10 +483,10 @@ export function QuotesPage() {
                   onClick={() =>
                     setCurrentPage((page) => Math.min(totalPages, page + 1))
                   }
-                  disabled={currentPage === totalPages}
+                  disabled={activePage === totalPages}
                   className={cn(
                     'flex h-[30px] min-w-[30px] items-center justify-center rounded-[8px] border px-2 text-[11px] font-medium',
-                    currentPage === totalPages
+                    activePage === totalPages
                       ? 'cursor-not-allowed border-[#edf2fb] bg-[#f8faff] text-[#a7b4d3]'
                       : 'border-[#e1e8fb] bg-white text-[#5f7099]'
                   )}

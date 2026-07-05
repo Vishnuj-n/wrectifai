@@ -20,29 +20,37 @@ import { cn } from '@/utils/cn';
 
 const { PhoneCall, Send, ShieldCheck } = sharedIcons;
 
+interface Vehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  vin?: string;
+  mileage?: number;
+}
+
 export function AIDiagnoseResultsPage() {
   const router = useRouter();
   const pageRootRef = useRef<HTMLDivElement>(null);
-  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('wrectifai_selected_vehicle');
+      if (stored) {
+        try {
+          return JSON.parse(stored) as Vehicle;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+    return null;
+  });
   const [selectedIssues, setSelectedIssues] = useState<string[]>(['wheel-balance', 'wheel-alignment']);
   const [detailsText, setDetailsText] = useState('');
   const [activeTab, setActiveTab] = useState('Text Details');
   const [uploadedPhotos, setUploadedPhotos] = useState<{ id: string; url: string; name: string }[]>([]);
   const [uploadedVideo, setUploadedVideo] = useState<{ name: string; size: string } | null>(null);
   const [uploadedAudio, setUploadedAudio] = useState<{ name: string; size: string } | null>(null);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('wrectifai_selected_vehicle');
-      if (stored) {
-        try {
-          setSelectedVehicle(JSON.parse(stored));
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }
-  }, []);
 
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,7 +116,7 @@ export function AIDiagnoseResultsPage() {
             <h1 className="text-[28px] lg:text-[32px] font-bold tracking-tight text-[#17307a]">
               WrectifAI Diagnosis Results
             </h1>
-            <p className="mt-1 text-[14.5px] text-[#5f7099]">Here's what WrectifAI found based on your input</p>
+            <p className="mt-1 text-[14.5px] text-[#5f7099]">Here&apos;s what WrectifAI found based on your input</p>
           </div>
         </div>
 
@@ -285,7 +293,7 @@ export function AIDiagnoseResultsPage() {
                   Provide more details for selected issue(s) <span className="text-[13px] font-semibold text-[#8ea0c7]">(Optional)</span>
                 </h2>
                 <p className="mt-1 text-[12.5px] text-[#5f7099]">
-                  The more details you provide, the more accurate quotes you'll receive.
+                  The more details you provide, the more accurate quotes you&apos;ll receive.
                 </p>
               </div>
 
@@ -336,7 +344,7 @@ export function AIDiagnoseResultsPage() {
                     <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 pt-1">
                       {uploadedPhotos.map((photo) => (
                         <div key={photo.id} className="group relative h-20 rounded-[8px] border border-[#e8eefc] overflow-hidden bg-white shadow-sm">
-                          <img src={photo.url} alt={photo.name} className="h-full w-full object-cover" />
+                          <Image src={photo.url} alt={photo.name} fill unoptimized className="object-cover" />
                           <button
                             type="button"
                             onClick={() => setUploadedPhotos(prev => prev.filter(p => p.id !== photo.id))}

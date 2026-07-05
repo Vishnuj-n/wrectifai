@@ -11,11 +11,10 @@ export function PageLoader({ imageSources = [] }: PageLoaderProps) {
   const [progress, setProgress] = useState(0);
   const [isFadeOut, setIsFadeOut] = useState(false);
   const [isDestroyed, setIsDestroyed] = useState(false);
-  const [isLoadingNeeded, setIsLoadingNeeded] = useState(imageSources.length > 0);
+  const isLoadingNeeded = imageSources.length > 0;
 
   useEffect(() => {
     if (imageSources.length === 0) {
-      setIsLoadingNeeded(false);
       return;
     }
 
@@ -35,7 +34,6 @@ export function PageLoader({ imageSources = [] }: PageLoaderProps) {
       setIsFadeOut(true);
       const destroyTimer = setTimeout(() => {
         setIsDestroyed(true);
-        setIsLoadingNeeded(false);
       }, 500);
       return () => clearTimeout(destroyTimer);
     }

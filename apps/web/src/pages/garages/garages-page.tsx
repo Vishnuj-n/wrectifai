@@ -23,6 +23,7 @@ import { Button } from '@/components/common/button';
 import { DashboardShell } from '@/components/home/dashboard-shell';
 import { TopNavbar } from '@/components/home/top-navbar';
 import { cn } from '@/utils/cn';
+import Image from 'next/image';
 import { PageLoader } from '@/components/common/page-loader';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -467,10 +468,12 @@ function GarageCard({
         )}
       >
         {image && (
-          <img
+          <Image
             src={image}
             alt={name}
-            className="absolute inset-0 h-full w-full object-cover"
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover"
           />
         )}
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(5,8,17,0.4))]" />

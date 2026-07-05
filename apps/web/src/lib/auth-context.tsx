@@ -38,47 +38,52 @@ function decodeJwt(token: string): any {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      const storedUserStr = localStorage.getItem('user');
+      if (storedUserStr) {
+        try {
+          return JSON.parse(storedUserStr);
+        } catch {
+          // Ignore parse errors
+        }
+      }
+      
+      const storedToken = localStorage.getItem('accessToken') || localStorage.getItem('token');
+      if (storedToken) {
+        const decoded = decodeJwt(storedToken);
+        if (decoded) {
+          return {
+            id: decoded.userId,
+            email: decoded.email,
+            roles: decoded.roles,
+            name: decoded.name || (decoded.email ? decoded.email.split('@')[0] : 'User'),
+          };
+        }
+      }
+    }
+    return null;
+  });
+
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('accessToken') || localStorage.getItem('token');
+    }
+    return null;
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return !!(localStorage.getItem('accessToken') || localStorage.getItem('token'));
+    }
+    return false;
+  });
+
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Auto-load on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedToken = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      const storedUserStr = localStorage.getItem('user');
-
-      if (storedToken) {
-        let loadedUser: User | null = null;
-        if (storedUserStr) {
-          try {
-            loadedUser = JSON.parse(storedUserStr);
-          } catch {
-            // Ignore parse errors
-          }
-        }
-        
-        if (!loadedUser) {
-          const decoded = decodeJwt(storedToken);
-          if (decoded) {
-            loadedUser = {
-              id: decoded.userId,
-              email: decoded.email,
-              roles: decoded.roles,
-              name: decoded.name || (decoded.email ? decoded.email.split('@')[0] : 'User'),
-            };
-          }
-        }
-
-        if (loadedUser) {
-          setUser(loadedUser);
-          setToken(storedToken);
-          setIsAuthenticated(true);
-        }
-      }
-      setIsLoading(false);
-    }
+    setIsLoading(false);
   }, []);
 
   // Listen to silent refresh logout events
@@ -132,7 +137,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ refreshToken }),
-        }).catch(() => {});
+        }).catch(() => {
+          // TODO: Handle logout API failure or log it if needed
+        });
       }
       localStorage.removeItem('accessToken');
       localStorage.removeItem('token');

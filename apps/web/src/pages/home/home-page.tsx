@@ -1,7 +1,6 @@
 'use client';
 
-import Image from 'next/image';
-import { useEffect, useState } from 'react';
+
 import { DashboardShell } from '@/components/home/dashboard-shell';
 import {
   careTips,

@@ -11,24 +11,32 @@ import { Card } from '@/components/common/card';
 import { ResultTrustFooter, resultIssues } from '@/components/ai-diagnose/diagnose-flow-shared';
 import { cn } from '@/utils/cn';
 
+interface Vehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  vin?: string;
+  mileage?: number;
+}
+
 export function FindingQuotesPage({ issues }: { issues?: string }) {
   const pageRootRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
-
-  useEffect(() => {
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('wrectifai_selected_vehicle');
       if (stored) {
         try {
-          setSelectedVehicle(JSON.parse(stored));
+          return JSON.parse(stored) as Vehicle;
         } catch (e) {
           console.error(e);
         }
       }
     }
-  }, []);
+    return null;
+  });
 
 
   const selectedIssueIds = (issues || 'wheel-balance,wheel-alignment')

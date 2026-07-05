@@ -4,7 +4,6 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import {
-  Bot,
   Check,
   CheckCircle2,
   Clock3,
@@ -18,6 +17,34 @@ import {
   Sparkles,
   Video,
   Zap,
+} from 'lucide-react';
+
+interface Vehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  vin?: string;
+  mileage?: number;
+}
+
+interface LlmIssue {
+  confidence: number;
+  estimatedPriceRange: { min: number; max: number };
+  name: string;
+  description?: string;
+  risks?: string[];
+  imageSrc?: string;
+}
+
+interface NextStep {
+  step: string;
+  title: string;
+  body: string;
+  meta?: string;
+}
+
+import {
   ArrowRight,
   ChevronDown,
   Target,
@@ -57,7 +84,7 @@ import { cn } from '@/utils/cn';
 import { VehicleSelector } from '@/components/common/vehicle-selector';
 import { submitDiagnosis } from '../../lib/diagnosis-api';
 
-function mapLlmIssueToDiagnosticResult(llmIssue: any, index: number): DiagnosticIssueResult {
+function mapLlmIssueToDiagnosticResult(llmIssue: LlmIssue, index: number): DiagnosticIssueResult {
   const match = llmIssue.confidence;
   const priceRange = llmIssue.estimatedPriceRange;
   const estimatedCost = `$${priceRange.min} - $${priceRange.max}`;
@@ -113,23 +140,7 @@ type ChatEntry =
       text: string;
     };
 
-const trustItems = [
-  {
-    label: '98% Accurate Diagnosis',
-    icon: Target,
-    iconClass: 'text-[#20409a]',
-  },
-  {
-    label: 'Secure & Private',
-    icon: Lock,
-    iconClass: 'text-[#1e9b57]',
-  },
-  {
-    label: 'Expert Verified',
-    icon: ShieldCheck,
-    iconClass: 'text-[#2b61f0]',
-  },
-];
+
 
 const footerFeatures = [
   {
@@ -361,12 +372,12 @@ function IssueVisual({
       style={{ width: size, height: size }}
     >
       {!hasImageError ? (
-        <img
+        <Image
           src={issue.imageSrc}
           alt={issue.title}
           width={size}
           height={size}
-          className="h-full w-full object-contain p-2"
+          className="object-contain p-2"
           onError={() => setHasImageError(true)}
         />
       ) : (
@@ -916,8 +927,8 @@ type DiagnoseResultsScreenProps = {
   onToggleIssue: (issueId: string) => void;
   onEditIssue: () => void;
   onRequestQuotes: () => void;
-  selectedVehicle?: any;
-  nextSteps?: any[];
+  selectedVehicle?: Vehicle | null;
+  nextSteps?: NextStep[];
   confidenceScore?: number;
 };
 
@@ -1334,7 +1345,7 @@ type FindingQuotesScreenProps = {
   resultIssues: DiagnosticIssueResult[];
   selectedIssues: string[];
   onBack: () => void;
-  selectedVehicle?: any;
+  selectedVehicle?: Vehicle | null;
 };
 
 function FindingQuotesScreen({
@@ -1634,7 +1645,7 @@ export function AIDiagnosePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('');
-  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const initialIssueParam = searchParams?.get('issue')?.trim() ?? '';
   const initialFlow = buildInitialFlow(initialIssueParam);
   const [issueText, setIssueText] = useState(initialFlow.issueText);
@@ -1667,11 +1678,11 @@ export function AIDiagnosePage() {
   const [detailsText, setDetailsText] = useState('');
 
   // Custom API Integration States
-  const [apiResult, setApiResult] = useState<any | null>(null);
+  const [apiResult, setApiResult] = useState<unknown | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [timerFinished, setTimerFinished] = useState(false);
-  const [customResultIssues, setCustomResultIssues] = useState<any[] | null>(null);
-  const [attachedMedia, setAttachedMedia] = useState<Array<{ mediaType: 'image' | 'video' | 'audio'; base64: string; name: string }>>([]);
+  const [customResultIssues, setCustomResultIssues] = useState<DiagnosticIssueResult[] | null>(null);
+  const [attachedMedia] = useState<Array<{ mediaType: 'image' | 'video' | 'audio'; base64: string; name: string }>>([]);
 
   const pageRootRef = useRef<HTMLDivElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -1732,21 +1743,22 @@ export function AIDiagnosePage() {
           setApiResult(response);
           
           if (response.result && response.result.issues) {
-            const mapped = response.result.issues.map((issue: any, index: number) => 
+            const mapped = response.result.issues.map((issue: LlmIssue, index: number) => 
               mapLlmIssueToDiagnosticResult(issue, index)
             );
             setCustomResultIssues(mapped);
-            setSelectedIssues(mapped.map((m: any) => m.id));
+            setSelectedIssues(mapped.map((m) => m.id));
           }
-        } catch (err: any) {
+        } catch (err) {
           console.error('API Diagnosis failed:', err);
-          setApiError(err.message || 'Failed to complete diagnosis. Please check your credentials or network.');
+          const message = err instanceof Error ? err.message : 'Failed to complete diagnosis. Please check your credentials or network.';
+          setApiError(message);
         }
       };
       
       runApiDiagnosis();
     }
-  }, [isAnalyzingResults, apiResult, apiError, answers, initialIssueParam, detailsText, selectedVehicleId, attachedMedia]);
+  }, [isAnalyzingResults, apiResult, apiError, answers, initialIssueParam, detailsText, selectedVehicleId, attachedMedia, activeCategoryId]);
 
   // Transition to results screen only when both timer is finished and API response has arrived
   useEffect(() => {
@@ -2097,106 +2109,9 @@ export function AIDiagnosePage() {
     }, 1200);
   };
 
-  // Step Tracker component
-  const StepTracker = () => {
-    return (
-      <div className="overflow-x-auto">
-        <div className="mx-auto flex min-w-[620px] max-w-[720px] items-center px-2 py-0.5">
-          {/* Step 1: Describe Issue */}
-          <div className="flex items-center gap-2">
-            <Check className="h-4.5 w-4.5 text-[#2b61f0] stroke-[3]" />
-            <span className="text-[13px] font-semibold text-[#2b61f0]">
-              Describe Issue
-            </span>
-          </div>
 
-          {/* Connector 1: 1 -> 2 */}
-          <div className="mx-4 h-px flex-1 bg-[#7fa2ff]" />
 
-          {/* Step 2: AI Analysis */}
-          <div className="flex items-center gap-2">
-            {activeStepId === '3' ? (
-              <Check className="h-4.5 w-4.5 text-[#2b61f0] stroke-[3]" />
-            ) : (
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#2b61f0] text-white text-[12px] font-bold shadow-[0_4px_12px_rgba(43,97,240,0.16)] animate-in scale-in-95 duration-200">
-                2
-              </div>
-            )}
-            <span
-              className={cn(
-                'text-[13px] font-semibold transition-colors duration-300',
-                activeStepId === '3'
-                  ? 'text-[#2b61f0]'
-                  : 'text-[#1a56db] font-bold'
-              )}
-            >
-              WrectifAI Analysis
-            </span>
-          </div>
 
-          {/* Connector 2: 2 -> 3 */}
-          <div
-            className={cn(
-              'mx-4 h-px flex-1 transition-all duration-500',
-              activeStepId === '3' ? 'bg-[#7fa2ff]' : 'bg-[#edf2ff]'
-            )}
-          />
-
-          {/* Step 3: Results */}
-          <div className="flex items-center gap-2">
-            <div
-              className={cn(
-                'flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold transition-all duration-300',
-                activeStepId === '3'
-                  ? 'bg-[#2b61f0] text-white shadow-[0_4px_12px_rgba(43,97,240,0.16)]'
-                  : 'bg-[#f1f4fb] text-[#9aa8c8]'
-              )}
-            >
-              3
-            </div>
-            <span
-              className={cn(
-                'text-[13px] font-semibold transition-colors duration-300',
-                activeStepId === '3'
-                  ? 'text-[#1a56db] font-bold'
-                  : 'text-[#a0abc6]'
-              )}
-            >
-              Results
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Next Steps Tracker
-  const nextSteps = [
-    {
-      id: '1',
-      title: 'Analyzing',
-      description: 'WrectifAI is analyzing your inputs',
-      active: !isDiagnosed,
-    },
-    {
-      id: '2',
-      title: 'Detecting Issues',
-      description: 'Identifying possible root causes',
-      active: activeStepId === '2',
-    },
-    {
-      id: '3',
-      title: 'Matching Garages',
-      description: 'Finding best garages for you',
-      active: activeStepId === '3',
-    },
-    {
-      id: '4',
-      title: 'Getting Quotes',
-      description: "We'll notify you once quotes are ready",
-      active: false,
-    },
-  ];
 
   if (isDiagnosed) {
     if (isFindingQuotes) {

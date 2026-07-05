@@ -18,6 +18,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Card } from '@/components/common/card';
 import { Button } from '@/components/common/button';
 import { cn } from '@/utils/cn';
@@ -38,6 +39,15 @@ interface BookingConfirmedProps {
   onViewBookings: () => void;
 }
 
+interface Vehicle {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  vin?: string;
+  mileage?: number;
+}
+
 export function BookingConfirmed({
   garage,
   selectedDate,
@@ -46,21 +56,20 @@ export function BookingConfirmed({
   onViewBookings,
 }: BookingConfirmedProps) {
   const [copied, setCopied] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
-  const bookingId = `WRCT-2505${selectedDate}-0420`;
-
-  useEffect(() => {
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('wrectifai_selected_vehicle');
       if (stored) {
         try {
-          setSelectedVehicle(JSON.parse(stored));
+          return JSON.parse(stored) as Vehicle;
         } catch (e) {
           console.error(e);
         }
       }
     }
-  }, []);
+    return null;
+  });
+  const bookingId = `WRCT-2505${selectedDate}-0420`;
 
 
   const handleCopy = () => {
@@ -443,10 +452,12 @@ export function BookingConfirmed({
             {/* Mini Garage detail widget */}
             <div className="flex gap-3 items-center">
               {garage.image && (
-                <img
+                <Image
                   src={garage.image}
                   alt={garage.name}
-                  className="w-20 h-14 rounded-[10px] object-cover shrink-0 border border-[#e2eefc]"
+                  width={80}
+                  height={56}
+                  className="rounded-[10px] object-cover shrink-0 border border-[#e2eefc]"
                 />
               )}
               <div className="min-w-0">
