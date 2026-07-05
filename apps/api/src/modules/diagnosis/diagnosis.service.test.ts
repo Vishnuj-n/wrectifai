@@ -1,0 +1,63 @@
+import { test } from 'node:test';
+import assert from 'node:assert';
+import { DiagnosisService, DiagnosisResult } from './diagnosis.service';
+
+test('Diagnosis Service - applySafetyGuardrail correctly overrides high risk issues', () => {
+  const result: DiagnosisResult = {
+    issues: [{ name: 'Engine oil level low', confidence: 90, estimatedPriceRange: { min: 20, max: 50 }, requiredParts: [] }],
+    confidenceScore: 90,
+    riskLevel: 'high', // Should trigger safety override
+    diyAllowed: true,
+    diySteps: ['Refill oil'],
+    nextAction: 'diy',
+  };
+
+  const overridden = DiagnosisService.applySafetyGuardrail(result, 'oil is low');
+  assert.strictEqual(overridden.diyAllowed, false);
+  assert.strictEqual(overridden.nextAction, 'bookGarage');
+});
+
+test('Diagnosis Service - applySafetyGuardrail overrides safety-critical components (e.g. brakes)', () => {
+  const result: DiagnosisResult = {
+    issues: [{ name: 'Front brake pad worn out', confidence: 85, estimatedPriceRange: { min: 100, max: 200 }, requiredParts: ['Brake pads'] }],
+    confidenceScore: 85,
+    riskLevel: 'medium', // Low risk level but safety critical issue keyword 'brake'
+    diyAllowed: true,
+    diySteps: ['Replace pads'],
+    nextAction: 'diy',
+  };
+
+  const overridden = DiagnosisService.applySafetyGuardrail(result, 'squeaking noise');
+  assert.strictEqual(overridden.diyAllowed, false);
+  assert.strictEqual(overridden.nextAction, 'bookGarage');
+});
+
+test('Diagnosis Service - applySafetyGuardrail overrides based on symptom keywords (e.g. steering)', () => {
+  const result: DiagnosisResult = {
+    issues: [{ name: 'Fluid level low', confidence: 70, estimatedPriceRange: { min: 15, max: 30 }, requiredParts: [] }],
+    confidenceScore: 70,
+    riskLevel: 'low',
+    diyAllowed: true,
+    diySteps: ['Add fluid'],
+    nextAction: 'diy',
+  };
+
+  const overridden = DiagnosisService.applySafetyGuardrail(result, 'Steering is very hard to turn');
+  assert.strictEqual(overridden.diyAllowed, false);
+  assert.strictEqual(overridden.nextAction, 'bookGarage');
+});
+
+test('Diagnosis Service - applySafetyGuardrail leaves safe issues alone', () => {
+  const result: DiagnosisResult = {
+    issues: [{ name: 'Windshield wiper blades worn', confidence: 95, estimatedPriceRange: { min: 20, max: 40 }, requiredParts: ['Wiper blades'] }],
+    confidenceScore: 95,
+    riskLevel: 'low',
+    diyAllowed: true,
+    diySteps: ['Remove old blades', 'Install new blades'],
+    nextAction: 'diy',
+  };
+
+  const overridden = DiagnosisService.applySafetyGuardrail(result, 'wipers leaving streaks');
+  assert.strictEqual(overridden.diyAllowed, true);
+  assert.strictEqual(overridden.nextAction, 'diy');
+});

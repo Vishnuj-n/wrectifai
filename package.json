@@ -68,9 +68,11 @@
     "typescript-eslint": "^8.29.0"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^4.0.7",
     "@expo/metro-config": "~0.19.4",
     "@expo/metro-runtime": "~4.0.0",
     "@radix-ui/react-slot": "^1.2.4",
+    "ai": "^7.0.14",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cors": "^2.8.6",
@@ -91,6 +93,7 @@
     "react-native-svg-transformer": "~1.5.0",
     "react-native-web": "~0.19.13",
     "tailwind-merge": "^3.5.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "zod": "^4.4.3"
   }
 }

@@ -55,6 +55,37 @@ import { TopNavbar } from '@/components/home/top-navbar';
 import { Card } from '@/components/common/card';
 import { cn } from '@/utils/cn';
 import { VehicleSelector } from '@/components/common/vehicle-selector';
+import { submitDiagnosis } from '../../lib/diagnosis-api';
+
+function mapLlmIssueToDiagnosticResult(llmIssue: any, index: number): DiagnosticIssueResult {
+  const match = llmIssue.confidence;
+  const priceRange = llmIssue.estimatedPriceRange;
+  const estimatedCost = `$${priceRange.min} - $${priceRange.max}`;
+  const id = `llm_issue_${index}`;
+  const title = llmIssue.name;
+  
+  let badge = 'Caution';
+  let badgeClass = 'text-[#e27622] bg-[#fdf5ed]';
+  if (match >= 80) {
+    badge = 'Critical';
+    badgeClass = 'text-[#ea3838] bg-[#fef1f1]';
+  } else if (match <= 50) {
+    badge = 'Low Risk';
+    badgeClass = 'text-[#2e7d32] bg-[#edf7ed]';
+  }
+
+  return {
+    id,
+    title,
+    badge,
+    badgeClass,
+    description: `Diagnosed issue: ${title}. Requires parts: ${llmIssue.requiredParts.join(', ') || 'None specified'}.`,
+    match,
+    risks: [`Confidence match: ${match}%`],
+    estimatedCost,
+    imageSrc: '/assets/mega car.png',
+  };
+}
 
 type ChatEntry =
   | {
@@ -886,6 +917,8 @@ type DiagnoseResultsScreenProps = {
   onEditIssue: () => void;
   onRequestQuotes: () => void;
   selectedVehicle?: any;
+  nextSteps?: any[];
+  confidenceScore?: number;
 };
 
 function DiagnoseResultsScreen({
@@ -899,6 +932,8 @@ function DiagnoseResultsScreen({
   onEditIssue,
   onRequestQuotes,
   selectedVehicle,
+  nextSteps,
+  confidenceScore,
 }: DiagnoseResultsScreenProps) {
   const selectedCount = selectedIssues.length;
   const detailsTabs = ['Text Details', 'Photo', 'Video', 'Audio'];
@@ -1184,7 +1219,7 @@ function DiagnoseResultsScreen({
           <Card className="rounded-[22px] border-[#e6ecfb] bg-white px-4 py-4 text-center shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
             <h3 className={homeCardHeadingClass}>Diagnosis Confidence</h3>
             <div className="mt-3">
-              <ConfidenceGauge value={92} />
+              <ConfidenceGauge value={confidenceScore ?? 92} />
             </div>
             <p className="mx-auto mt-2 max-w-[180px] text-[11px] leading-5 text-[#5f7099]">
               Based on WrectifAI analysis of your issue description and
@@ -1221,7 +1256,7 @@ function DiagnoseResultsScreen({
           <Card className="rounded-[22px] border-[#e6ecfb] bg-white px-4 py-6 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
             <h3 className={homeCardHeadingClass}>Next Steps</h3>
             <div className="mt-6 space-y-6">
-              {resultNextSteps.map((step) => (
+              {(nextSteps || resultNextSteps).map((step) => (
                 <div key={step.step} className="flex gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f2f5ff] text-[12px] font-semibold text-[#3059e1]">
                     {step.step}
@@ -1631,6 +1666,13 @@ export function AIDiagnosePage() {
   const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
   const [detailsText, setDetailsText] = useState('');
 
+  // Custom API Integration States
+  const [apiResult, setApiResult] = useState<any | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [timerFinished, setTimerFinished] = useState(false);
+  const [customResultIssues, setCustomResultIssues] = useState<any[] | null>(null);
+  const [attachedMedia, setAttachedMedia] = useState<Array<{ mediaType: 'image' | 'video' | 'audio'; base64: string; name: string }>>([]);
+
   const pageRootRef = useRef<HTMLDivElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const hasMountedRef = useRef(false);
@@ -1665,6 +1707,52 @@ export function AIDiagnosePage() {
       behavior: 'smooth',
     });
   }, [messages, isTyping]);
+
+  // Triggers real API call when transitioning to analyzing state
+  useEffect(() => {
+    if (isAnalyzingResults && !apiResult && !apiError) {
+      const runApiDiagnosis = async () => {
+        try {
+          const answersText = Object.entries(answers)
+            .map(([q, a]) => `${q}: ${a}`)
+            .join(', ');
+          const combinedSymptom = `Initial report: ${initialIssueParam || 'No initial text'}. Question answers: ${answersText}. ${detailsText ? 'Details: ' + detailsText : ''}`;
+          
+          const payload = {
+            vehicleId: selectedVehicleId || 'v1',
+            symptomText: combinedSymptom,
+            media: attachedMedia.map(m => ({ mediaType: m.mediaType, base64: m.base64 })),
+          };
+          
+          const response = await submitDiagnosis(payload);
+          setApiResult(response);
+          
+          if (response.result && response.result.issues) {
+            const mapped = response.result.issues.map((issue: any, index: number) => 
+              mapLlmIssueToDiagnosticResult(issue, index)
+            );
+            setCustomResultIssues(mapped);
+            setSelectedIssues(mapped.map((m: any) => m.id));
+          }
+        } catch (err: any) {
+          console.error('API Diagnosis failed:', err);
+          setApiError(err.message || 'Failed to complete diagnosis. Please check your credentials or network.');
+        }
+      };
+      
+      runApiDiagnosis();
+    }
+  }, [isAnalyzingResults, apiResult, apiError, answers, initialIssueParam, detailsText, selectedVehicleId, attachedMedia]);
+
+  // Transition to results screen only when both timer is finished and API response has arrived
+  useEffect(() => {
+    if (apiResult && timerFinished) {
+      setIsAnalyzingResults(false);
+      setProgress(100);
+      setActiveStepId('3'); // Completed
+      setIsDiagnosed(true);
+    }
+  }, [apiResult, timerFinished]);
 
   const applyDiagnoseFlow = (nextIssue: string) => {
     const flow = buildInitialFlow(nextIssue);
@@ -1756,10 +1844,21 @@ export function AIDiagnosePage() {
   const activeCategory = activeCategoryId
     ? getCategoryById(activeCategoryId)
     : undefined;
-  const resultIssues = activeCategoryId
+  const resultIssues = customResultIssues || (activeCategoryId
     ? getResolvedIssues(activeCategoryId)
-    : legacyResultIssues;
+    : legacyResultIssues);
   const answerSummaryItems = buildAnswerSummaryItems(answers);
+
+  const nextSteps = apiResult && apiResult.result && apiResult.result.diySteps && apiResult.result.diySteps.length > 0
+    ? apiResult.result.diySteps.map((stepText: string, index: number) => ({
+        step: `0${index + 1}`,
+        title: `Step ${index + 1}`,
+        body: stepText,
+        meta: apiResult.result.diyAllowed ? 'DIY Guidance' : 'Recommended Action',
+      }))
+    : undefined;
+
+  const confidenceScore = apiResult?.result?.confidenceScore;
 
   const handleSelectOption = (questionId: string, option: string) => {
     if (isAnalyzingResults) return;
@@ -2127,6 +2226,8 @@ export function AIDiagnosePage() {
               router.push(`/finding-quotes?issues=${selectedIssues.join(',')}`)
             }
             selectedVehicle={selectedVehicle}
+            nextSteps={nextSteps}
+            confidenceScore={confidenceScore}
           />
         </div>
       </DashboardShell>
@@ -2134,17 +2235,33 @@ export function AIDiagnosePage() {
   }
 
   const handleAnalysisComplete = () => {
-    setIsAnalyzingResults(false);
-    setProgress(100);
-    setActiveStepId('3'); // Completed
-    setIsDiagnosed(true);
+    setTimerFinished(true);
   };
 
   if (isAnalyzingResults) {
     return (
       <DashboardShell header={<TopNavbar />}>
         <div ref={pageRootRef} className="pt-1">
-          <DiagnoseAnalyzingScreen onComplete={handleAnalysisComplete} />
+          {apiError ? (
+            <div className="mx-auto max-w-md rounded-[20px] border border-[#ffe4e2] bg-white p-6 text-center shadow-lg mt-12">
+              <h2 className="text-[16px] font-bold text-[#ea3838]">Diagnosis Failed</h2>
+              <p className="mt-3 text-[12px] leading-5 text-[#5f7099]">{apiError}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setApiError(null);
+                  setIsAnalyzingResults(false);
+                  setProgress(60);
+                  setActiveStepId('2');
+                }}
+                className="mt-6 inline-flex h-10 items-center justify-center rounded-[12px] bg-[#1a56db] px-6 text-[12px] font-semibold text-white transition-colors hover:bg-[#163cb3]"
+              >
+                Go Back & Retry
+              </button>
+            </div>
+          ) : (
+            <DiagnoseAnalyzingScreen onComplete={handleAnalysisComplete} />
+          )}
         </div>
       </DashboardShell>
     );

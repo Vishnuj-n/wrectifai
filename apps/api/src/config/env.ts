@@ -7,5 +7,9 @@ export function getEnv() {
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET ?? 'super-secret-refresh-key',
     corsOrigins: process.env.WEB_ORIGINS ? process.env.WEB_ORIGINS.split(',') : ['http://localhost:4200', 'http://localhost:3001'],
     googleClientId: process.env.GOOGLE_CLIENT_ID,
+    llmProvider: process.env.LLM_PROVIDER ?? 'groq',
+    llmModel: process.env.LLM_MODEL ?? 'llama-3.1-70b-versatile',
+    groqApiKey: process.env.GROQ_API_KEY,
+    openaiApiKey: process.env.OPENAI_API_KEY,
   };
 }
