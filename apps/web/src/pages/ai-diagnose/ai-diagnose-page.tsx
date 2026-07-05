@@ -502,44 +502,12 @@ function createQuestionEntry(question: IssueQuestion): ChatEntry {
 
 function buildInitialFlow(issueText: string): InitialFlowState {
   const trimmedIssue = issueText.trim();
-  const rankedMatches = rankIssueCategories(trimmedIssue);
-  const candidateCategories = rankedMatches
-    .slice(0, 3)
-    .map((entry) => entry.category);
-
-  if (candidateCategories.length === 1) {
-    return {
-      issueText: trimmedIssue || DEFAULT_ISSUE_TEXT,
-      introText: `This sounds like ${candidateCategories[0].label.toLowerCase()}. I will ask a few targeted questions.`,
-      initialQuestion: candidateCategories[0].questions[0],
-      activeCategoryId: candidateCategories[0].id,
-    };
-  }
-
-  if (candidateCategories.length > 1) {
-    return {
-      issueText: trimmedIssue || DEFAULT_ISSUE_TEXT,
-      introText:
-        'I found a few likely issue groups. Pick the closest one so I can ask the right questions.',
-      initialQuestion: {
-        id: CATEGORY_MATCH_QUESTION_ID,
-        label: 'Best match',
-        question: 'Which of these best matches the issue you typed?',
-        options: [
-          ...candidateCategories.map((category) => category.label),
-          FALLBACK_NONE_OPTION,
-        ],
-      },
-      activeCategoryId: null,
-    };
-  }
-
   return {
     issueText: trimmedIssue || DEFAULT_ISSUE_TEXT,
     introText: trimmedIssue
-      ? 'I could not classify that directly, so I will narrow it down with a few issue-specific questions.'
-      : 'Describe the issue and I will narrow it down with a few issue-specific questions.',
-    initialQuestion: fallbackCategoryQuestion,
+      ? `I received your symptom description: "${trimmedIssue}". Selecting your vehicle on the right will immediately begin the diagnosis.`
+      : 'Hello! I am WrectifAI, your automotive diagnostic assistant. Please select your vehicle on the right, then describe the issues or symptoms your vehicle is experiencing below to start the diagnosis.',
+    initialQuestion: null as any,
     activeCategoryId: null,
   };
 }
@@ -1648,6 +1616,11 @@ export function AIDiagnosePage() {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const initialIssueParam = searchParams?.get('issue')?.trim() ?? '';
   const initialFlow = buildInitialFlow(initialIssueParam);
+  const [pageLoadTime] = useState(() => {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  });
+  const hasInitialIssue = !!initialIssueParam;
+
   const [issueText, setIssueText] = useState(initialFlow.issueText);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(
     initialFlow.activeCategoryId
@@ -1656,7 +1629,7 @@ export function AIDiagnosePage() {
     {
       id: 'message-1',
       sender: 'assistant',
-      time: '10:30 AM',
+      time: pageLoadTime,
       kind: 'message',
       text: initialFlow.introText,
       highlighted: true,
@@ -1777,7 +1750,7 @@ export function AIDiagnosePage() {
       {
         id: 'message-1',
         sender: 'assistant',
-        time: '10:30 AM',
+        time: pageLoadTime,
         kind: 'message',
         text: flow.introText,
         highlighted: true,
@@ -1816,7 +1789,7 @@ export function AIDiagnosePage() {
       {
         id: 'message-1',
         sender: 'assistant',
-        time: '10:30 AM',
+        time: pageLoadTime,
         kind: 'message',
         text: "Thanks! Let's narrow this down ✨",
         highlighted: true,
@@ -1824,7 +1797,7 @@ export function AIDiagnosePage() {
       {
         id: 'question-1',
         sender: 'assistant',
-        time: '10:30 AM',
+        time: pageLoadTime,
         kind: 'question',
         question: 'When do you feel the vibration?',
         options: [
@@ -2069,7 +2042,12 @@ export function AIDiagnosePage() {
 
   const handleSendMessage = () => {
     if (isAnalyzingResults) return;
+    if (!selectedVehicleId) return;
     if (!typedMessage.trim()) return;
+
+    if (issueText === DEFAULT_ISSUE_TEXT) {
+      setIssueText(typedMessage.trim());
+    }
 
     const currentTime = new Date().toLocaleTimeString([], {
       hour: '2-digit',
@@ -2237,20 +2215,29 @@ export function AIDiagnosePage() {
                     <DiagnoseAnalyzingScreen />
                   ) : (
                     <>
-                      {/* Initial User message */}
-                      <div className="mb-7 flex justify-end">
-                        <div className="w-full max-w-[250px] rounded-[14px] border border-[#dfe9fb] bg-[#f8fbff] px-4 py-3 shadow-[0_10px_22px_rgba(39,73,154,0.04)]">
-                          <div className="mb-1 flex items-center justify-between text-[10px]">
-                            <span className="font-semibold text-[#3155a8]">
-                              You
-                            </span>
-                            <span className="text-[#a4b1cb]">10:30 AM</span>
-                          </div>
-                          <p className="text-[12px] leading-6 text-[#17307a]">
-                            {issueText}
-                          </p>
+                      {!selectedVehicleId && (
+                        <div className="mb-4 rounded-[12px] bg-amber-50 border border-amber-200 p-4 text-[12px] text-amber-800 flex items-center gap-3">
+                          <CircleAlert className="h-5 w-5 text-amber-600 shrink-0" />
+                          <span>Please select your vehicle from the <strong>Diagnosing Vehicle</strong> panel on the right to start your AI diagnostic session.</span>
                         </div>
-                      </div>
+                      )}
+
+                      {/* Initial User message */}
+                      {hasInitialIssue && (
+                        <div className="mb-7 flex justify-end">
+                          <div className="w-full max-w-[250px] rounded-[14px] border border-[#dfe9fb] bg-[#f8fbff] px-4 py-3 shadow-[0_10px_22px_rgba(39,73,154,0.04)]">
+                            <div className="mb-1 flex items-center justify-between text-[10px]">
+                              <span className="font-semibold text-[#3155a8]">
+                                You
+                              </span>
+                              <span className="text-[#a4b1cb]">{pageLoadTime}</span>
+                            </div>
+                            <p className="text-[12px] leading-6 text-[#17307a]">
+                              {issueText}
+                            </p>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Dynamic messages rendering */}
                       <div className="relative mt-6 pb-3">
@@ -2377,7 +2364,7 @@ export function AIDiagnosePage() {
                                           <button
                                             key={option}
                                             type="button"
-                                            disabled={hasSelected}
+                                            disabled={hasSelected || !selectedVehicleId}
                                             onClick={() =>
                                               handleSelectOption(
                                                 entry.id,
@@ -2388,7 +2375,7 @@ export function AIDiagnosePage() {
                                               'flex w-full h-[42px] items-center justify-between rounded-[9px] border px-3.5 text-[13px] font-medium transition-all text-left',
                                               isSelected
                                                 ? 'border-[#4d81ff] bg-[#fbfdff] text-[#2a5eea] shadow-[inset_0_0_0_1px_rgba(77,129,255,0.14)] font-bold'
-                                                : hasSelected
+                                                : (hasSelected || !selectedVehicleId)
                                                 ? 'border-[#f2f4f8] bg-[#fafbfc] text-[#b0c0df] cursor-not-allowed'
                                                 : 'border-[#e8edf8] bg-white text-[#52658f] hover:border-[#b9ccf9] hover:bg-[#f6f9ff]'
                                             )}
@@ -2470,21 +2457,24 @@ export function AIDiagnosePage() {
                 <div className="mt-2 flex flex-wrap gap-3 text-[10px] font-medium text-[#7284ab]">
                   <button
                     type="button"
-                    className="flex items-center gap-1.5 hover:text-[#1a56db] transition-colors"
+                    disabled={!selectedVehicleId}
+                    className="flex items-center gap-1.5 hover:text-[#1a56db] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ImageIcon className="h-3.5 w-3.5 text-[#6a8cff]" />
                     <span>Upload Photo</span>
                   </button>
                   <button
                     type="button"
-                    className="flex items-center gap-1.5 hover:text-[#1a56db] transition-colors"
+                    disabled={!selectedVehicleId}
+                    className="flex items-center gap-1.5 hover:text-[#1a56db] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Video className="h-3.5 w-3.5 text-[#6a8cff]" />
                     <span>Upload Video</span>
                   </button>
                   <button
                     type="button"
-                    className="flex items-center gap-1.5 hover:text-[#1a56db] transition-colors"
+                    disabled={!selectedVehicleId}
+                    className="flex items-center gap-1.5 hover:text-[#1a56db] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Mic className="h-3.5 w-3.5 text-[#6a8cff]" />
                     <span>Record Sound</span>
@@ -2497,15 +2487,15 @@ export function AIDiagnosePage() {
                     value={typedMessage}
                     onChange={(e) => setTypedMessage(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder="Type additional details or ask a question..."
-                    disabled={isAnalyzingResults}
-                    className="w-full bg-transparent py-2 text-[12px] text-[#17307a] placeholder-[#a7b2ca] outline-none border-none focus:ring-0 shadow-none"
+                    placeholder={selectedVehicleId ? "Type additional details or ask a question..." : "Please select a vehicle to start diagnosing..."}
+                    disabled={isAnalyzingResults || !selectedVehicleId}
+                    className="w-full bg-transparent py-2 text-[12px] text-[#17307a] placeholder-[#a7b2ca] outline-none border-none focus:ring-0 shadow-none disabled:cursor-not-allowed"
                   />
                   <button
                     type="button"
                     onClick={handleSendMessage}
-                    disabled={isAnalyzingResults}
-                    className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1a56db]/5 text-[#1a56db] hover:bg-[#1a56db] hover:text-white transition-all duration-200"
+                    disabled={isAnalyzingResults || !selectedVehicleId}
+                    className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1a56db]/5 text-[#1a56db] hover:bg-[#1a56db] hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Send className="h-4 w-4" />
                   </button>

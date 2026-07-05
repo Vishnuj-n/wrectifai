@@ -28,27 +28,30 @@ export class KnowledgeService {
     category?: string,
     maxResults = 5
   ): Promise<RetrievedIssue[]> {
-    // Split symptomText into words, sanitize, and filter out common stop words
-    const stopWords = new Set(['and', 'the', 'for', 'with', 'from', 'you', 'your', 'makes', 'making', 'when', 'that', 'this', 'is', 'are', 'was', 'were']);
+    // Process input text: keep alphanumeric and spaces, split into words
     const tokens = symptomText
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/[^a-zA-Z0-9\s]/g, ' ')
       .split(/\s+/)
-      .filter(w => w.length > 1 && !stopWords.has(w));
+      .filter(w => w.length > 1);
 
-    const tokenArray = tokens.length > 0 ? tokens : [symptomText.toLowerCase()];
+    if (tokens.length === 0) {
+      return [];
+    }
+
+    // Convert tokens to FTS OR query with prefix matching, e.g. "click:* | nois:*"
+    // ponytail: leverage native postgres to_tsquery/to_tsvector for stemming/stop-words
+    const tsQuery = tokens.map(t => `${t}:*`).join(' | ');
 
     const queryText = `
       WITH scored_issues AS (
         SELECT *,
-               (
-                 SELECT COUNT(*) 
-                 FROM unnest(symptom_keywords) kw 
-                 WHERE exists (
-                   SELECT 1 
-                   FROM unnest($1::text[]) token 
-                   WHERE position(token in lower(kw)) > 0
-                 )
+               ts_rank_cd(
+                 to_tsvector('english', 
+                   coalesce(issue_name, '') || ' ' || 
+                   coalesce(description, '') || ' ' || 
+                   coalesce(array_to_string(symptom_keywords, ' '), '')
+                 ),
+                 to_tsquery('english', $1)
                ) as match_count
         FROM known_issues
         WHERE 
@@ -72,7 +75,7 @@ export class KnowledgeService {
     const yearParam = vehicleYear || null;
     const categoryParam = category || null;
 
-    const res = await query(queryText, [tokenArray, makeParam, yearParam, categoryParam, maxResults]);
+    const res = await query(queryText, [tsQuery, makeParam, yearParam, categoryParam, maxResults]);
 
     return res.rows.map(row => ({
       id: row.id,

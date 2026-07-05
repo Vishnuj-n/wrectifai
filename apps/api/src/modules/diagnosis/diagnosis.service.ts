@@ -117,40 +117,58 @@ export class DiagnosisService {
       });
     }
 
-    // 3. Call LLM (Vercel AI SDK OpenAI or Groq)
-    let aiProvider;
-    if (env.llmProvider === 'groq') {
-      if (!env.groqApiKey) {
-        throw new Error('GROQ_API_KEY is not defined in the environment');
-      }
-      aiProvider = createOpenAI({
-        baseURL: 'https://api.groq.com/openai/v1',
-        apiKey: env.groqApiKey,
-      });
+    let result: DiagnosisResult;
+
+    if (matchedIssues.length === 0) {
+      // ponytail: bypass LLM entirely to save latency & costs when there are 0 DB matches
+      result = {
+        issues: [{
+          name: 'Clarification Required',
+          confidence: 0,
+          estimatedPriceRange: { min: 0, max: 0 },
+          requiredParts: [],
+        }],
+        confidenceScore: 0,
+        riskLevel: 'low',
+        diyAllowed: false,
+        diySteps: ["I couldn't find a direct match. Can you describe the noise it's making, or when exactly it happens?"],
+        nextAction: 'diy',
+      };
     } else {
-      if (!env.openaiApiKey) {
-        throw new Error('OPENAI_API_KEY is not defined in the environment');
+      // 3. Call LLM (Vercel AI SDK OpenAI or Groq)
+      let aiProvider;
+      if (env.llmProvider === 'groq') {
+        if (!env.groqApiKey) {
+          throw new Error('GROQ_API_KEY is not defined in the environment');
+        }
+        aiProvider = createOpenAI({
+          baseURL: 'https://api.groq.com/openai/v1',
+          apiKey: env.groqApiKey,
+        });
+      } else {
+        if (!env.openaiApiKey) {
+          throw new Error('OPENAI_API_KEY is not defined in the environment');
+        }
+        aiProvider = createOpenAI({
+          apiKey: env.openaiApiKey,
+        });
       }
-      aiProvider = createOpenAI({
-        apiKey: env.openaiApiKey,
-      });
-    }
 
-    const modelInstance = aiProvider(env.llmModel);
+      const modelInstance = aiProvider(env.llmModel);
 
-    // Format service history for the prompt
-    const serviceHistoryText = serviceHistory.length > 0
-      ? serviceHistory.map(h => `- [${new Date(h.service_date).toLocaleDateString()}] ${h.description} ($${h.cost || 0})`).join('\n')
-      : 'No prior service history recorded.';
+      // Format service history for the prompt
+      const serviceHistoryText = serviceHistory.length > 0
+        ? serviceHistory.map(h => `- [${new Date(h.service_date).toLocaleDateString()}] ${h.description} ($${h.cost || 0})`).join('\n')
+        : 'No prior service history recorded.';
 
-    const systemPrompt = `You are WrectifAI, an advanced automotive diagnostic expert system.
+      const systemPrompt = `You are WrectifAI, an advanced automotive diagnostic expert system.
 Analyze the vehicle details, recent service history, user symptoms, and any provided media descriptions.
 Provide a highly structured diagnosis conforming exactly to the required JSON schema.
 Be realistic about whether a repair is DIY-safe. Safety-critical components (brakes, steering, suspension, airbags, high-voltage EV battery systems) should NEVER have diyAllowed = true. Always output prices in US dollars.`;
 
-    let groundingText = '';
-    if (matchedIssues.length > 0) {
-      groundingText = `\n\nKnown Issues for this vehicle (from diagnostic database):
+      let groundingText = '';
+      if (matchedIssues.length > 0) {
+        groundingText = `\n\nKnown Issues for this vehicle (from diagnostic database):
 ---
 ${matchedIssues.map(issue => `
 Issue: ${issue.issue_name}
@@ -164,11 +182,11 @@ Issue: ${issue.issue_name}
 `).join('\n---\n')}
 ---
 Use these known issues as PRIMARY reference. Adjust confidence based on how well the user's symptoms match. Only suggest issues NOT in this list if no known issue fits well. Make sure estimated prices and steps reflect this database grounding.`;
-    }
+      }
 
-    const finalSystemPrompt = `${systemPrompt}${groundingText}`;
+      const finalSystemPrompt = `${systemPrompt}${groundingText}`;
 
-    const userPrompt = `Vehicle Context:
+      const userPrompt = `Vehicle Context:
 - Make: ${vehicle.make}
 - Model: ${vehicle.model}
 - Year: ${vehicle.year}
@@ -183,41 +201,42 @@ ${intakeAnswers ? `\nIntake Answers:\n${Object.entries(intakeAnswers.answers).ma
 
 Please diagnose the issue.`;
 
-    // Process media content (Vercel AI SDK handles base64 image content natively)
-    const contentPayload: any[] = [{ type: 'text', text: userPrompt }];
-    
-    // Add media descriptions/links to prompt
-    mediaInputs.forEach((input, index) => {
-      if (input.mediaType === 'image') {
-        // Strip data url prefix if present for AI SDK image block
-        const base64Data = input.base64.includes(';base64,')
-          ? input.base64.split(';base64,')[1]
-          : input.base64;
-        contentPayload.push({
-          type: 'image',
-          image: base64Data,
-        });
-      } else {
-        contentPayload.push({
-          type: 'text',
-          text: `[User attached ${input.mediaType} file #${index + 1} for analysis]`,
-        });
-      }
-    });
+      // Process media content (Vercel AI SDK handles base64 image content natively)
+      const contentPayload: any[] = [{ type: 'text', text: userPrompt }];
+      
+      // Add media descriptions/links to prompt
+      mediaInputs.forEach((input, index) => {
+        if (input.mediaType === 'image') {
+          // Strip data url prefix if present for AI SDK image block
+          const base64Data = input.base64.includes(';base64,')
+            ? input.base64.split(';base64,')[1]
+            : input.base64;
+          contentPayload.push({
+            type: 'image',
+            image: base64Data,
+          });
+        } else {
+          contentPayload.push({
+            type: 'text',
+            text: `[User attached ${input.mediaType} file #${index + 1} for analysis]`,
+          });
+        }
+      });
 
-    const llmResponse = await generateObject({
-      model: modelInstance,
-      schema: diagnosisResultSchema,
-      system: finalSystemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: contentPayload,
-        },
-      ],
-    });
+      const llmResponse = await generateObject({
+        model: modelInstance,
+        schema: diagnosisResultSchema,
+        system: finalSystemPrompt,
+        messages: [
+          {
+            role: 'user',
+            content: contentPayload,
+          },
+        ],
+      });
 
-    const result = DiagnosisService.applySafetyGuardrail(llmResponse.object, symptomText, matchedIssues);
+      result = DiagnosisService.applySafetyGuardrail(llmResponse.object, symptomText, matchedIssues);
+    }
 
     // 5. Database Transaction Persistence
     const pool = getDbPool();
@@ -359,10 +378,10 @@ Please diagnose the issue.`;
     symptomText: string,
     matchedIssues: any[] = []
   ): DiagnosisResult {
-    const safetyKeywords = ['brake', 'steering', 'airbag', 'suspension', 'high-voltage', 'hybrid battery', 'stabilizer', 'abs'];
-    let hasSafetyCriticalIssue = result.issues.some(issue => 
-      safetyKeywords.some(keyword => issue.name.toLowerCase().includes(keyword))
-    ) || safetyKeywords.some(keyword => symptomText.toLowerCase().includes(keyword));
+    // ponytail: compile regex once with word boundaries to prevent false positives (like "absent" matching "abs")
+    const safetyRegex = /\b(brake|steering|airbag|suspension|high-voltage|hybrid_battery|hybrid battery|stabilizer|abs)\b/i;
+    let hasSafetyCriticalIssue = result.issues.some(issue => safetyRegex.test(issue.name)) || 
+                                 safetyRegex.test(symptomText);
 
     if (matchedIssues.some(issue => issue.safety_critical)) {
       hasSafetyCriticalIssue = true;

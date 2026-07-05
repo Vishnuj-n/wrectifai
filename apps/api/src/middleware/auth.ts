@@ -43,7 +43,8 @@ export function requireRole(allowedRoles: string[]) {
         [user.userId]
       );
       const dbRoles = rolesResult.rows.map((row) => row.code);
-      const hasRole = dbRoles.some((role) => allowedRoles.includes(role));
+      const mappedDbRoles = dbRoles.map((role) => (role === 'customer' ? 'user' : role));
+      const hasRole = mappedDbRoles.some((role) => allowedRoles.includes(role));
       if (!hasRole) {
         return error(res, 'Forbidden: Insufficient permissions', 'FORBIDDEN', 403);
       }

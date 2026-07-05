@@ -37,16 +37,22 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
       // Auto-select stored vehicle if value is not set
       if (data && data.length > 0 && !value && typeof window !== 'undefined') {
         const storedStr = localStorage.getItem('wrectifai_selected_vehicle');
+        let selected = false;
         if (storedStr) {
           try {
             const stored = JSON.parse(storedStr) as Vehicle;
             const found = data.find((v: Vehicle) => v.id === stored.id);
             if (found) {
               onChange(found.id, found);
+              selected = true;
             }
           } catch (e) {
             console.error(e);
           }
+        }
+        if (!selected && data[0]) {
+          onChange(data[0].id, data[0]);
+          localStorage.setItem('wrectifai_selected_vehicle', JSON.stringify(data[0]));
         }
       }
     } catch (err) {

@@ -90,3 +90,18 @@ test('auth middleware - requireRole checks user roles mapping from DB', async ()
   await middleware(req as Request, res, nextSuccess);
   assert.ok(nextCalledSuccess);
 });
+
+test('auth middleware - requireRole maps customer to user', async () => {
+  mockRows.length = 0;
+  mockRows.push({ code: 'customer' });
+
+  const req: any = { user: { userId: 'user-123' } };
+  const res = createMockRes();
+  let nextCalled = false;
+  const next = () => { nextCalled = true; };
+
+  const middleware = requireRole(['user']);
+  await middleware(req as Request, res, next);
+
+  assert.ok(nextCalled);
+});
