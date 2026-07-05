@@ -3,16 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth, type User } from '@/lib/auth-context';
 import { apiClient } from '@/lib/api-client';
+import { Phone, ShieldCheck, User as UserIcon } from 'lucide-react';
+import OtpInput from '@/components/common/otp-input';
 
 interface AuthResponse {
   accessToken: string;
   refreshToken: string;
-  user: Record<string, unknown>;
+  user: User;
 }
-import { Phone, ShieldCheck, User } from 'lucide-react';
-import OtpInput from '@/components/common/otp-input';
 
 export default function SignupPage() {
   const { isAuthenticated, login } = useAuth();
@@ -152,7 +152,7 @@ export default function SignupPage() {
               <label className="block text-xs font-semibold text-[#17307a] mb-1.5">Full Name</label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8ea0c7]">
-                  <User className="h-4 w-4" />
+                  <UserIcon className="h-4 w-4" />
                 </span>
                 <input
                   type="text"
