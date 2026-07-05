@@ -1722,6 +1722,10 @@ export function AIDiagnosePage() {
             vehicleId: selectedVehicleId || 'v1',
             symptomText: combinedSymptom,
             media: attachedMedia.map(m => ({ mediaType: m.mediaType, base64: m.base64 })),
+            intakeAnswers: {
+              category: activeCategoryId,
+              answers: answers,
+            },
           };
           
           const response = await submitDiagnosis(payload);

@@ -5,6 +5,8 @@ import { generateObject } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { getDbPool, query } from '../../config/database';
 import { getEnv } from '../../config/env';
+import { KnowledgeService } from './knowledge.service';
+
 
 // Schema matching frontend requirements and future sprints
 export const diagnosisResultSchema = z.object({
@@ -44,7 +46,8 @@ export class DiagnosisService {
     customerId: string,
     vehicleId: string,
     symptomText: string,
-    mediaInputs: MediaInput[] = []
+    mediaInputs: MediaInput[] = [],
+    intakeAnswers?: { category: string; answers: Record<string, string> }
   ) {
     const env = getEnv();
 
@@ -65,6 +68,19 @@ export class DiagnosisService {
       [vehicleId]
     );
     const serviceHistory = historyRes.rows;
+
+    // Fetch matching issues from database for grounding
+    let matchedIssues: any[] = [];
+    try {
+      matchedIssues = await KnowledgeService.findMatchingIssues(
+        symptomText,
+        vehicle.make,
+        vehicle.year,
+        intakeAnswers?.category
+      );
+    } catch (dbErr) {
+      console.error('Failed to retrieve matched issues from database:', dbErr);
+    }
 
     // 2. Save media files to local disk
     const savedMediaPaths: { mediaType: 'image' | 'video' | 'audio'; url: string }[] = [];
@@ -132,6 +148,26 @@ Analyze the vehicle details, recent service history, user symptoms, and any prov
 Provide a highly structured diagnosis conforming exactly to the required JSON schema.
 Be realistic about whether a repair is DIY-safe. Safety-critical components (brakes, steering, suspension, airbags, high-voltage EV battery systems) should NEVER have diyAllowed = true. Always output prices in US dollars.`;
 
+    let groundingText = '';
+    if (matchedIssues.length > 0) {
+      groundingText = `\n\nKnown Issues for this vehicle (from diagnostic database):
+---
+${matchedIssues.map(issue => `
+Issue: ${issue.issue_name}
+- Risk Level: ${issue.risk_level}
+- DIY Allowed: ${issue.diy_allowed ? 'Yes' : 'No'}
+- Required Parts: ${JSON.stringify(issue.required_parts)}
+- Cost Range: $${issue.estimated_cost_min} - $${issue.estimated_cost_max}
+- DIY Steps: ${JSON.stringify(issue.diy_steps)}
+- Garage Steps: ${JSON.stringify(issue.garage_steps)}
+- Base Confidence: ${issue.base_confidence}%
+`).join('\n---\n')}
+---
+Use these known issues as PRIMARY reference. Adjust confidence based on how well the user's symptoms match. Only suggest issues NOT in this list if no known issue fits well. Make sure estimated prices and steps reflect this database grounding.`;
+    }
+
+    const finalSystemPrompt = `${systemPrompt}${groundingText}`;
+
     const userPrompt = `Vehicle Context:
 - Make: ${vehicle.make}
 - Model: ${vehicle.model}
@@ -143,6 +179,7 @@ ${serviceHistoryText}
 
 Reported Symptoms:
 ${symptomText}
+${intakeAnswers ? `\nIntake Answers:\n${Object.entries(intakeAnswers.answers).map(([q, a]) => `- ${q}: ${a}`).join('\n')}` : ''}
 
 Please diagnose the issue.`;
 
@@ -171,7 +208,7 @@ Please diagnose the issue.`;
     const llmResponse = await generateObject({
       model: modelInstance,
       schema: diagnosisResultSchema,
-      system: systemPrompt,
+      system: finalSystemPrompt,
       messages: [
         {
           role: 'user',
@@ -180,7 +217,7 @@ Please diagnose the issue.`;
       ],
     });
 
-    const result = DiagnosisService.applySafetyGuardrail(llmResponse.object, symptomText);
+    const result = DiagnosisService.applySafetyGuardrail(llmResponse.object, symptomText, matchedIssues);
 
     // 5. Database Transaction Persistence
     const pool = getDbPool();
@@ -317,15 +354,22 @@ Please diagnose the issue.`;
   /**
    * Apply hardcoded safety guardrails to LLM result
    */
-  static applySafetyGuardrail(result: DiagnosisResult, symptomText: string): DiagnosisResult {
+  static applySafetyGuardrail(
+    result: DiagnosisResult,
+    symptomText: string,
+    matchedIssues: any[] = []
+  ): DiagnosisResult {
     const safetyKeywords = ['brake', 'steering', 'airbag', 'suspension', 'high-voltage', 'hybrid battery', 'stabilizer', 'abs'];
-    const hasSafetyCriticalIssue = result.issues.some(issue => 
+    let hasSafetyCriticalIssue = result.issues.some(issue => 
       safetyKeywords.some(keyword => issue.name.toLowerCase().includes(keyword))
     ) || safetyKeywords.some(keyword => symptomText.toLowerCase().includes(keyword));
 
+    if (matchedIssues.some(issue => issue.safety_critical)) {
+      hasSafetyCriticalIssue = true;
+    }
+
     const finalResult = { ...result };
     if (finalResult.riskLevel === 'high' || finalResult.riskLevel === 'critical' || hasSafetyCriticalIssue) {
-      finalResult.diyAllowed = true; // start with true, but override below
       finalResult.diyAllowed = false;
       finalResult.nextAction = 'bookGarage';
     }

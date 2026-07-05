@@ -4,13 +4,7 @@ import { getDbPool, query } from './database';
 
 let pool: ReturnType<typeof getDbPool>;
 
-before(() => {
-  pool = getDbPool();
-});
-
-after(async () => {
-  await pool.end();
-});
+// Do not close the pool inside database.test.ts as it is a shared singleton
 
 test('DB - can connect to test database', async () => {
   const result = await query('SELECT 1 AS alive');

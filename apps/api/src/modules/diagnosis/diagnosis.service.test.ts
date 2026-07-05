@@ -61,3 +61,27 @@ test('Diagnosis Service - applySafetyGuardrail leaves safe issues alone', () => 
   assert.strictEqual(overridden.diyAllowed, true);
   assert.strictEqual(overridden.nextAction, 'diy');
 });
+
+test('Diagnosis Service - applySafetyGuardrail overrides based on safety_critical flag in matchedIssues', () => {
+  const result: DiagnosisResult = {
+    issues: [{ name: 'Check lights', confidence: 95, estimatedPriceRange: { min: 10, max: 20 }, requiredParts: [] }],
+    confidenceScore: 95,
+    riskLevel: 'low',
+    diyAllowed: true,
+    diySteps: ['Replace bulb'],
+    nextAction: 'diy',
+  };
+
+  const matchedIssues = [
+    {
+      issue_name: 'Check lights',
+      safety_critical: true,
+      risk_level: 'low',
+    }
+  ];
+
+  const overridden = DiagnosisService.applySafetyGuardrail(result, 'light is off', matchedIssues);
+  assert.strictEqual(overridden.diyAllowed, false);
+  assert.strictEqual(overridden.nextAction, 'bookGarage');
+});
+

@@ -8,7 +8,7 @@ export const diagnosisRouter = Router();
 // Submit symptoms and run LLM diagnosis
 diagnosisRouter.post('/', authenticate, async (req, res) => {
   try {
-    const { vehicleId, symptomText, media } = req.body;
+    const { vehicleId, symptomText, media, intakeAnswers } = req.body;
     
     if (!vehicleId) {
       return error(res, 'Vehicle ID is required', 'BAD_REQUEST', 400);
@@ -26,7 +26,8 @@ diagnosisRouter.post('/', authenticate, async (req, res) => {
       customerId,
       vehicleId,
       symptomText,
-      media || []
+      media || [],
+      intakeAnswers
     );
 
     return success(res, diagnosis, 201);
