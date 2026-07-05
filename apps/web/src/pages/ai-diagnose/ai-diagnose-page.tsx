@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Check,
   CheckCircle2,
@@ -1616,11 +1616,20 @@ export function AIDiagnosePage() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [timerFinished, setTimerFinished] = useState(false);
   const [customResultIssues, setCustomResultIssues] = useState<DiagnosticIssueResult[] | null>(null);
-  const [attachedMedia] = useState<Array<{ mediaType: 'image' | 'video' | 'audio'; base64: string; name: string }>>([]);
+  const [attachedMedia, setAttachedMedia] = useState<Array<{ mediaType: 'image' | 'video' | 'audio'; base64: string; name: string }>>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   const pageRootRef = useRef<HTMLDivElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const hasMountedRef = useRef(false);
+
+  const handleVehicleChange = useCallback((id: string, vehicle?: Vehicle) => {
+    setSelectedVehicleId(id);
+    if (vehicle) setSelectedVehicle(vehicle);
+  }, []);
 
   useEffect(() => {
     const pageScroller = (() => {
@@ -1916,6 +1925,70 @@ export function AIDiagnosePage() {
     : undefined;
 
   const confidenceScore = apiResult?.result?.confidenceScore;
+
+  // --- Media helpers ---
+  const fileToBase64 = useCallback((file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }, []);
+
+  const handleFileChange = useCallback(async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    mediaType: 'image' | 'video'
+  ) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    const converted = await Promise.all(
+      files.map(async (file) => ({
+        mediaType,
+        base64: await fileToBase64(file),
+        name: file.name,
+      }))
+    );
+    setAttachedMedia((prev) => [...prev, ...converted]);
+    // reset so the same file can be re-selected
+    e.target.value = '';
+  }, [fileToBase64]);
+
+  const handleToggleRecording = useCallback(async () => {
+    if (isRecording) {
+      mediaRecorderRef.current?.stop();
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = reader.result as string;
+          const name = `recording-${Date.now()}.wav`;
+          setAttachedMedia((prev) => [...prev, { mediaType: 'audio', base64, name }]);
+        };
+        reader.readAsDataURL(blob);
+        stream.getTracks().forEach((t) => t.stop());
+        setIsRecording(false);
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setIsRecording(true);
+    } catch {
+      console.error('Microphone access denied');
+    }
+  }, [isRecording]);
+
+  const removeMedia = useCallback((idx: number) => {
+    setAttachedMedia((prev) => prev.filter((_, i) => i !== idx));
+  }, []);
 
   const handleSendMessage = () => {
     if (isAnalyzingResults) return;
@@ -2351,9 +2424,20 @@ export function AIDiagnosePage() {
                   Add more details (optional)
                 </div>
                 <div className="mt-2 flex flex-wrap gap-3 text-[10px] font-medium text-[#7284ab]">
+                  {/* Hidden file inputs */}
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => handleFileChange(e, 'image')}
+                  />
+
                   <button
                     type="button"
-                    disabled={!selectedVehicleId}
+                    disabled={!selectedVehicleId || isAnalyzingResults}
+                    onClick={() => imageInputRef.current?.click()}
                     className="flex items-center gap-1.5 hover:text-[#1a56db] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ImageIcon className="h-3.5 w-3.5 text-[#6a8cff]" />
@@ -2369,13 +2453,44 @@ export function AIDiagnosePage() {
                   </button>
                   <button
                     type="button"
-                    disabled={!selectedVehicleId}
-                    className="flex items-center gap-1.5 hover:text-[#1a56db] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!selectedVehicleId || isAnalyzingResults}
+                    onClick={handleToggleRecording}
+                    className={`flex items-center gap-1.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                      isRecording
+                        ? 'text-red-500 animate-pulse'
+                        : 'hover:text-[#1a56db]'
+                    }`}
                   >
                     <Mic className="h-3.5 w-3.5 text-[#6a8cff]" />
-                    <span>Record Sound</span>
+                    <span>{isRecording ? 'Stop Recording' : 'Record Sound'}</span>
                   </button>
                 </div>
+
+
+                {/* Media preview chips */}
+                {attachedMedia.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {attachedMedia.map((m, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-1.5 rounded-full border border-[#d6e4ff] bg-[#eef4ff] px-2.5 py-1 text-[10px] font-medium text-[#1a56db]"
+                      >
+                        {m.mediaType === 'image' && <ImageIcon className="h-3 w-3 shrink-0" />}
+                        {m.mediaType === 'video' && <Video className="h-3 w-3 shrink-0" />}
+                        {m.mediaType === 'audio' && <Mic className="h-3 w-3 shrink-0" />}
+                        <span className="max-w-[120px] truncate">{m.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeMedia(idx)}
+                          className="ml-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-[#c1d5ff] text-[#1a56db] hover:bg-red-100 hover:text-red-500 transition-colors"
+                          aria-label="Remove"
+                        >
+                          <X className="h-2 w-2" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <div className="mt-2 flex items-center gap-3 rounded-[12px] border border-[#e4eafb] bg-[#fbfcff] px-4 py-1">
                   <input
@@ -2404,15 +2519,12 @@ export function AIDiagnosePage() {
           {/* RIGHT SIDEBAR PANEL */}
           <div className="space-y-6">
             {/* Vehicle Selector Panel */}
-            <Card className="rounded-[18px] border-[#e8edf8] bg-white p-5 shadow-[0_12px_28px_rgba(35,64,143,0.04)]">
+            <Card className="rounded-[18px] border-[#e8edf8] bg-white p-5 shadow-[0_12px-28px_rgba(35,64,143,0.04)]">
               <h2 className={homeSubheadingClass}>Diagnosing Vehicle</h2>
               <div className="mt-4">
                 <VehicleSelector 
                   value={selectedVehicleId} 
-                  onChange={(id, vehicle) => {
-                    setSelectedVehicleId(id);
-                    if (vehicle) setSelectedVehicle(vehicle);
-                  }} 
+                  onChange={handleVehicleChange} 
                 />
               </div>
             </Card>

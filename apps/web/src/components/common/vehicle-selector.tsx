@@ -27,14 +27,15 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
   const [errorText, setErrorText] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const hasAutoSelected = useRef(false);
-  const activeRef = useRef(true);
+  const hasFetched = useRef(false);
 
-  const fetchVehicles = useCallback(async () => {
+  const fetchVehicles = useCallback(async (active: { current: boolean }) => {
     setLoading(true);
     setErrorText(null);
     try {
       const data = await apiClient.get<Vehicle[]>('/vehicles');
-      if (!activeRef.current) return;
+      if (!active.current) return;
+
       setVehicles(data || []);
 
       if (!hasAutoSelected.current && data && data.length > 0 && !value && typeof window !== 'undefined') {
@@ -59,18 +60,29 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
         }
       }
     } catch (err) {
-      if (!activeRef.current) return;
+      if (!active.current) return;
       const message = err instanceof Error ? err.message : 'Failed to load vehicles';
       setErrorText(message);
     } finally {
-      if (activeRef.current) setLoading(false);
+      if (active.current) {
+        setLoading(false);
+      }
     }
   }, [value, onChange]);
 
   useEffect(() => {
-    activeRef.current = true;
-    fetchVehicles();
-    return () => { activeRef.current = false; };
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
+    // Each effect invocation owns its own `active` object.
+    // The cleanup only sets THIS invocation's flag to false,
+    // so a concurrent fetch from a prior run (e.g. React StrictMode)
+    // cannot corrupt the current one's state updates.
+    const active = { current: true };
+    fetchVehicles(active);
+    return () => {
+      active.current = false;
+    };
   }, [fetchVehicles]);
 
   const selectedVehicle = vehicles.find((v) => v.id === value);
@@ -82,7 +94,6 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
     onChange(vehicle.id, vehicle);
     setIsOpen(false);
   };
-
 
   return (
     <div className={`relative ${className}`}>
@@ -99,9 +110,12 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
             <AlertCircle className="h-4 w-4" />
             Error loading vehicles
           </span>
-          <button 
-            type="button" 
-            onClick={fetchVehicles} 
+          <button
+            type="button"
+            onClick={() => {
+              const active = { current: true };
+              fetchVehicles(active);
+            }}
             className="text-xs font-bold text-red-700 underline hover:text-red-800"
           >
             Retry
@@ -113,8 +127,8 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
             <Car className="h-4 w-4" />
             No vehicles registered
           </span>
-          <Link 
-            href="/vehicles" 
+          <Link
+            href="/vehicles"
             className="text-xs font-bold text-[#1a56db] hover:underline flex items-center gap-0.5"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -147,7 +161,7 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
             <>
               {/* Backdrop to close dropdown on click outside */}
               <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-              
+
               <div className="absolute left-0 right-0 mt-1.5 z-50 rounded-[12px] border border-[#dbe6ff] bg-white p-1.5 shadow-[0_10px_25px_rgba(30,58,138,0.08)] max-h-60 overflow-y-auto animate-in fade-in duration-100">
                 {vehicles.map((vehicle) => (
                   <button
@@ -155,8 +169,8 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
                     type="button"
                     onClick={() => handleSelect(vehicle)}
                     className={`flex w-full items-center justify-between rounded-[8px] px-3 py-2 text-left text-sm transition-colors ${
-                      vehicle.id === value 
-                        ? 'bg-[#eef4ff] text-[#1a56db] font-semibold' 
+                      vehicle.id === value
+                        ? 'bg-[#eef4ff] text-[#1a56db] font-semibold'
                         : 'text-[#17307a] hover:bg-slate-50'
                     }`}
                   >
@@ -164,10 +178,10 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
                     {vehicle.id === value && <span className="h-2 w-2 rounded-full bg-[#1a56db]" />}
                   </button>
                 ))}
-                
+
                 <div className="border-t border-slate-100 mt-1.5 pt-1.5 pb-0.5 px-2">
-                  <Link 
-                    href="/vehicles" 
+                  <Link
+                    href="/vehicles"
                     className="flex items-center justify-center gap-1.5 py-1.5 rounded-[8px] border border-dashed border-[#dbe6ff] text-xs font-bold text-[#1a56db] hover:bg-[#f8fbff] hover:border-[#bfd1ff] transition-colors"
                   >
                     <Plus className="h-3.5 w-3.5" />

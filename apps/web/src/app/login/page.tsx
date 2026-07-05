@@ -3,8 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth, User } from '@/lib/auth-context';
 import { apiClient } from '@/lib/api-client';
+
+interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: User;
+}
 import { Phone, ShieldCheck } from 'lucide-react';
 import OtpInput from '@/components/common/otp-input';
 import { useGoogleLogin } from '@react-oauth/google';
@@ -37,7 +43,7 @@ export default function LoginPage() {
       setSuccessMsg('');
       setIsSubmitting(true);
       try {
-        const data = await apiClient.post('/auth/google', {
+        const data = await apiClient.post<AuthResponse>('/auth/google', {
           credential: credentialResponse.access_token
         });
         login(data.accessToken, data.refreshToken, data.user);
@@ -90,7 +96,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const data = await apiClient.post('/auth/login', {
+      const data = await apiClient.post<AuthResponse>('/auth/login', {
         mobileNumber: mobileNumber.replace(/\s+/g, ''),
         otp,
       });
@@ -113,7 +119,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const data = await apiClient.post('/auth/login', { provider });
+      const data = await apiClient.post<AuthResponse>('/auth/login', { provider });
       login(data.accessToken, data.refreshToken, data.user);
       setSuccessMsg(`Successfully logged in via ${provider === 'google' ? 'Google' : 'Apple'}! Redirecting...`);
       setTimeout(() => {
@@ -233,7 +239,7 @@ export default function LoginPage() {
                   setSuccessMsg('');
                   setIsSubmitting(true);
                   try {
-                    const data = await apiClient.post('/auth/google', {
+                    const data = await apiClient.post<AuthResponse>('/auth/google', {
                       credential: 'mock_developer'
                     });
                     login(data.accessToken, data.refreshToken, data.user);

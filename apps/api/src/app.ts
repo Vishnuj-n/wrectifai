@@ -17,9 +17,9 @@ export function createApp() {
     })
   );
 
-  // Body parsing middlewares
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  // Body parsing middlewares — 20 MB limit to accommodate base64-encoded images/audio
+  app.use(express.json({ limit: '20mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
   // Request logger middleware
   app.use(requestLogger);

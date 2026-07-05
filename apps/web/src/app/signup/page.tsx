@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { apiClient } from '@/lib/api-client';
+
+interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: Record<string, unknown>;
+}
 import { Phone, ShieldCheck, User } from 'lucide-react';
 import OtpInput from '@/components/common/otp-input';
 
@@ -67,7 +73,7 @@ export default function SignupPage() {
     setIsSubmitting(true);
 
     try {
-      const data = await apiClient.post('/auth/register', {
+      const data = await apiClient.post<AuthResponse>('/auth/register', {
         name,
         mobileNumber: mobileNumber.replace(/\s+/g, ''),
         otp,
@@ -93,7 +99,7 @@ export default function SignupPage() {
 
     try {
       // In OAuth flow, we use the same endpoint as login to mock/stub Google/Apple auth.
-      const data = await apiClient.post('/auth/login', { provider });
+      const data = await apiClient.post<AuthResponse>('/auth/login', { provider });
       login(data.accessToken, data.refreshToken, data.user);
       setSuccessMsg(`Successfully logged in via ${provider === 'google' ? 'Google' : 'Apple'}! Redirecting...`);
       setTimeout(() => {

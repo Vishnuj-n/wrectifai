@@ -8,7 +8,7 @@ export const diagnosisRouter = Router();
 // Submit symptoms and run LLM diagnosis
 diagnosisRouter.post('/', authenticate, requireRole(['user', 'garage', 'vendor', 'admin']), async (req, res) => {
   try {
-    const { vehicleId, symptomText, media, intakeAnswers } = req.body;
+    const { vehicleId, symptomText, media, intakeAnswers, stage } = req.body;
     
     if (!vehicleId) {
       return error(res, 'Vehicle ID is required', 'BAD_REQUEST', 400);
@@ -20,6 +20,15 @@ diagnosisRouter.post('/', authenticate, requireRole(['user', 'garage', 'vendor',
     const customerId = req.user?.userId;
     if (!customerId) {
       return error(res, 'Authentication failed: no customer ID found', 'UNAUTHORIZED', 401);
+    }
+
+    if (stage === 'questions') {
+      const questionsData = await DiagnosisService.generateQuestions(
+        customerId,
+        vehicleId,
+        symptomText
+      );
+      return success(res, questionsData, 200);
     }
 
     const diagnosis = await DiagnosisService.runDiagnosis(

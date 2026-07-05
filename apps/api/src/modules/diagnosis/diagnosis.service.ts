@@ -1,12 +1,21 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { z } from 'zod';
-import { generateObject } from 'ai';
+import { generateObject, generateText, type ImagePart } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { getDbPool, query } from '../../config/database';
 import { getEnv } from '../../config/env';
 import { KnowledgeService, type RetrievedIssue } from './knowledge.service';
 
+/** OpenAI/Groq wire-format image block. The Vercel AI SDK does not expose this
+ *  type natively — it uses `ImagePart` ({ type: 'image'; image: DataContent }).
+ *  We cast via `unknown` to bridge the gap until @ai-sdk/groq ships vision types.
+ *  ponytail: upgrade path — replace with native ImagePart when @ai-sdk/groq adds vision support.
+ */
+interface OpenAIImageUrlPart {
+  type: 'image_url';
+  image_url: { url: string };
+}
 
 // Schema matching frontend requirements and future sprints
 export const diagnosisResultSchema = z.object({
@@ -34,6 +43,66 @@ export interface MediaInput {
 }
 
 export class DiagnosisService {
+  // ponytail: raw fetch — Vercel AI SDK has no transcription support; both Groq and OpenAI use identical OpenAI-compatible multipart endpoint
+  static async transcribeAudio(base64Audio: string, mimeType: string): Promise<string> {
+    const env = getEnv();
+    const baseURL = env.audioProvider === 'groq'
+      ? 'https://api.groq.com/openai/v1'
+      : 'https://api.openai.com/v1';
+    const apiKey = env.audioProvider === 'groq' ? env.groqApiKey : env.openaiApiKey;
+
+    const rawBase64 = base64Audio.includes(';base64,') ? base64Audio.split(';base64,')[1] : base64Audio;
+    const formData = new FormData();
+    formData.append('file', new Blob([new Uint8Array(Buffer.from(rawBase64, 'base64'))], { type: mimeType }), 'audio.wav');
+    formData.append('model', env.audioModel);
+    formData.append('response_format', 'text');
+
+    try {
+      const res = await fetch(`${baseURL}/audio/transcriptions`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}` },
+        body: formData,
+      });
+      return res.ok ? res.text() : '';
+    } catch (err) {
+      console.error('Audio transcription failed:', err);
+      return '';
+    }
+  }
+
+  static async analyzeImage(base64Image: string): Promise<string> {
+    const env = getEnv();
+    const apiKey = env.imageLlmProvider === 'groq' ? env.groqApiKey : env.openaiApiKey;
+    const baseURL = env.imageLlmProvider === 'groq' ? 'https://api.groq.com/openai/v1' : undefined;
+
+    if (!apiKey) throw new Error(`API key for ${env.imageLlmProvider} is not set`);
+
+    const imageUrl = base64Image.startsWith('data:image/')
+      ? base64Image
+      : `data:image/jpeg;base64,${base64Image}`;
+
+    const aiProvider = createOpenAI({ apiKey, ...(baseURL ? { baseURL } : {}) });
+
+    try {
+      const { text } = await generateText({
+        model: aiProvider(env.imageLlmModel),
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Analyze this vehicle image. Describe any visible damage, wear, warning lights, or mechanical issues you can see.' },
+            // ponytail: cast via `unknown` — SDK types don't include OpenAI-wire `image_url`.
+            // Upgrade path: switch to @ai-sdk/groq when it adds vision type support.
+            ({ type: 'image_url', image_url: { url: imageUrl } } as OpenAIImageUrlPart) as unknown as ImagePart,
+          ],
+        }],
+      });
+      return text;
+    } catch (err) {
+      console.error('Image analysis failed:', err);
+      return '';
+    }
+  }
+
   /**
    * Stage 1: Generate dynamic intake questions based on database matches
    */
@@ -224,6 +293,7 @@ Output your response as a strict JSON array under a "questions" field, where eac
     }
 
     let result: DiagnosisResult;
+    let finalSymptomText = symptomText;
 
     if (matchedIssues.length === 0) {
       // ponytail: bypass LLM entirely to save latency & costs when there are 0 DB matches
@@ -300,6 +370,31 @@ Use these known issues as PRIMARY reference. Adjust confidence based on how well
         }
       }
 
+      // Process media in parallel before LLM call
+      const [imageDescriptions, audioTranscripts] = await Promise.all([
+        Promise.all(
+          mediaInputs
+            .filter(m => m.mediaType === 'image')
+            .map(m => DiagnosisService.analyzeImage(m.base64))
+        ),
+        Promise.all(
+          mediaInputs
+            .filter(m => m.mediaType === 'audio')
+            .map(m => DiagnosisService.transcribeAudio(m.base64, 'audio/wav'))
+        ),
+      ]);
+
+      // Append transcripts to symptomText so they persist to DB too
+      const transcriptText = audioTranscripts.filter(Boolean).join('\n');
+      finalSymptomText = transcriptText
+        ? `${symptomText}\n\n[Transcribed Audio]: ${transcriptText}`
+        : symptomText;
+
+      // Build image context for prompt
+      const imageContext = imageDescriptions.filter(Boolean).length > 0
+        ? `\n\nImage Analysis:\n${imageDescriptions.map((d, i) => `- Image #${i + 1}: ${d}`).join('\n')}`
+        : '';
+
       const userPrompt = `Vehicle Context:
 - Make: ${vehicle.make}
 - Model: ${vehicle.model}
@@ -310,33 +405,12 @@ Prior Service History:
 ${serviceHistoryText}
 
 Reported Symptoms:
-${symptomText}
+${finalSymptomText}
 ${intakeText}
 
 Please diagnose the issue.`;
 
-      // Process media content (Vercel AI SDK handles base64 image content natively)
-      type ContentBlock = { type: 'text'; text: string } | { type: 'image'; image: string };
-      const contentPayload: ContentBlock[] = [{ type: 'text', text: userPrompt }];
-      
-      // Add media descriptions/links to prompt
-      mediaInputs.forEach((input, index) => {
-        if (input.mediaType === 'image') {
-          // Strip data url prefix if present for AI SDK image block
-          const base64Data = input.base64.includes(';base64,')
-            ? input.base64.split(';base64,')[1]
-            : input.base64;
-          contentPayload.push({
-            type: 'image',
-            image: base64Data,
-          });
-        } else {
-          contentPayload.push({
-            type: 'text',
-            text: `[User attached ${input.mediaType} file #${index + 1} for analysis]`,
-          });
-        }
-      });
+      const contentPayload: { type: 'text'; text: string }[] = [{ type: 'text', text: userPrompt + imageContext }];
 
       const llmResponse = await generateObject({
         model: modelInstance,
@@ -364,7 +438,7 @@ Please diagnose the issue.`;
       const requestInsertRes = await client.query(
         `INSERT INTO diagnosis_requests (customer_id, vehicle_id, symptom_text, status)
          VALUES ($1, $2, $3, $4) RETURNING *`,
-        [customerId, vehicleId, symptomText, 'completed']
+        [customerId, vehicleId, finalSymptomText, 'completed']
       );
       const dbRequest = requestInsertRes.rows[0];
 

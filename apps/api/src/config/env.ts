@@ -11,5 +11,9 @@ export function getEnv() {
     llmModel: process.env.LLM_MODEL ?? 'llama-3.1-70b-versatile',
     groqApiKey: process.env.GROQ_API_KEY,
     openaiApiKey: process.env.OPENAI_API_KEY,
+    imageLlmProvider: process.env.IMAGE_LLM_PROVIDER ?? 'groq',
+    imageLlmModel: process.env.IMAGE_LLM_MODEL ?? 'meta-llama/llama-4-scout-17b-16e-instruct',
+    audioProvider: process.env.AUDIO_PROVIDER ?? 'groq',
+    audioModel: process.env.AUDIO_MODEL ?? 'whisper-large-v3-turbo',
   };
 }

@@ -74,9 +74,19 @@ test('Diagnosis Service - applySafetyGuardrail overrides based on safety_critica
 
   const matchedIssues = [
     {
+      id: '1',
+      category: 'lighting',
       issue_name: 'Check lights',
+      description: 'Light bulb issue',
+      risk_level: 'low' as const,
+      diy_allowed: true,
       safety_critical: true,
-      risk_level: 'low',
+      required_parts: [],
+      estimated_cost_min: 0,
+      estimated_cost_max: 0,
+      diy_steps: [],
+      garage_steps: [],
+      base_confidence: 0.8,
     }
   ];
 

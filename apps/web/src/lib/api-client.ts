@@ -27,19 +27,6 @@ export type ResponseInterceptor = (response: Response) => Response | Promise<Res
 export const requestInterceptors: RequestInterceptor[] = [];
 export const responseInterceptors: ResponseInterceptor[] = [];
 
-// Logger interceptors (disabled in tests)
-if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
-  requestInterceptors.push((url, config) => {
-    console.log(`[API Request] ${config.method || 'GET'} ${url}`);
-    return config;
-  });
-
-  responseInterceptors.push((response) => {
-    console.log(`[API Response] ${response.status} ${response.url}`);
-    return response;
-  });
-}
-
 let refreshPromise: Promise<string> | null = null;
 
 export async function apiClient<T = unknown>(path: string, options: RequestOptions = {}): Promise<T> {
