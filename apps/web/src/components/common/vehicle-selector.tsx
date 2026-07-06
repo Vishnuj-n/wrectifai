@@ -71,9 +71,6 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
   }, [value, onChange]);
 
   useEffect(() => {
-    if (hasFetched.current) return;
-    hasFetched.current = true;
-
     // Each effect invocation owns its own `active` object.
     // The cleanup only sets THIS invocation's flag to false,
     // so a concurrent fetch from a prior run (e.g. React StrictMode)

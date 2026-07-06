@@ -1,13 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken, type UserTokenPayload } from '../services/jwt.service';
+import { verifyAccessToken } from '../services/jwt.service';
 import { error } from '../utils/response';
-
-// Extend Request interface to include user payload
-declare module 'express-serve-static-core' {
-  interface Request {
-    user?: UserTokenPayload;
-  }
-}
 
 export function authenticate(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
