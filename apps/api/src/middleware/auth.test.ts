@@ -66,10 +66,7 @@ test('auth middleware - authenticate expired token', async () => {
   assert.strictEqual(res.body.error.code, 'UNAUTHORIZED');
 });
 
-test('auth middleware - requireRole checks user roles mapping from DB', async () => {
-  // Empty mockRows -> user has no role in DB
-  mockRows.length = 0;
-
+test('auth middleware - requireRole checks user roles mapping from token', async () => {
   const req: any = { user: { userId: 'user-123', roles: ['customer'] } };
   const res = createMockRes();
   let nextCalled = false;
@@ -82,8 +79,8 @@ test('auth middleware - requireRole checks user roles mapping from DB', async ()
   assert.strictEqual(res.statusCode, 403);
   assert.strictEqual(res.body.error.code, 'FORBIDDEN');
 
-  // Add matching role to mockRows
-  mockRows.push({ code: 'admin' });
+  // Set user roles to include admin
+  req.user.roles = ['admin'];
   let nextCalledSuccess = false;
   const nextSuccess = () => { nextCalledSuccess = true; };
 
@@ -92,10 +89,7 @@ test('auth middleware - requireRole checks user roles mapping from DB', async ()
 });
 
 test('auth middleware - requireRole maps customer to user', async () => {
-  mockRows.length = 0;
-  mockRows.push({ code: 'customer' });
-
-  const req: any = { user: { userId: 'user-123' } };
+  const req: any = { user: { userId: 'user-123', roles: ['customer'] } };
   const res = createMockRes();
   let nextCalled = false;
   const next = () => { nextCalled = true; };

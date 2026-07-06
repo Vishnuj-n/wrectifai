@@ -95,3 +95,24 @@ test('Diagnosis Service - applySafetyGuardrail overrides based on safety_critica
   assert.strictEqual(overridden.nextAction, 'bookGarage');
 });
 
+test('Diagnosis Service - runDiagnosis rejects invalid media mime types', async () => {
+  await assert.rejects(
+    DiagnosisService.runDiagnosis('cust123', 'veh123', 'symptoms', [
+      { mediaType: 'image', base64: 'data:text/html;base64,PGh0bWw+c29tZSBodG1sPC9odG1sPg==' }
+    ]),
+    /Unsupported or invalid MIME type for image: text\/html/
+  );
+});
+
+test('Diagnosis Service - runDiagnosis rejects files exceeding size limits', async () => {
+  // 11MB image (base64 length approx 15.3MB)
+  const hugeBase64 = 'data:image/png;base64,' + 'A'.repeat(15.3 * 1024 * 1024);
+  await assert.rejects(
+    DiagnosisService.runDiagnosis('cust123', 'veh123', 'symptoms', [
+      { mediaType: 'image', base64: hugeBase64 }
+    ]),
+    /File size exceeds the limit of 10MB for image/
+  );
+});
+
+

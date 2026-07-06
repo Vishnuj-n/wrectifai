@@ -546,7 +546,7 @@ export function QuotesPage() {
                       value={selectedVehicleId} 
                       onChange={(id, vehicle) => {
                         setSelectedVehicleId(id);
-                        setSelectedVehicle(vehicle);
+                        setSelectedVehicle(vehicle ?? null);
                       }} 
                     />
                   </div>

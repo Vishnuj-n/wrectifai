@@ -11,12 +11,13 @@ import { paymentsRouter } from '../modules/payments/payments.routes';
 import { reviewsRouter } from '../modules/reviews/reviews.routes';
 import { adminRouter } from '../modules/admin/admin.routes';
 import { getHealthStatus } from '../services/health.service';
+import { success } from '../utils/response';
 
 export const apiRouter = Router();
 
 apiRouter.get('/health', async (_req, res) => {
   const status = await getHealthStatus();
-  res.json(status);
+  return success(res, status);
 });
 
 apiRouter.use('/auth', authRouter);

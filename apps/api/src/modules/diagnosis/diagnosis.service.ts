@@ -42,6 +42,39 @@ export interface MediaInput {
   base64: string;
 }
 
+const ALLOWED_MEDIA = {
+  image: {
+    'image/jpeg': 'jpg',
+    'image/jpg': 'jpg',
+    'image/png': 'png',
+    'image/gif': 'gif',
+    'image/webp': 'webp',
+  },
+  audio: {
+    'audio/mpeg': 'mp3',
+    'audio/mp3': 'mp3',
+    'audio/wav': 'wav',
+    'audio/x-wav': 'wav',
+    'audio/webm': 'webm',
+    'audio/aac': 'aac',
+    'audio/ogg': 'ogg',
+    'audio/m4a': 'm4a',
+    'audio/x-m4a': 'm4a',
+  },
+  video: {
+    'video/mp4': 'mp4',
+    'video/webm': 'webm',
+    'video/ogg': 'ogg',
+    'video/quicktime': 'mov',
+  },
+} as const;
+
+const MAX_SIZES = {
+  image: 10 * 1024 * 1024,   // 10MB
+  audio: 15 * 1024 * 1024,   // 15MB
+  video: 15 * 1024 * 1024,   // 15MB
+} as const;
+
 export class DiagnosisService {
   // ponytail: raw fetch — Vercel AI SDK has no transcription support; both Groq and OpenAI use identical OpenAI-compatible multipart endpoint
   static async transcribeAudio(base64Audio: string, mimeType: string): Promise<string> {
@@ -226,6 +259,44 @@ Output your response as a strict JSON array under a "questions" field, where eac
   ) {
     const env = getEnv();
 
+    // Validate and decode media inputs upfront
+    const validatedMedia = mediaInputs.map(input => {
+      const matches = input.base64.match(/^data:([A-Za-z0-9+/.-]+);base64,(.+)$/);
+      let buffer: Buffer;
+      let mime = '';
+
+      if (matches && matches.length === 3) {
+        mime = matches[1].toLowerCase();
+        buffer = Buffer.from(matches[2], 'base64');
+      } else {
+        buffer = Buffer.from(input.base64, 'base64');
+        if (input.mediaType === 'image') mime = 'image/jpeg';
+        if (input.mediaType === 'audio') mime = 'audio/wav';
+        if (input.mediaType === 'video') mime = 'video/mp4';
+      }
+
+      const allowedMimes = ALLOWED_MEDIA[input.mediaType];
+      if (!allowedMimes) {
+        throw new Error(`Unsupported mediaType: ${input.mediaType}`);
+      }
+
+      const extension = allowedMimes[mime as keyof typeof allowedMimes];
+      if (!extension) {
+        throw new Error(`Unsupported or invalid MIME type for ${input.mediaType}: ${mime}`);
+      }
+
+      const maxSize = MAX_SIZES[input.mediaType];
+      if (buffer.length > maxSize) {
+        throw new Error(`File size exceeds the limit of ${maxSize / (1024 * 1024)}MB for ${input.mediaType}`);
+      }
+
+      return {
+        mediaType: input.mediaType,
+        buffer,
+        extension,
+      };
+    });
+
     // 1. Fetch vehicle & customer ownership check
     const vehicleRes = await query(
       'SELECT make, model, year, mileage FROM vehicles WHERE id = $1 AND customer_id = $2',
@@ -265,29 +336,14 @@ Output your response as a strict JSON array under a "questions" field, where eac
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
 
-    for (const input of mediaInputs) {
-      // Decode base64
-      const matches = input.base64.match(/^data:([A-Za-z+/]+);base64,(.+)$/);
-      let buffer: Buffer;
-      let extension = 'bin';
-
-      if (matches && matches.length === 3) {
-        extension = matches[1].split('/')[1] || 'bin';
-        buffer = Buffer.from(matches[2], 'base64');
-      } else {
-        buffer = Buffer.from(input.base64, 'base64');
-        if (input.mediaType === 'image') extension = 'jpg';
-        if (input.mediaType === 'audio') extension = 'wav';
-        if (input.mediaType === 'video') extension = 'mp4';
-      }
-
+    for (const media of validatedMedia) {
       // ponytail: generate unique filename using stdlib
-      const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${extension}`;
+      const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${media.extension}`;
       const filePath = path.join(uploadsDir, filename);
-      await fs.promises.writeFile(filePath, new Uint8Array(buffer));
+      await fs.promises.writeFile(filePath, new Uint8Array(media.buffer));
 
       savedMediaPaths.push({
-        mediaType: input.mediaType,
+        mediaType: media.mediaType,
         url: `/uploads/${filename}`,
       });
     }
@@ -503,14 +559,14 @@ Please diagnose the issue.`;
   static async getDiagnosisById(diagnosisId: string, customerId: string, isAdmin = false) {
     // Ownership verification built directly into the query
     const queryStr = isAdmin
-      ? `SELECT dr.*, dr.customer_id as customerId, dr.vehicle_id as vehicleId, dr.symptom_text as symptomText,
-                dr.created_at as createdAt,
+      ? `SELECT dr.*, dr.customer_id as "customerId", dr.vehicle_id as "vehicleId", dr.symptom_text as "symptomText",
+                dr.created_at as "createdAt",
                 dr.status,
                 dr.id as id
          FROM diagnosis_requests dr
          WHERE dr.id = $1`
-      : `SELECT dr.*, dr.customer_id as customerId, dr.vehicle_id as vehicleId, dr.symptom_text as symptomText,
-                dr.created_at as createdAt,
+      : `SELECT dr.*, dr.customer_id as "customerId", dr.vehicle_id as "vehicleId", dr.symptom_text as "symptomText",
+                dr.created_at as "createdAt",
                 dr.status,
                 dr.id as id
          FROM diagnosis_requests dr
@@ -526,14 +582,14 @@ Please diagnose the issue.`;
 
     // Fetch media
     const mediaRes = await query(
-      'SELECT id, media_type as mediaType, url FROM diagnosis_media WHERE diagnosis_request_id = $1',
+      'SELECT id, media_type as "mediaType", url FROM diagnosis_media WHERE diagnosis_request_id = $1',
       [diagnosisId]
     );
 
     // Fetch results
     const resultRes = await query(
-      `SELECT id, issues, confidence_score as confidenceScore, risk_level as riskLevel,
-              diy_allowed as diyAllowed, diy_steps as diySteps, next_action as nextAction
+      `SELECT id, issues, confidence_score as "confidenceScore", risk_level as "riskLevel",
+              diy_allowed as "diyAllowed", diy_steps as "diySteps", next_action as "nextAction"
        FROM diagnosis_results
        WHERE diagnosis_request_id = $1`,
       [diagnosisId]
@@ -541,20 +597,20 @@ Please diagnose the issue.`;
 
     return {
       id: dbRequest.id,
-      customerId: dbRequest.customerid,
-      vehicleId: dbRequest.vehicleid,
-      symptomText: dbRequest.symptomtext,
+      customerId: dbRequest.customerId,
+      vehicleId: dbRequest.vehicleId,
+      symptomText: dbRequest.symptomText,
       status: dbRequest.status,
-      createdAt: dbRequest.createdat,
+      createdAt: dbRequest.createdAt,
       media: mediaRes.rows,
       result: resultRes.rows[0] ? {
         id: resultRes.rows[0].id,
         issues: resultRes.rows[0].issues,
-        confidenceScore: resultRes.rows[0].confidencescore,
-        riskLevel: resultRes.rows[0].risklevel,
-        diyAllowed: resultRes.rows[0].diyallowed,
-        diySteps: resultRes.rows[0].diysteps,
-        nextAction: resultRes.rows[0].nextaction,
+        confidenceScore: resultRes.rows[0].confidenceScore,
+        riskLevel: resultRes.rows[0].riskLevel,
+        diyAllowed: resultRes.rows[0].diyAllowed,
+        diySteps: resultRes.rows[0].diySteps,
+        nextAction: resultRes.rows[0].nextAction,
       } : null,
     };
   }
