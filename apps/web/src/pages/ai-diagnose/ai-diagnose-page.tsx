@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Check,
   CheckCircle2,
@@ -631,13 +631,18 @@ function AssistantPill() {
 
 function DiagnoseAnalyzingScreen({ onComplete }: { onComplete?: () => void }) {
   const [currentStep, setCurrentStep] = useState(0);
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     const step1 = setTimeout(() => setCurrentStep(1), 1000);
     const step2 = setTimeout(() => setCurrentStep(2), 2000);
     const step3 = setTimeout(() => setCurrentStep(3), 3000);
     const done = setTimeout(() => {
-      if (onComplete) onComplete();
+      if (onCompleteRef.current) onCompleteRef.current();
     }, 4000);
 
     return () => {
@@ -646,7 +651,7 @@ function DiagnoseAnalyzingScreen({ onComplete }: { onComplete?: () => void }) {
       clearTimeout(step3);
       clearTimeout(done);
     };
-  }, [onComplete]);
+  }, []);
 
   const analyzingSteps = [
     {
@@ -1594,10 +1599,8 @@ export function AIDiagnosePage() {
 
   const [answers, setAnswers] = useState<AnswerMap>({});
 
-  const [progress, setProgress] = useState(60);
   const [isTyping, setIsTyping] = useState(false);
   const [typingText, setTypingText] = useState('WrectifAI is thinking...');
-  const [activeStepId, setActiveStepId] = useState('2'); // '1' = Describe, '2' = Analyzing, '3' = Completed
   const [isDiagnosed, setIsDiagnosed] = useState(false);
   const [isFindingQuotes, setIsFindingQuotes] = useState(false);
   const [isAnalyzingResults, setIsAnalyzingResults] = useState(false);
@@ -1625,6 +1628,40 @@ export function AIDiagnosePage() {
   const pageRootRef = useRef<HTMLDivElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const hasMountedRef = useRef(false);
+
+  // Derived progress and step states to prevent static stuck/inconsistent states
+  const progress = useMemo(() => {
+    if (isDiagnosed) return 100;
+    if (isAnalyzingResults) return 90;
+    if (!selectedVehicleId) return 0;
+    if (!hasStartedDiagnose) return 20;
+
+    // We have started diagnosis and are answering questions
+    if (dynamicQuestions.length > 0 && currentQuestionIdx >= 0) {
+      return 40 + Math.round((currentQuestionIdx / dynamicQuestions.length) * 40);
+    }
+    return 40;
+  }, [isDiagnosed, isAnalyzingResults, selectedVehicleId, hasStartedDiagnose, dynamicQuestions, currentQuestionIdx]);
+
+  const stepTitle = useMemo(() => {
+    if (progress === 100) return 'Analysis Complete!';
+    if (progress === 90) return 'Synthesizing Details';
+    if (!selectedVehicleId) return 'Select Vehicle';
+    if (!hasStartedDiagnose) return 'Describe Symptom';
+    return 'Identifying Issues';
+  }, [progress, selectedVehicleId, hasStartedDiagnose]);
+
+  const stepDesc = useMemo(() => {
+    if (progress === 100) return 'Review the suggestions below.';
+    if (progress === 90) return 'Preparing your diagnosis results...';
+    if (!selectedVehicleId) return 'Please select a vehicle to start.';
+    if (!hasStartedDiagnose) return 'Please describe your symptom to begin.';
+    return 'Please answer the questions...';
+  }, [progress, selectedVehicleId, hasStartedDiagnose]);
+
+  const handleAnalysisComplete = useCallback(() => {
+    setTimerFinished(true);
+  }, []);
 
   const handleVehicleChange = useCallback((id: string, vehicle?: Vehicle) => {
     setSelectedVehicleId(id);
@@ -1765,8 +1802,6 @@ export function AIDiagnosePage() {
     if (apiResult && timerFinished) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsAnalyzingResults(false);
-      setProgress(100);
-      setActiveStepId('3'); // Completed
       setIsDiagnosed(true);
     }
   }, [apiResult, timerFinished]);
@@ -1787,10 +1822,8 @@ export function AIDiagnosePage() {
     setIssueText(flow.issueText);
     setActiveCategoryId(flow.activeCategoryId);
     setAnswers({});
-    setProgress(60);
     setIsTyping(false);
     setTypingText('WrectifAI is thinking...');
-    setActiveStepId('2');
     setIsDiagnosed(false);
     setIsFindingQuotes(false);
     setIsAnalyzingResults(false);
@@ -2100,9 +2133,7 @@ export function AIDiagnosePage() {
     );
   }
 
-  const handleAnalysisComplete = () => {
-    setTimerFinished(true);
-  };
+
 
   if (isAnalyzingResults) {
     return (
@@ -2117,8 +2148,6 @@ export function AIDiagnosePage() {
                 onClick={() => {
                   setApiError(null);
                   setIsAnalyzingResults(false);
-                  setProgress(60);
-                  setActiveStepId('2');
                 }}
                 className="mt-6 inline-flex h-10 items-center justify-center rounded-[12px] bg-[#1a56db] px-6 text-[12px] font-semibold text-white transition-colors hover:bg-[#163cb3]"
               >
@@ -2536,16 +2565,10 @@ export function AIDiagnosePage() {
                 <ProgressRing progress={progress} />
                 <div>
                   <h3 className={homeCardHeadingClass}>
-                    {progress === 100
-                      ? 'Analysis Complete!'
-                      : activeStepId === '2'
-                      ? 'Identifying Issues'
-                      : 'Analyzing your inputs'}
+                    {stepTitle}
                   </h3>
                   <p className="mt-1 text-[11px] leading-5 text-[#5f7099]">
-                    {progress === 100
-                      ? 'Review the suggestions below.'
-                      : 'Please answer the questions...'}
+                    {stepDesc}
                   </p>
                 </div>
               </div>
@@ -2590,8 +2613,6 @@ export function AIDiagnosePage() {
                       wheelShakes: '-',
                       started: '-',
                     });
-                    setProgress(60);
-                    setActiveStepId('2');
                     setIsDiagnosed(false);
                     setIsAnalyzingResults(false);
                   }}

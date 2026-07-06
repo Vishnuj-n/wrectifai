@@ -76,6 +76,7 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
     // so a concurrent fetch from a prior run (e.g. React StrictMode)
     // cannot corrupt the current one's state updates.
     const active = { current: true };
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchVehicles(active);
     return () => {
       active.current = false;
