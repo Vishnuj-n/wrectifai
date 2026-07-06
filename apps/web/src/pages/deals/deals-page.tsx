@@ -29,6 +29,7 @@ import { Button } from '@/components/common/button';
 import { Card } from '@/components/common/card';
 import { DashboardShell } from '@/components/home/dashboard-shell';
 import { TopNavbar } from '@/components/home/top-navbar';
+import { apiClient } from '@/lib/api-client';
 import { cn } from '@/utils/cn';
 
 type DealCategory =
@@ -800,6 +801,63 @@ function DealsPageContent() {
   const sortRef = useRef<HTMLDivElement>(null);
   const moreFiltersRef = useRef<HTMLDivElement>(null);
 
+  const [dealsList, setDealsList] = useState<DealItem[]>(deals);
+
+  useEffect(() => {
+    let active = true;
+    apiClient.get<any[]>('/promos')
+      .then((data) => {
+        if (active && data && data.length > 0) {
+          const mapped: DealItem[] = data.map((p: any) => ({
+            id: p.id,
+            badge: p.badge,
+            badgeColor: p.badgeColor,
+            icon: p.icon === 'Sun' ? Sun : p.icon === 'CloudRain' ? CloudRain : p.icon === 'Snowflake' ? Snowflake : p.icon === 'Sparkles' ? Sparkles : p.icon === 'Settings' ? Settings : p.icon === 'CarFront' ? CarFront : p.icon === 'Disc3' ? Disc3 : Tag,
+            title: p.title,
+            bullets: p.bullets || [],
+            displayPrice: p.displayPrice,
+            numericPrice: Number(p.numericPrice),
+            strikePrice: p.strikePrice,
+            strikePriceLineThrough: p.strikePriceLineThrough,
+            discountLabel: p.discountLabel,
+            discountPercent: Number(p.discountPercent),
+            validTill: new Date(p.validTill).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+            usedCount: p.usedCount,
+            usedCountValue: Number(p.usedCountValue),
+            image: p.image,
+            imageClassName: p.imageClassName || 'h-[148px] w-[178px] object-contain',
+            cardTint: p.cardTint || 'from-[#fffaf0] via-[#fffaf5] to-[#fff4e7]',
+            bgColor: p.bgColor || '#fff7ed',
+            imageGlow: p.imageGlow || '',
+            accent: p.accent || 'text-[#f04f23]',
+            categories: p.categories || [],
+            isCombo: p.isCombo,
+            relevance: Number(p.relevance)
+          }));
+          const combined = [
+            ...mapped,
+            ...mapped.map((d, i) => ({
+              ...d,
+              id: `${d.id}-page2-${i}`,
+              relevance: d.relevance - 20,
+            })),
+            ...mapped.map((d, i) => ({
+              ...d,
+              id: `${d.id}-page3-${i}`,
+              relevance: d.relevance - 40,
+            })),
+          ];
+          setDealsList(combined);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch promos:', err);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   useEffect(() => {
     const handleSearch = (event: Event) => {
       const customEvent = event as CustomEvent<string>;
@@ -826,7 +884,7 @@ function DealsPageContent() {
   }, []);
 
   const filteredDeals = useMemo(() => {
-    let nextDeals = deals.filter((deal) => {
+    let nextDeals = dealsList.filter((deal) => {
       const matchesFilter =
         filters.category === 'all'
           ? true

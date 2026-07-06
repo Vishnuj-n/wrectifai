@@ -24,8 +24,9 @@ import { GarageMoreMenu } from '@/components/quotes/garage-more-menu';
 import {
   aiEstimatedQuoteRange,
   quoteContextDefaultIssueIds,
-  quotesList,
 } from '@/components/quotes/quotes-shared';
+import { fetchQuotes } from '@/lib/quotes-api';
+import type { QuoteItem } from '@/components/quotes/quotes-shared';
 import { resultIssues } from '@/components/ai-diagnose/diagnose-flow-shared';
 import { cn } from '@/utils/cn';
 import type { QuoteStatus } from '@/components/quotes/quotes-shared';
@@ -71,6 +72,22 @@ export function QuotesPage() {
   const [selectedQuoteIds, setSelectedQuoteIds] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<QuoteTabKey>('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [quotes, setQuotes] = useState<QuoteItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadQuotes() {
+      try {
+        const data = await fetchQuotes();
+        setQuotes(data);
+      } catch (err) {
+        console.error('Failed to fetch quotes:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadQuotes();
+  }, []);
 
   useEffect(() => {
     const pageScroller = (() => {
@@ -88,33 +105,35 @@ export function QuotesPage() {
 
   const quoteTabs = useMemo(
     () => [
-      { key: 'all' as const, label: `All Quotes (${quotesList.length})` },
+      { key: 'all' as const, label: `All Quotes (${quotes.length})` },
       {
         key: 'new' as const,
         label: `New (${
-          quotesList.filter((quote) => quote.status === 'new').length
+          quotes.filter((quote) => quote.status === 'new').length
         })`,
       },
       {
         key: 'viewed' as const,
         label: `Viewed (${
-          quotesList.filter((quote) => quote.status === 'viewed').length
+          quotes.filter((quote) => quote.status === 'viewed').length
         })`,
       },
       {
         key: 'expired' as const,
         label: `Expired (${
-          quotesList.filter((quote) => quote.status === 'expired').length
+          quotes.filter((quote) => quote.status === 'expired').length
         })`,
       },
     ],
-    []
+    [quotes]
   );
 
-  const filteredQuotes =
-    activeTab === 'all'
-      ? quotesList
-      : quotesList.filter((quote) => quote.status === activeTab);
+  const filteredQuotes = useMemo(() => {
+    return activeTab === 'all'
+      ? quotes
+      : quotes.filter((quote) => quote.status === activeTab);
+  }, [quotes, activeTab]);
+
   const totalPages = Math.max(
     1,
     Math.ceil(filteredQuotes.length / quotesPerPage)
@@ -122,10 +141,12 @@ export function QuotesPage() {
   
   // Clamping pagination page derived from current page state
   const activePage = Math.min(currentPage, totalPages);
-  const paginatedQuotes = filteredQuotes.slice(
-    (activePage - 1) * quotesPerPage,
-    activePage * quotesPerPage
-  );
+  const paginatedQuotes = useMemo(() => {
+    return filteredQuotes.slice(
+      (activePage - 1) * quotesPerPage,
+      activePage * quotesPerPage
+    );
+  }, [filteredQuotes, activePage]);
 
   const selectedQuoteCount = selectedQuoteIds.length;
   const canCompare = selectedQuoteCount >= 2;
@@ -282,9 +303,19 @@ export function QuotesPage() {
             </Card>
 
             <div className="space-y-4">
-              {paginatedQuotes.map((quote) => (
-                <Card
-                  key={quote.id}
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-16 bg-white border border-[#e6ecfb] rounded-[18px]">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#1a56db] border-t-transparent"></div>
+                  <p className="mt-4 text-[13px] font-medium text-[#5f7099]">Loading quotes from trusted garages...</p>
+                </div>
+              ) : paginatedQuotes.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 bg-white border border-[#e6ecfb] rounded-[18px]">
+                  <p className="text-[13px] font-medium text-[#5f7099]">No quotes available at this time.</p>
+                </div>
+              ) : (
+                paginatedQuotes.map((quote) => (
+                  <Card
+                    key={quote.id}
                   className="relative rounded-[18px] border-[#e6ecfb] bg-white px-5 pt-7 pb-4 shadow-[0_12px_30px_rgba(37,73,153,0.04)]"
                 >
                   <div className="absolute right-5 top-0 flex items-start gap-2">
@@ -438,7 +469,7 @@ export function QuotesPage() {
                     </div>
                   </div>
                 </Card>
-              ))}
+              )))}
             </div>
 
             {totalPages > 1 ? (

@@ -1,8 +1,11 @@
+import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { Card } from '@/components/common/card';
 import { emergencyItems, overviewItems, promoItems } from '@/components/home/data';
 import { cn } from '@/utils/cn';
+import { apiClient } from '@/lib/api-client';
+
 
 function OverviewPanel() {
   return (
@@ -166,6 +169,52 @@ function OfferCard({
 }
 
 function OffersPanel() {
+  const [promos, setPromos] = useState<any[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    apiClient.get<any[]>('/promos')
+      .then((data) => {
+        if (active && data) {
+          // Filter to only display non-combo/home promos (or just take the first 3)
+          const homePromos = data
+            .filter((p: any) => !p.isCombo)
+            .map((p: any) => ({
+              eyebrow: p.badge,
+              title: p.title,
+              price: p.displayPrice,
+              strikePrice: p.strikePrice,
+              discount: p.discountLabel,
+              accent: p.accent || 'text-[#1a56db]',
+              fill: p.cardTint || 'from-[#eff5ff] to-[#fafcff]',
+              icon: p.icon,
+              image: p.image,
+            }));
+          if (homePromos.length > 0) {
+            setPromos(homePromos);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch promos:', err);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const displayPromos = promos.length > 0 ? promos : promoItems.map(p => ({
+    eyebrow: p.eyebrow,
+    title: p.title,
+    price: p.price,
+    strikePrice: p.strikePrice,
+    discount: p.discount,
+    accent: p.accent,
+    fill: p.fill,
+    icon: p.icon,
+    image: p.image,
+  }));
+
   return (
     <Card id="offers" className="p-4 border-[#f0f4ff] bg-white">
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -177,7 +226,7 @@ function OffersPanel() {
         </span>
       </div>
       <div className="space-y-4">
-        {promoItems.map(({ href: _href, ...promo }) => (
+        {displayPromos.map((promo: any) => (
           <OfferCard key={promo.eyebrow} {...promo} />
         ))}
       </div>

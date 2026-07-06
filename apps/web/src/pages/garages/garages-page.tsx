@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { apiClient } from '@/lib/api-client';
 import {
   BadgeCheck,
   ChevronDown,
@@ -585,8 +586,40 @@ function GaragesContent() {
     moreFilters: 'all',
   });
 
+  const [garagesList, setGaragesList] = useState<Garage[]>(garages);
+
+  useEffect(() => {
+    let active = true;
+    apiClient.get<any[]>('/garages/search')
+      .then((data) => {
+        if (active && data && data.length > 0) {
+          // Merge backend dynamic fields into fallback structure to keep styling/assets
+          const merged = data.map((g: any, index: number) => {
+            const fallback = garages[index] || garages[0];
+            return {
+              ...fallback,
+              id: g.id,
+              name: g.name,
+              location: g.location || fallback.location,
+              rating: Number(g.rating || fallback.rating),
+              reviews: Number(g.reviews || fallback.reviews),
+              chips: g.chips || fallback.chips,
+              verified: g.verified !== undefined ? g.verified : fallback.verified,
+            };
+          });
+          setGaragesList(merged);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch garages:', err);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const filteredGarages = useMemo(() => {
-    const filtered = garages.filter((garage) => {
+    const filtered = garagesList.filter((garage) => {
       if (filters.rating !== 'all' && garage.rating < Number(filters.rating)) {
         return false;
       }
