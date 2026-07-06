@@ -79,12 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return false;
   });
 
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  // Auto-load on mount
-  useEffect(() => {
-    setIsLoading(false);
-  }, []);
+  const [isLoading] = useState<boolean>(false);
 
   // Listen to silent refresh logout events
   useEffect(() => {

@@ -31,11 +31,14 @@ export function PageLoader({ imageSources = [] }: PageLoaderProps) {
 
     if (allCached) {
       // If all images are cached, fade out immediately and destroy the loader
-      setIsFadeOut(true);
-      const destroyTimer = setTimeout(() => {
-        setIsDestroyed(true);
-      }, 500);
-      return () => clearTimeout(destroyTimer);
+      const fadeTimer = requestAnimationFrame(() => {
+        setIsFadeOut(true);
+        const destroyTimer = setTimeout(() => {
+          setIsDestroyed(true);
+        }, 500);
+        return () => clearTimeout(destroyTimer);
+      });
+      return () => cancelAnimationFrame(fadeTimer);
     }
 
     let isMounted = true;

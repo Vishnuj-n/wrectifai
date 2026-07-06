@@ -160,7 +160,7 @@ interface Vehicle {
 export function RequestAentPage({ issues }: { issues?: string }) {
   const router = useRouter();
   const pageRootRef = useRef<HTMLDivElement>(null);
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(() => {
+  const [selectedVehicle] = useState<Vehicle | null>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('wrectifai_selected_vehicle');
       if (stored) {

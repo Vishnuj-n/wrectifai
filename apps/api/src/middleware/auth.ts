@@ -3,11 +3,9 @@ import { verifyAccessToken, type UserTokenPayload } from '../services/jwt.servic
 import { error } from '../utils/response';
 
 // Extend Request interface to include user payload
-declare global {
-  namespace Express {
-    interface Request {
-      user?: UserTokenPayload;
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: UserTokenPayload;
   }
 }
 

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, CarFront, Headset, Info, PenLine, FileText, ThumbsUp, Zap, Check, Upload, ImageIcon, Video, Mic, Trash2 } from 'lucide-react';
+import { ChevronLeft, Headset, Info, PenLine, FileText, ThumbsUp, Zap, Check, ImageIcon, Video, Mic, Trash2 } from 'lucide-react';
 import { DashboardShell } from '@/components/home/dashboard-shell';
 import { TopNavbar } from '@/components/home/top-navbar';
 import { Card } from '@/components/common/card';
@@ -32,7 +32,7 @@ interface Vehicle {
 export function AIDiagnoseResultsPage() {
   const router = useRouter();
   const pageRootRef = useRef<HTMLDivElement>(null);
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(() => {
+  const [selectedVehicle] = useState<Vehicle | null>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('wrectifai_selected_vehicle');
       if (stored) {
