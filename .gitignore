@@ -71,3 +71,4 @@ apps/api/.env
 apps/api/.env.test
 postman/
 apps/web/tsconfig.tsbuildinfo
+uploads/

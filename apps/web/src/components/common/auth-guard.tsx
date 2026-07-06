@@ -2,25 +2,29 @@
 
 import { useAuth } from '@/lib/auth-context';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
+
+function noop() {
+  return noop;
+}
+
+function useIsClient() {
+  return useSyncExternalStore(noop, () => true, () => false);
+}
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsClient();
 
   const isPublicPath = pathname === '/login' || pathname === '/signup';
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (mounted && !isAuthenticated && !isPublicPath) {
+    if (!isAuthenticated && !isPublicPath) {
       router.push('/login');
     }
-  }, [mounted, isAuthenticated, isPublicPath, router]);
+  }, [isAuthenticated, isPublicPath, router]);
 
   if (!mounted) {
     return null;

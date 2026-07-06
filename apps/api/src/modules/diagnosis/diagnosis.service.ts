@@ -1,21 +1,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { z } from 'zod';
-import { generateObject, generateText, type ImagePart } from 'ai';
+import { generateObject, generateText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { getDbPool, query } from '../../config/database';
 import { getEnv } from '../../config/env';
 import { KnowledgeService, type RetrievedIssue } from './knowledge.service';
-
-/** OpenAI/Groq wire-format image block. The Vercel AI SDK does not expose this
- *  type natively — it uses `ImagePart` ({ type: 'image'; image: DataContent }).
- *  We cast via `unknown` to bridge the gap until @ai-sdk/groq ships vision types.
- *  ponytail: upgrade path — replace with native ImagePart when @ai-sdk/groq adds vision support.
- */
-interface OpenAIImageUrlPart {
-  type: 'image_url';
-  image_url: { url: string };
-}
 
 // Schema matching frontend requirements and future sprints
 export const diagnosisResultSchema = z.object({
@@ -114,6 +104,12 @@ export class DiagnosisService {
       ? base64Image
       : `data:image/jpeg;base64,${base64Image}`;
 
+    let mimeType = 'image/jpeg';
+    const match = imageUrl.match(/^data:([^;]+);base64,/);
+    if (match) {
+      mimeType = match[1];
+    }
+
     const aiProvider = createOpenAI({ apiKey, ...(baseURL ? { baseURL } : {}) });
 
     try {
@@ -123,9 +119,11 @@ export class DiagnosisService {
           role: 'user',
           content: [
             { type: 'text', text: 'Analyze this vehicle image. Describe any visible damage, wear, warning lights, or mechanical issues you can see.' },
-            // ponytail: cast via `unknown` — SDK types don't include OpenAI-wire `image_url`.
-            // Upgrade path: switch to @ai-sdk/groq when it adds vision type support.
-            ({ type: 'image_url', image_url: { url: imageUrl } } as OpenAIImageUrlPart) as unknown as ImagePart,
+            {
+              type: 'file',
+              data: imageUrl,
+              mediaType: mimeType,
+            },
           ],
         }],
       });
