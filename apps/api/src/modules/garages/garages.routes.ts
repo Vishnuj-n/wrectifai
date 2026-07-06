@@ -1,28 +1,26 @@
 import { Router } from 'express';
-import { success } from '../../utils/response';
+import { success, error } from '../../utils/response';
 import { authenticate } from '../../middleware/auth';
+import { query } from '../../config/database';
 
 export const garagesRouter = Router();
 
-garagesRouter.get('/search', (req, res) => {
-  return success(res, [
-    {
-      id: 'g1',
-      name: 'Central Auto Garage',
-      address: '123 Main St, Tech City',
-      specializations: ['engine', 'brakes'],
-      ratingAvg: 4.8,
-      ratingCount: 12,
-    },
-    {
-      id: 'g2',
-      name: 'EV Specialist Hub',
-      address: '456 Electric Rd, Green Valley',
-      specializations: ['EV', 'battery'],
-      ratingAvg: 4.9,
-      ratingCount: 8,
-    },
-  ]);
+garagesRouter.get('/search', async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT id, name, address, specializations, rating_avg as "ratingAvg", rating_count as "ratingCount"
+       FROM garages
+       WHERE approval_status = 'approved'`
+    );
+    return success(res, result.rows);
+  } catch (err) {
+    return error(
+      res,
+      err instanceof Error ? err.message : 'Database query failed',
+      'DATABASE_ERROR',
+      500
+    );
+  }
 });
 
 garagesRouter.get('/:id', (req, res) => {

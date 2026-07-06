@@ -695,6 +695,7 @@ function DiagnoseAnalyzingScreen({ onComplete }: { onComplete?: () => void }) {
                 height={50}
                 priority
                 className="object-contain"
+                style={{ width: '50px', height: 'auto' }}
               />
             </div>
           </div>
@@ -952,6 +953,7 @@ function DiagnoseResultsScreen({
                   width={230}
                   height={132}
                   className="h-auto w-[190px] object-contain"
+                  style={{ width: '190px', height: 'auto' }}
                 />
                 <div className={cn('mt-3', homeCardHeadingClass)}>
                   {selectedVehicle ? `${selectedVehicle.year} ${selectedVehicle.make} ${selectedVehicle.model}` : 'Honda City (TS07 AB 1234)'}
@@ -1334,6 +1336,7 @@ function FindingQuotesScreen({
                   height={80}
                   priority
                   className="object-contain"
+                  style={{ width: '80px', height: 'auto' }}
                 />
               </div>
             </div>
@@ -1345,6 +1348,7 @@ function FindingQuotesScreen({
                 width={260}
                 height={110}
                 className="h-auto w-[250px] object-contain drop-shadow-[0_16px_24px_rgba(28,74,188,0.18)]"
+                style={{ width: '250px', height: 'auto' }}
               />
             </div>
             <div className="pointer-events-none absolute inset-0 hidden md:block">
@@ -1461,6 +1465,7 @@ function FindingQuotesScreen({
                     width={72}
                     height={72}
                     className="h-[66px] w-[66px] object-contain"
+                    style={{ width: '66px', height: '66px' }}
                   />
                 </div>
                 <div>
@@ -2184,6 +2189,7 @@ export function AIDiagnosePage() {
                       height={90}
                       className="h-[58px] w-[58px] object-contain shrink-0 block"
                       priority
+                      style={{ width: '58px', height: '58px' }}
                     />
                     <div>
                       <h2 className={homeCardHeadingClass}>

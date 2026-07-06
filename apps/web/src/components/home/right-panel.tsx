@@ -79,6 +79,7 @@ function EmergencyHelp() {
                   width={size}
                   height={size}
                   className="object-contain" 
+                  style={{ width: `${size}px`, height: `${size}px` }}
                 />
               </div>
               <span className="max-w-[72px] text-[10.5px] font-semibold leading-tight text-[#17307a]">

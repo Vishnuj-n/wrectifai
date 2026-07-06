@@ -102,6 +102,7 @@ export function FindingQuotesPage({ issues }: { issues?: string }) {
                     height={80}
                     priority
                     className="object-contain"
+                    style={{ width: '80px', height: 'auto' }}
                   />
                 </div>
               </div>
@@ -113,6 +114,7 @@ export function FindingQuotesPage({ issues }: { issues?: string }) {
                   width={260}
                   height={110}
                   className="h-auto w-[250px] object-contain drop-shadow-[0_16px_24px_rgba(28,74,188,0.18)]"
+                  style={{ width: '250px', height: 'auto' }}
                 />
               </div>
               <div className="pointer-events-none absolute inset-0 hidden md:block">
@@ -211,6 +213,7 @@ export function FindingQuotesPage({ issues }: { issues?: string }) {
                       width={72}
                       height={72}
                       className="h-[66px] w-[66px] object-contain"
+                      style={{ width: '66px', height: '66px' }}
                     />
                   </div>
                   <div>

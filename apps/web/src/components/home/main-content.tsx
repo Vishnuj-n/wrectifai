@@ -31,6 +31,7 @@ import {
   maintenanceItems,
   seasonalDeals,
 } from '@/components/home/data';
+import { apiClient } from '@/lib/api-client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/utils/cn';
@@ -152,6 +153,7 @@ function CategoriesModal({
                       width={44}
                       height={44}
                       className="object-contain"
+                      style={{ width: '44px', height: 'auto' }}
                     />
                   ) : (
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f7f9ff] text-[#173fcf]">
@@ -183,6 +185,7 @@ function CategoriesModal({
                       width={36}
                       height={36}
                       className="object-contain"
+                      style={{ width: '36px', height: 'auto' }}
                     />
                   ) : (
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f7f9ff] text-[#1a56db]">
@@ -430,6 +433,7 @@ function CategoryGrid({
                     width={64}
                     height={64}
                     className="object-contain"
+                    style={{ width: '64px', height: 'auto' }}
                   />
                 ) : (
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f4f8ff] text-[#173fcf]">
@@ -473,6 +477,7 @@ function MaintenanceStrip({
                     width={48}
                     height={48}
                     className="object-contain shrink-0"
+                    style={{ width: '48px', height: 'auto' }}
                   />
                 ) : (
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f5f8ff] text-[#1a56db]">
@@ -893,6 +898,7 @@ function CareTips({
 export function MainContent() {
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [garagesList, setGaragesList] = useState<any[]>(garages);
 
   useEffect(() => {
     const handleSearch = (event: Event) => {
@@ -902,6 +908,34 @@ export function MainContent() {
 
     window.addEventListener('dashboard-search', handleSearch);
     return () => window.removeEventListener('dashboard-search', handleSearch);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    apiClient.get<any[]>('/garages/search')
+      .then((data) => {
+        if (active && data && data.length > 0) {
+          // ponytail: merge backend dynamic fields into fallback structure to keep styling/assets
+          const merged = data.map((g: any, index: number) => {
+            const fallback = garages[index] || garages[0];
+            return {
+              ...fallback,
+              id: g.id,
+              name: g.name,
+              location: g.address || g.location || fallback.location,
+              rating: g.ratingAvg !== undefined && g.ratingAvg !== null ? String(g.ratingAvg) : fallback.rating,
+              reviews: g.ratingCount !== undefined && g.ratingCount !== null ? g.ratingCount : fallback.reviews,
+            };
+          });
+          setGaragesList(merged);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch garages:', err);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -929,13 +963,13 @@ export function MainContent() {
   const filteredGarages = useMemo(
     () =>
       normalizedSearch
-        ? garages.filter(
+        ? garagesList.filter(
             (item) =>
               item.name.toLowerCase().includes(normalizedSearch) ||
               item.location.toLowerCase().includes(normalizedSearch)
           )
-        : garages,
-    [normalizedSearch]
+        : garagesList,
+    [normalizedSearch, garagesList]
   );
 
   const filteredDeals = useMemo(
