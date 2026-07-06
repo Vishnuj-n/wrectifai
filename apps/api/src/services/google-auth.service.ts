@@ -28,6 +28,23 @@ export async function verifyGoogleIdToken(token: string): Promise<GoogleUserPayl
     return { email, name, sub };
   }
 
+  // If the token is not a JWT (doesn't have 3 parts separated by dots), treat it as an access token.
+  if (token.split('.').length !== 3) {
+    const response = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch user info from Google using access token');
+    }
+    const payload = await response.json() as { email?: string; name?: string; sub?: string };
+    if (!payload || !payload.email || !payload.name || !payload.sub) {
+      throw new Error('Invalid Google UserInfo payload');
+    }
+    return {
+      email: payload.email,
+      name: payload.name,
+      sub: payload.sub,
+    };
+  }
+
   const client = new OAuth2Client(googleClientId);
   const ticket = await client.verifyIdToken({
     idToken: token,
