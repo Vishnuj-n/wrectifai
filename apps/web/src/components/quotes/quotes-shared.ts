@@ -14,6 +14,7 @@ export type QuoteItem = {
   savings: string;
   time: string;
   tag?: string;
+  details?: any;
 };
 
 const DOLLAR = '$';

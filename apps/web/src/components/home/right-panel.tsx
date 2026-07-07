@@ -1,13 +1,114 @@
 import { useEffect, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, CalendarDays, Package, FileText, Car } from 'lucide-react';
 import Image from 'next/image';
 import { Card } from '@/components/common/card';
-import { emergencyItems, overviewItems, promoItems } from '@/components/home/data';
+import { emergencyItems, promoItems } from '@/components/home/data';
 import { cn } from '@/utils/cn';
 import { apiClient } from '@/lib/api-client';
-
+import { fetchBookings } from '@/lib/bookings-api';
+import { fetchQuotes } from '@/lib/quotes-api';
 
 function OverviewPanel() {
+  const [bookingsCount, setBookingsCount] = useState<number>(0);
+  const [nextBooking, setNextBooking] = useState<string>('No upcoming bookings');
+  const [quotesCount, setQuotesCount] = useState<number>(0);
+  const [vehiclesCount, setVehiclesCount] = useState<number>(0);
+  const [vehicleDesc, setVehicleDesc] = useState<string>('No vehicles added');
+
+  useEffect(() => {
+    let active = true;
+
+    // Fetch Bookings
+    fetchBookings()
+      .then((data) => {
+        if (!active || !data) return;
+        const activeBookings = data.filter((b) => b.status === 'confirmed' || b.status === 'pendingPayment' || b.status === 'inService');
+        setBookingsCount(activeBookings.length);
+        
+        // Find next booking
+        const future = data
+          .filter((b) => (b.status === 'confirmed' || b.status === 'pendingPayment') && new Date(b.scheduledAt) >= new Date())
+          .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
+        
+        if (future.length > 0) {
+          const nextDate = new Date(future[0].scheduledAt);
+          const formatted = nextDate.toLocaleDateString(undefined, {
+            day: 'numeric',
+            month: 'short',
+          }) + ', ' + nextDate.toLocaleTimeString(undefined, {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+          setNextBooking(`Next: ${formatted}`);
+        } else {
+          setNextBooking('No upcoming bookings');
+        }
+      })
+      .catch((err) => console.error('Overview panel bookings fetch failed:', err));
+
+    // Fetch Quotes
+    fetchQuotes()
+      .then((data) => {
+        if (!active || !data) return;
+        setQuotesCount(data.length);
+      })
+      .catch((err) => console.error('Overview panel quotes fetch failed:', err));
+
+    // Fetch Vehicles
+    apiClient.get<any[]>('/vehicles')
+      .then((data) => {
+        if (!active || !data) return;
+        setVehiclesCount(data.length);
+        if (data.length > 0) {
+          setVehicleDesc(`${data[0].make} ${data[0].model} (Active)`);
+        }
+      })
+      .catch((err) => console.error('Overview panel vehicles fetch failed:', err));
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const items = [
+    {
+      title: 'Upcoming Bookings',
+      value: String(bookingsCount),
+      description: nextBooking,
+      cta: 'View All',
+      href: '/bookings',
+      icon: CalendarDays,
+      colors: 'from-[#7c3aed] to-[#9f67ff]',
+    },
+    {
+      title: 'Part Orders',
+      value: '3',
+      description: '1 Order In Transit',
+      cta: 'View All',
+      href: '/offers',
+      icon: Package,
+      colors: 'from-[#f97316] to-[#f59e0b]',
+    },
+    {
+      title: 'Pending Quotes',
+      value: String(quotesCount),
+      description: quotesCount > 0 ? 'Action Required' : 'No active quotes',
+      cta: 'View All',
+      href: '/quotes',
+      icon: FileText,
+      colors: 'from-[#3b82f6] to-[#2563eb]',
+    },
+    {
+      title: 'Vehicles',
+      value: String(vehiclesCount),
+      description: vehicleDesc,
+      cta: 'View All',
+      href: '/vehicles',
+      icon: Car,
+      colors: 'from-[#10b981] to-[#059669]',
+    },
+  ];
+
   return (
     <Card id="overview" className="p-4">
       <div className="mb-3 flex items-center justify-between">
@@ -21,7 +122,7 @@ function OverviewPanel() {
       </div>
 
       <div className="space-y-2">
-        {overviewItems.map(({ title, value, description, cta, icon: Icon, colors }) => (
+        {items.map(({ title, value, description, cta, href, icon: Icon, colors }) => (
           <div key={title} className="flex items-center gap-3 rounded-[14px] py-0">
             <div
               className={cn(
@@ -38,7 +139,7 @@ function OverviewPanel() {
               </div>
               <p className="mt-0.5 text-[11px] font-normal text-[#17307a]">{description}</p>
             </div>
-            <span className="self-center text-[11.5px] font-semibold text-[#1a56db] cursor-pointer hover:underline">{cta}</span>
+            <a href={href} className="self-center text-[11.5px] font-semibold text-[#1a56db] cursor-pointer hover:underline">{cta}</a>
           </div>
         ))}
       </div>

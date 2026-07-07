@@ -5,6 +5,7 @@ import { GaragesPage } from '@/pages/garages/garages-page';
 import { AIDiagnosePage } from '@/pages/ai-diagnose/ai-diagnose-page';
 import { QuotesPage } from '@/pages/quotes/quotes-page';
 import { VehiclesPage } from '@/pages/vehicles/vehicles-page';
+import { BookingsPage } from '@/pages/bookings/bookings-page';
 import { navItems } from '@/components/home/data';
 
 const featurePageCopy: Record<string, string> = {
@@ -80,6 +81,14 @@ export default async function FeaturePage({
     return (
       <Suspense fallback={null}>
         <VehiclesPage />
+      </Suspense>
+    );
+  }
+
+  if (slug === 'bookings') {
+    return (
+      <Suspense fallback={null}>
+        <BookingsPage />
       </Suspense>
     );
   }

@@ -46,6 +46,7 @@ type ViewMode = 'list' | 'map';
 type SortOption = 'best' | 'rating' | 'distance' | 'response';
 
 export type Garage = {
+  id?: string;
   badge: string;
   badgeTone: string;
   name: string;

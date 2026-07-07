@@ -32,6 +32,7 @@ import type { Garage } from '@/pages/garages/garages-page';
 import { BookingConfirmed } from '@/components/garages/booking-confirmed';
 import type { QuoteItem } from '@/components/quotes/quotes-shared';
 import type { DiagnoseIssue } from '@/components/ai-diagnose/diagnose-flow-shared';
+import { createBooking } from '@/lib/bookings-api';
 
 interface GarageDetailPageProps {
   garage: Garage;
@@ -92,6 +93,7 @@ export function GarageDetailPage({
   const [selectedDate, setSelectedDate] = useState('23');
   const [selectedSlot, setSelectedSlot] = useState('04:00 PM');
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const [confirmedBookingId, setConfirmedBookingId] = useState<string | null>(null);
   const [reviewPage, setReviewPage] = useState(0);
 
   const detailImageSources = [garage.image].filter((src): src is string =>
@@ -134,8 +136,53 @@ export function GarageDetailPage({
     },
   ];
 
-  const handleBookAppointment = () => {
-    setBookingConfirmed(true);
+  const handleBookAppointment = async () => {
+    try {
+      const timeMatch = selectedSlot.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      let hour = 10;
+      let minute = 0;
+      if (timeMatch) {
+        hour = parseInt(timeMatch[1], 10);
+        minute = parseInt(timeMatch[2], 10);
+        const isPm = timeMatch[3].toUpperCase() === 'PM';
+        if (isPm && hour < 12) hour += 12;
+        if (!isPm && hour === 12) hour = 0;
+      }
+      const scheduledAt = new Date(2026, 6, parseInt(selectedDate, 10) || 23, hour, minute).toISOString();
+      const amountStr = quoteContext?.quote?.price ? String(quoteContext.quote.price).replace(/[^\d.]/g, '') : '150';
+      const totalAmount = parseFloat(amountStr) || 150.0;
+
+      let vehicleId = '00000000-0000-0000-0000-000000000002';
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('wrectifai_selected_vehicle');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed && parsed.id) {
+              vehicleId = parsed.id;
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+
+      const response = await createBooking({
+        garageId: garage.id,
+        vehicleId,
+        scheduledAt,
+        totalAmount,
+        bookingType: isQuoteContext ? 'quoteBased' : 'instant',
+        quoteId: quoteContext?.quote?.id || null,
+      });
+
+      if (response && response.id) {
+        setConfirmedBookingId(response.id);
+      }
+      setBookingConfirmed(true);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Booking creation failed');
+    }
   };
 
   if (bookingConfirmed) {
@@ -145,8 +192,10 @@ export function GarageDetailPage({
         selectedDate={selectedDate}
         selectedSlot={selectedSlot}
         quoteContext={isQuoteContext ? quoteContext : undefined}
+        bookingId={confirmedBookingId || undefined}
         onViewBookings={() => {
           setBookingConfirmed(false);
+          setConfirmedBookingId(null);
           onBack();
         }}
       />

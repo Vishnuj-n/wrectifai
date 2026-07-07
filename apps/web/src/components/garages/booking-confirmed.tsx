@@ -36,6 +36,7 @@ interface BookingConfirmedProps {
     issueIds: string[];
     aiEstimateRange: string;
   };
+  bookingId?: string;
   onViewBookings: () => void;
 }
 
@@ -53,6 +54,7 @@ export function BookingConfirmed({
   selectedDate,
   selectedSlot,
   quoteContext,
+  bookingId: propBookingId,
   onViewBookings,
 }: BookingConfirmedProps) {
   const [copied, setCopied] = useState(false);
@@ -69,7 +71,7 @@ export function BookingConfirmed({
     }
     return null;
   });
-  const bookingId = `WRCT-2505${selectedDate}-0420`;
+  const bookingId = propBookingId || `WRCT-2505${selectedDate}-0420`;
 
 
   const handleCopy = () => {
