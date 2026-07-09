@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/common/card';
 import { Button } from '@/components/common/button';
 import { cn } from '@/utils/cn';
@@ -57,6 +58,7 @@ export function BookingConfirmed({
   bookingId: propBookingId,
   onViewBookings,
 }: BookingConfirmedProps) {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(() => {
     if (typeof window !== 'undefined') {
@@ -435,8 +437,8 @@ export function BookingConfirmed({
           {/* View My Bookings trigger */}
           <div className="flex justify-center pt-2">
             <Button
-              disabled
-              className="h-11 rounded-[12px] px-8 text-[12.5px] font-bold bg-[#1a56db] text-white shadow-md disabled:cursor-not-allowed disabled:opacity-100"
+              onClick={() => router.push('/bookings')}
+              className="h-11 rounded-[12px] px-8 text-[12.5px] font-bold bg-[#1a56db] text-white shadow-md hover:bg-[#0b43c4]"
             >
               View My Bookings
             </Button>

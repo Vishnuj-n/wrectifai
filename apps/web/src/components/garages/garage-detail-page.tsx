@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ChevronLeft,
   ChevronRight,
@@ -88,6 +89,7 @@ export function GarageDetailPage({
   mode = 'default',
   quoteContext,
 }: GarageDetailPageProps) {
+  const router = useRouter();
   const [isFavorite, setIsFavorite] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedDate, setSelectedDate] = useState('23');
@@ -194,9 +196,7 @@ export function GarageDetailPage({
         quoteContext={isQuoteContext ? quoteContext : undefined}
         bookingId={confirmedBookingId || undefined}
         onViewBookings={() => {
-          setBookingConfirmed(false);
-          setConfirmedBookingId(null);
-          onBack();
+          router.push('/bookings');
         }}
       />
     );

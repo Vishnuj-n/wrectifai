@@ -28,7 +28,6 @@ import Image from 'next/image';
 import { PageLoader } from '@/components/common/page-loader';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  quotesList,
   aiEstimatedQuoteRange,
 } from '@/components/quotes/quotes-shared';
 import { resultIssues } from '@/components/ai-diagnose/diagnose-flow-shared';
@@ -414,6 +413,7 @@ function GaragesContent() {
   });
 
   const [garagesList, setGaragesList] = useState<Garage[]>([]);
+  const [quotes, setQuotes] = useState<any[]>([]);
 
   useEffect(() => {
     let active = true;
@@ -426,6 +426,15 @@ function GaragesContent() {
       })
       .catch((err) => {
         console.error('Failed to fetch garages:', err);
+      });
+    apiClient.get<any[]>('/quotes')
+      .then((data) => {
+        if (active && data) {
+          setQuotes(data);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch quotes:', err);
       });
     return () => {
       active = false;
@@ -585,7 +594,7 @@ function GaragesContent() {
       return null;
     }
 
-    const quote = quotesList.find((item) => item.id === quoteId);
+    const quote = quotes.find((item) => item.id === quoteId);
     const garageFromQuote = quote
       ? garagesList.find((item) => item.name === quote.garage)
       : null;
@@ -606,7 +615,7 @@ function GaragesContent() {
       issueIds,
       aiEstimateRange: aiEstimatedQuoteRange,
     };
-  }, [searchParams, garagesList]);
+  }, [searchParams, garagesList, quotes]);
 
   const garageFromQuery = useMemo(() => {
     const garageName = searchParams?.get('garage');
