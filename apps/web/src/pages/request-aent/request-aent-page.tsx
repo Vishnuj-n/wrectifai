@@ -8,8 +8,42 @@ import { DashboardShell } from '@/components/home/dashboard-shell';
 import { TopNavbar } from '@/components/home/top-navbar';
 import { Card } from '@/components/common/card';
 import { resultIssues } from '@/components/ai-diagnose/diagnose-flow-shared';
-import { garages } from '@/components/home/data';
 import { cn } from '@/utils/cn';
+
+const garages = [
+  {
+    name: 'Express Auto Care',
+    image: '/assets/repair-services.png',
+    rating: 4.8,
+    reviews: 120,
+    distance: '1.2 miles',
+    badge: 'Top Rated',
+  },
+  {
+    name: 'Precision Motors',
+    image: '/assets/repair-services.png',
+    rating: 4.6,
+    reviews: 85,
+    distance: '2.4 miles',
+    badge: 'Budget Friendly',
+  },
+  {
+    name: 'Green EV Specialist',
+    image: '/assets/repair-services.png',
+    rating: 4.9,
+    reviews: 45,
+    distance: '3.1 miles',
+    badge: 'EV Specialist',
+  },
+  {
+    name: 'Elite Performance Garage',
+    image: '/assets/repair-services.png',
+    rating: 4.7,
+    reviews: 95,
+    distance: '4.0 miles',
+    badge: 'Verified',
+  },
+];
 
 const BULLET = '\u2022';
 
@@ -179,9 +213,24 @@ export function RequestAentPage({ issues }: { issues?: string }) {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
-  const selectedIssues = resultIssues.filter((issue) =>
-    selectedIssueIds.includes(issue.id)
-  );
+
+  const getSelectedIssues = () => {
+    let allIssues = [...resultIssues];
+    if (typeof window !== 'undefined') {
+      const storedCustom = localStorage.getItem('wrectifai_custom_issues');
+      if (storedCustom) {
+        try {
+          const customIssues = JSON.parse(storedCustom);
+          allIssues = [...allIssues, ...customIssues];
+        } catch (e) {
+          console.error('Failed to parse custom issues:', e);
+        }
+      }
+    }
+    return allIssues.filter((issue) => selectedIssueIds.includes(issue.id));
+  };
+
+  const selectedIssues = getSelectedIssues();
   const featuredGarages = garages.slice(0, 4);
 
   useEffect(() => {

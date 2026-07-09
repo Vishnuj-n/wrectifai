@@ -201,7 +201,7 @@ The user has reported a symptom: "${symptomText}".
 Our database indicates this could be one of the following known issues:
 ${matchedIssues.map(issue => `- Issue: ${issue.issue_name}\n  Description: ${issue.description}`).join('\n')}
 
-Your task is to generate exactly 3 to 5 highly specific multiple choice questions to ask the user.
+Your task is to generate exactly 5 highly specific multiple choice questions to ask the user.
 These questions should be designed to narrow down WHICH of the database issues is the correct one.
 Do not ask generic questions (e.g. "what model is your car?"). Focus strictly on symptoms, sound patterns, warning lights, or operating conditions related to the potential issues listed.
 For each question, provide 2 to 4 concise multiple choice options (e.g., ["Crank is slow", "Starter clicks only", "No crank at all"]).
@@ -624,7 +624,12 @@ Please diagnose the issue.`;
     }
 
     const finalResult = { ...result };
-    if (finalResult.riskLevel === 'high' || finalResult.riskLevel === 'critical' || hasSafetyCriticalIssue) {
+    if (
+      finalResult.riskLevel === 'medium' ||
+      finalResult.riskLevel === 'high' ||
+      finalResult.riskLevel === 'critical' ||
+      hasSafetyCriticalIssue
+    ) {
       finalResult.diyAllowed = false;
       finalResult.nextAction = 'bookGarage';
     }

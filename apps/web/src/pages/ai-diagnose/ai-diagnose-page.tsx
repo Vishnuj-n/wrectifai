@@ -848,6 +848,7 @@ function ConfidenceGauge({ value }: { value: number }) {
 }
 
 type DiagnoseResultsScreenProps = {
+  issueText: string;
   answerSummaryItems: AnswerSummaryItem[];
   activeCategory: IssueCategoryConfig | undefined;
   resultIssues: DiagnosticIssueResult[];
@@ -863,6 +864,7 @@ type DiagnoseResultsScreenProps = {
 };
 
 function DiagnoseResultsScreen({
+  issueText,
   answerSummaryItems,
   activeCategory,
   resultIssues,
@@ -904,6 +906,12 @@ function DiagnoseResultsScreen({
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0 flex-1">
             <div className={homeSectionHeadingClass}>Your Issue</div>
+            {issueText && issueText !== DEFAULT_ISSUE_TEXT ? (
+              <div className="mt-2.5 text-[13px] font-medium text-[#17307a] bg-[#f5f8ff] rounded-[12px] px-4 py-2 border border-[#e2eafd] inline-block max-w-full">
+                <span className="text-[#5f7099] text-[10px] block uppercase tracking-wider font-bold mb-0.5">Symptom Description</span>
+                "{issueText}"
+              </div>
+            ) : null}
             {activeCategory ? (
               <div className="mt-3 inline-flex rounded-full bg-[#dfe9ff] px-3.5 py-1.5 text-[12px] font-semibold text-[#1a56db] shadow-[0_6px_16px_rgba(26,86,219,0.08)]">
                 Detected issue family: {activeCategory.label}
@@ -933,7 +941,7 @@ function DiagnoseResultsScreen({
         </div>
       </Card>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_242px]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-5">
           <Card className="rounded-[22px] border-[#e6ecfb] bg-white px-5 py-5 shadow-[0_12px_30px_rgba(37,73,153,0.04)]">
             <div className="flex flex-wrap items-center gap-3">
@@ -1790,6 +1798,9 @@ export function AIDiagnosePage() {
             );
             setCustomResultIssues(mapped);
             setSelectedIssues(mapped.map((m) => m.id));
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('wrectifai_custom_issues', JSON.stringify(mapped));
+            }
           }
         } catch (err) {
           console.error('API Diagnosis failed:', err);
@@ -1864,6 +1875,9 @@ export function AIDiagnosePage() {
     setApiError(null);
     setTimerFinished(false);
     setCustomResultIssues(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('wrectifai_custom_issues');
+    }
     setSelectedIssues([]);
     applyDiagnoseFlow(initialIssueParam);
   };
@@ -1951,14 +1965,16 @@ export function AIDiagnosePage() {
   const resultIssues = customResultIssues || (activeCategoryId
     ? getResolvedIssues(activeCategoryId)
     : legacyResultIssues);
-  const answerSummaryItems = buildAnswerSummaryItems(answers);
+  const answerSummaryItems = buildAnswerSummaryItems(
+    Object.keys(dynamicAnswers).length > 0 ? dynamicAnswers : answers
+  );
 
-  const nextSteps = apiResult && apiResult.result && apiResult.result.diySteps && apiResult.result.diySteps.length > 0
+  const nextSteps = apiResult && apiResult.result && apiResult.result.diyAllowed && apiResult.result.diySteps && apiResult.result.diySteps.length > 0
     ? apiResult.result.diySteps.map((stepText: string, index: number) => ({
         step: `0${index + 1}`,
         title: `Step ${index + 1}`,
         body: stepText,
-        meta: apiResult.result.diyAllowed ? 'DIY Guidance' : 'Recommended Action',
+        meta: 'DIY Guidance',
       }))
     : undefined;
 
@@ -2118,6 +2134,7 @@ export function AIDiagnosePage() {
       <DashboardShell header={<TopNavbar />}>
         <div ref={pageRootRef} className="pt-1">
           <DiagnoseResultsScreen
+            issueText={issueText}
             answerSummaryItems={answerSummaryItems}
             activeCategory={activeCategory}
             resultIssues={resultIssues}

@@ -43,7 +43,24 @@ export function FindingQuotesPage({ issues }: { issues?: string }) {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
-  const chosenIssues = resultIssues.filter((issue) => selectedIssueIds.includes(issue.id));
+
+  const getChosenIssues = () => {
+    let allIssues = [...resultIssues];
+    if (typeof window !== 'undefined') {
+      const storedCustom = localStorage.getItem('wrectifai_custom_issues');
+      if (storedCustom) {
+        try {
+          const customIssues = JSON.parse(storedCustom);
+          allIssues = [...allIssues, ...customIssues];
+        } catch (e) {
+          console.error('Failed to parse custom issues:', e);
+        }
+      }
+    }
+    return allIssues.filter((issue) => selectedIssueIds.includes(issue.id));
+  };
+
+  const chosenIssues = getChosenIssues();
 
   useEffect(() => {
     if (currentStep < 4) {
