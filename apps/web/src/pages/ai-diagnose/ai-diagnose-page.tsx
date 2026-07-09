@@ -933,7 +933,7 @@ function DiagnoseResultsScreen({
             {issueText && issueText !== DEFAULT_ISSUE_TEXT ? (
               <div className="mt-2.5 text-[13px] font-medium text-[#17307a] bg-[#f5f8ff] rounded-[12px] px-4 py-2 border border-[#e2eafd] inline-block max-w-full">
                 <span className="text-[#5f7099] text-[10px] block uppercase tracking-wider font-bold mb-0.5">Symptom Description</span>
-                "{issueText}"
+                &quot;{issueText}&quot;
               </div>
             ) : null}
             {activeCategory ? (

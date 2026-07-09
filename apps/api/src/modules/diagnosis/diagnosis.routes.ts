@@ -54,13 +54,11 @@ diagnosisRouter.get('/:id', authenticate, requireRole(['user', 'garage', 'vendor
   try {
     const { id } = req.params;
     const customerId = req.user?.userId;
-    const isAdmin = req.user?.roles.includes('admin') || false;
-
     if (!customerId) {
       return error(res, 'Authentication failed: no customer ID found', 'UNAUTHORIZED', 401);
     }
 
-    const diagnosis = await DiagnosisService.getDiagnosisById(id, customerId, isAdmin);
+    const diagnosis = await DiagnosisService.getDiagnosisById(id, customerId);
     
     if (!diagnosis) {
       return error(res, 'Diagnosis request not found', 'NOT_FOUND', 404);

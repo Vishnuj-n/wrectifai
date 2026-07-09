@@ -19,7 +19,7 @@ quotesRouter.get('/', authenticate, async (req, res) => {
        ORDER BY q.created_at DESC`
     );
 
-    const mapped = result.rows.map((row: any) => {
+    const mapped = result.rows.map((row: Record<string, any>) => {
       const details = row.details || {};
       const amountNum = Number(row.amount);
       const savingsNum = Number(details.savings || 0);
@@ -222,20 +222,3 @@ quotesRouter.get('/requests/:requestId', authenticate, async (req, res) => {
   }
 });
 
-quotesRouter.post('/requests/:requestId/quotes', authenticate, (req, res) => {
-  const { amount, etaDays } = req.body;
-  return success(
-    res,
-    {
-      id: 'q_1',
-      quoteRequestId: req.params.requestId,
-      garageId: 'g1',
-      amount: amount || 250.0,
-      currency: 'USD',
-      etaDays: etaDays || 2,
-      status: 'active',
-      createdAt: new Date().toISOString(),
-    },
-    201
-  );
-});

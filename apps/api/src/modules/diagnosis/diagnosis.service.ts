@@ -554,7 +554,7 @@ Please diagnose the issue.`;
   /**
    * Get single diagnosis request and result details
    */
-  static async getDiagnosisById(diagnosisId: string, customerId: string, isAdmin = false) {
+  static async getDiagnosisById(diagnosisId: string, customerId: string) {
     // Ownership verification built directly into the query
     const queryStr = `SELECT dr.*, dr.customer_id as "customerId", dr.vehicle_id as "vehicleId", dr.symptom_text as "symptomText",
               dr.created_at as "createdAt",
