@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ChevronLeft,
@@ -48,14 +48,6 @@ interface GarageDetailPageProps {
   };
 }
 
-const appointmentDates = [
-  { day: 'Fri', date: '23', month: 'May' },
-  { day: 'Sat', date: '24', month: 'May' },
-  { day: 'Sun', date: '25', month: 'May' },
-  { day: 'Mon', date: '26', month: 'May' },
-  { day: 'Tue', date: '27', month: 'May' },
-];
-
 const timeSlots = [
   '09:00 AM',
   '10:00 AM',
@@ -92,7 +84,27 @@ export function GarageDetailPage({
   const router = useRouter();
   const [isFavorite, setIsFavorite] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedDate, setSelectedDate] = useState('23');
+
+  const appointmentDates = useMemo(() => {
+    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const list = [];
+    const today = new Date();
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      list.push({
+        day: daysOfWeek[d.getDay()],
+        date: String(d.getDate()),
+        month: months[d.getMonth()],
+        year: d.getFullYear(),
+        monthIndex: d.getMonth(),
+      });
+    }
+    return list;
+  }, []);
+
+  const [selectedDate, setSelectedDate] = useState(appointmentDates[0]?.date || '9');
   const [selectedSlot, setSelectedSlot] = useState('04:00 PM');
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [confirmedBookingId, setConfirmedBookingId] = useState<string | null>(null);
@@ -150,7 +162,14 @@ export function GarageDetailPage({
         if (isPm && hour < 12) hour += 12;
         if (!isPm && hour === 12) hour = 0;
       }
-      const scheduledAt = new Date(2026, 6, parseInt(selectedDate, 10) || 23, hour, minute).toISOString();
+      const selectedDayObj = appointmentDates.find((d) => d.date === selectedDate) || appointmentDates[0];
+      const scheduledAt = new Date(
+        selectedDayObj.year,
+        selectedDayObj.monthIndex,
+        parseInt(selectedDayObj.date, 10),
+        hour,
+        minute
+      ).toISOString();
       const amountStr = quoteContext?.quote?.price ? String(quoteContext.quote.price).replace(/[^\d.]/g, '') : '150';
       const totalAmount = parseFloat(amountStr) || 150.0;
 
@@ -832,7 +851,7 @@ export function GarageDetailPage({
                 Appointment Confirmed!
               </div>
               <div className="text-[10px] font-semibold text-[#536891]">
-                For May {selectedDate} at {selectedSlot} with {garage.name}
+                For {appointmentDates.find((d) => d.date === selectedDate)?.month} {selectedDate} at {selectedSlot} with {garage.name}
               </div>
             </div>
           </div>

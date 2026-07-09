@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Calendar,
   Wrench,
@@ -73,7 +73,39 @@ export function BookingConfirmed({
     }
     return null;
   });
-  const bookingId = propBookingId || `WRCT-2505${selectedDate}-0420`;
+
+  const appointmentDates = useMemo(() => {
+    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const list = [];
+    const today = new Date();
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      list.push({
+        day: daysOfWeek[d.getDay()],
+        date: String(d.getDate()),
+        month: months[d.getMonth()],
+        year: d.getFullYear(),
+      });
+    }
+    return list;
+  }, []);
+
+  const selectedDateObj = useMemo(() => {
+    return appointmentDates.find((d) => d.date === selectedDate) || appointmentDates[0] || {
+      day: 'Fri',
+      date: '23',
+      month: 'May',
+      year: 2025,
+    };
+  }, [appointmentDates, selectedDate]);
+  const formattedYear2Digit = String(selectedDateObj.year).slice(-2);
+  const monthsList = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthIdx = monthsList.indexOf(selectedDateObj.month);
+  const formattedMonth = String(monthIdx >= 0 ? monthIdx + 1 : 7).padStart(2, '0');
+  const formattedDate = String(selectedDateObj.date).padStart(2, '0');
+  const bookingId = propBookingId || `WRCT-${formattedYear2Digit}${formattedMonth}${formattedDate}-0420`;
 
 
   const handleCopy = () => {
@@ -225,7 +257,7 @@ export function BookingConfirmed({
                     Date &amp; Time
                   </div>
                   <div className="text-[13px] font-extrabold text-[#0f172a]">
-                    Fri, {selectedDate} May 2025 • {selectedSlot}
+                    {selectedDateObj.day}, {selectedDateObj.date} {selectedDateObj.month} {selectedDateObj.year} • {selectedSlot}
                   </div>
                 </div>
               </div>
@@ -488,7 +520,7 @@ export function BookingConfirmed({
                 { label: 'Service Type', val: 'Standard Service' },
                 {
                   label: 'Date & Time',
-                  val: `Fri, ${selectedDate} May 2025 at ${selectedSlot}`,
+                  val: `${selectedDateObj.day}, ${selectedDateObj.date} ${selectedDateObj.month} ${selectedDateObj.year} at ${selectedSlot}`,
                 },
                 { label: 'Estimated Duration', val: '60-90 mins' },
                 { label: 'Response Time', val: `${garage.responseMins} mins` },
@@ -542,8 +574,8 @@ export function BookingConfirmed({
                 Need to make changes?
               </h3>
               <p className="text-[11px] font-semibold text-[#8a99ad] leading-normal">
-                You can reschedule or cancel your booking before {selectedDate}{' '}
-                May 2025, 02:00 PM.
+                You can reschedule or cancel your booking before {selectedDateObj.date}{' '}
+                {selectedDateObj.month} {selectedDateObj.year}, 02:00 PM.
               </p>
             </div>
 
