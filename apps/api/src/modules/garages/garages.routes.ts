@@ -5,28 +5,34 @@ import { query } from '../../config/database';
 
 export const garagesRouter = Router();
 
+function mapGarageDbRow(g: any) {
+  return {
+    id: g.id,
+    name: g.name,
+    location: g.address || '',
+    rating: g.ratingAvg !== null && g.ratingAvg !== undefined ? Number(g.ratingAvg) : 0,
+    reviews: Number(g.ratingCount || 0),
+    distance: g.distanceKm || null,
+    price: g.startingPrice || null,
+    badge: g.badge || null,
+    image: g.image || null,
+    chips: g.specializations || [],
+    verified: g.approval_status === 'approved',
+  };
+}
+
 garagesRouter.get('/search', async (req, res) => {
   try {
     const result = await query(
-      `SELECT id, name, address, specializations, approval_status, rating_avg as "ratingAvg", rating_count as "ratingCount"
+      `SELECT id, name, address, specializations, approval_status, 
+              rating_avg as "ratingAvg", rating_count as "ratingCount",
+              starting_price as "startingPrice", distance_km as "distanceKm",
+              badge, image
        FROM garages
        WHERE approval_status = 'approved'`
     );
-    const mapped = result.rows.map((g: any) => ({
-      id: g.id,
-      name: g.name,
-      location: g.address,
-      rating: Number(g.ratingAvg || 4.5),
-      reviews: Number(g.ratingCount || 0),
-      distanceKm: 2.5, // ponytail: default mock distance
-      responseMins: 30, // ponytail: default mock response time
-      chips: g.specializations || [],
-      verified: g.approval_status === 'approved',
-      badge: Number(g.ratingAvg || 0) >= 4.5 ? 'Top Rated' : '',
-      badgeTone: Number(g.ratingAvg || 0) >= 4.5 ? 'bg-[#1aa14a]' : '',
-      tone: 'from-[#0d1118] via-[#43301c] to-[#0b0f16]',
-      image: '/assets/garage_1_1778071156220.png',
-    }));
+
+    const mapped = result.rows.map(mapGarageDbRow);
     return success(res, mapped);
   } catch (err) {
     return error(
@@ -41,7 +47,10 @@ garagesRouter.get('/search', async (req, res) => {
 garagesRouter.get('/:id', async (req, res) => {
   try {
     const result = await query(
-      `SELECT id, name, address, specializations, approval_status, rating_avg as "ratingAvg", rating_count as "ratingCount"
+      `SELECT id, name, address, specializations, approval_status, 
+              rating_avg as "ratingAvg", rating_count as "ratingCount",
+              starting_price as "startingPrice", distance_km as "distanceKm",
+              badge, image
        FROM garages
        WHERE id = $1`,
       [req.params.id]
@@ -49,22 +58,7 @@ garagesRouter.get('/:id', async (req, res) => {
     if (result.rows.length === 0) {
       return error(res, 'Garage not found', 'NOT_FOUND', 404);
     }
-    const g = result.rows[0];
-    const mapped = {
-      id: g.id,
-      name: g.name,
-      location: g.address,
-      rating: Number(g.ratingAvg || 4.5),
-      reviews: Number(g.ratingCount || 0),
-      distanceKm: 2.5,
-      responseMins: 30,
-      chips: g.specializations || [],
-      verified: g.approval_status === 'approved',
-      badge: Number(g.ratingAvg || 0) >= 4.5 ? 'Top Rated' : '',
-      badgeTone: Number(g.ratingAvg || 0) >= 4.5 ? 'bg-[#1aa14a]' : '',
-      tone: 'from-[#0d1118] via-[#43301c] to-[#0b0f16]',
-      image: '/assets/garage_1_1778071156220.png',
-    };
+    const mapped = mapGarageDbRow(result.rows[0]);
     return success(res, mapped);
   } catch (err) {
     return error(

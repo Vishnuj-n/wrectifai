@@ -19,6 +19,9 @@ import {
   X,
   FileText,
   Gift,
+  Sun,
+  CloudRain,
+  Settings as SettingsIcon,
 } from 'lucide-react';
 import { Badge } from '@/components/common/badge';
 import { Button } from '@/components/common/button';
@@ -501,16 +504,42 @@ function MaintenanceStrip({
 
 function GarageCard({
   badge,
-  tone,
   name,
   rating,
   reviews,
   location,
   distance,
   price,
-  artwork,
   image,
-}: Omit<(typeof garages)[number], 'href'>) {
+}: Omit<(typeof garages)[number], 'href' | 'tone' | 'artwork'>) {
+  // Map semantic badge to styling colors and gradients in the frontend design system
+  const getBadgeStyle = (badgeText: string) => {
+    switch (badgeText) {
+      case 'Top Rated':
+        return {
+          tone: 'green' as const,
+          artwork: 'from-[#0b121d] via-[#2a241f] to-[#5b3823]',
+        };
+      case 'Most Trusted':
+        return {
+          tone: 'orange' as const,
+          artwork: 'from-[#16181f] via-[#362219] to-[#5d2b20]',
+        };
+      case 'Best Value':
+        return {
+          tone: 'blue' as const,
+          artwork: 'from-[#2f2419] via-[#3c3127] to-[#1a1d25]',
+        };
+      default:
+        return {
+          tone: 'blue' as const,
+          artwork: 'from-[#151a22] via-[#324150] to-[#12161f]',
+        };
+    }
+  };
+
+  const { tone, artwork } = getBadgeStyle(badge || '');
+
   return (
     <Card className="overflow-hidden rounded-[16px] shadow-[0_12px_26px_rgba(20,44,112,0.08)]">
       <div className={cn('relative h-[86px] bg-gradient-to-r', artwork)}>
@@ -532,8 +561,14 @@ function GarageCard({
         <h3 className="text-[13.5px] font-bold tracking-[-0.03em] text-[#17307a]">{name}</h3>
         <div className="mt-1 flex items-center gap-1.5 text-[11px] font-normal text-[#17307a]">
           <Star className="h-3.5 w-3.5 fill-[#ff9f1a] text-[#ff9f1a]" />
-          <span className="font-semibold text-[#f28c28]">{rating}</span>
-          <span>({reviews})</span>
+          {Number(rating) > 0 ? (
+            <>
+              <span className="font-semibold text-[#f28c28]">{Number(rating).toFixed(1)}</span>
+              <span>({reviews})</span>
+            </>
+          ) : (
+            <span className="text-gray-400">No reviews yet</span>
+          )}
         </div>
         <div className="mt-1.5 space-y-1 text-[11px] font-normal text-[#17307a]">
           <div className="flex items-center gap-1.5 truncate">
@@ -543,9 +578,9 @@ function GarageCard({
           <div className="flex items-center justify-between gap-2 pt-0.5">
             <div className="flex items-center gap-1.5 shrink-0">
               <MapPin className="h-3.5 w-3.5 shrink-0 text-[#17307a]" />
-              <span>{distance}</span>
+              <span>{distance || '2.5 km'}</span>
             </div>
-            <span className="font-bold text-[#16a34a]">{price}</span>
+            {price && <span className="font-bold text-[#16a34a]">{price}</span>}
           </div>
         </div>
       </div>
@@ -682,7 +717,7 @@ function FeaturedGarages({
 function SeasonalDeals({
   deals,
 }: {
-  deals: typeof seasonalDeals;
+  deals: any[];
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft] = useState(false);
@@ -899,6 +934,7 @@ export function MainContent() {
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [garagesList, setGaragesList] = useState<any[]>(garages);
+  const [dealsList, setDealsList] = useState<any[]>(seasonalDeals);
 
   useEffect(() => {
     const handleSearch = (event: Event) => {
@@ -915,23 +951,54 @@ export function MainContent() {
     apiClient.get<any[]>('/garages/search')
       .then((data) => {
         if (active && data && data.length > 0) {
-          // ponytail: merge backend dynamic fields into fallback structure to keep styling/assets
-          const merged = data.map((g: any, index: number) => {
-            const fallback = garages[index] || garages[0];
-            return {
-              ...fallback,
-              id: g.id,
-              name: g.name,
-              location: g.address || g.location || fallback.location,
-              rating: g.ratingAvg !== undefined && g.ratingAvg !== null ? String(g.ratingAvg) : fallback.rating,
-              reviews: g.ratingCount !== undefined && g.ratingCount !== null ? g.ratingCount : fallback.reviews,
-            };
-          });
-          setGaragesList(merged);
+          setGaragesList(data);
         }
       })
       .catch((err) => {
         console.error('Failed to fetch garages:', err);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    apiClient.get<any[]>('/promos')
+      .then((data) => {
+        if (active && data && data.length > 0) {
+          const getIconComponent = (iconName: string) => {
+            switch (iconName) {
+              case 'Sun': return Sun;
+              case 'CloudRain': return CloudRain;
+              case 'Snowflake': return Snowflake;
+              case 'Sparkles': return Sparkles;
+              case 'Settings': return SettingsIcon;
+              default: return Snowflake;
+            }
+          };
+
+          const comboDeals = data
+            .filter((p: any) => p.isCombo)
+            .map((p: any) => ({
+              title: p.badge || p.title,
+              subtitle: p.title,
+              price: p.displayPrice,
+              strikePrice: p.strikePrice,
+              discount: p.discountLabel,
+              icon: getIconComponent(p.icon),
+              textColor: p.accent || 'text-[#1a56db]',
+              bgColor: p.bgColor || '#eff6ff',
+              fadeColor: p.cardTint || 'from-[#eff6ff]',
+              image: p.image,
+            }));
+          if (comboDeals.length > 0) {
+            setDealsList(comboDeals);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch combo deals:', err);
       });
     return () => {
       active = false;
@@ -975,13 +1042,13 @@ export function MainContent() {
   const filteredDeals = useMemo(
     () =>
       normalizedSearch
-        ? seasonalDeals.filter(
+        ? dealsList.filter(
             (item) =>
               item.title.toLowerCase().includes(normalizedSearch) ||
               item.subtitle.toLowerCase().includes(normalizedSearch)
           )
-        : seasonalDeals,
-    [normalizedSearch]
+        : dealsList,
+    [normalizedSearch, dealsList]
   );
 
   const filteredTips = useMemo(

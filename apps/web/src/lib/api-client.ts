@@ -62,7 +62,9 @@ export async function apiClient<T = unknown>(path: string, options: RequestOptio
   let response: Response;
   try {
     response = await fetch(url, config);
+    console.log('[apiClient] Request to:', url, 'returned status:', response.status);
   } catch (err) {
+    console.error('[apiClient] Request to:', url, 'failed with network error:', err);
     throw new ApiError(err instanceof Error ? err.message : 'Network error', 0);
   }
 

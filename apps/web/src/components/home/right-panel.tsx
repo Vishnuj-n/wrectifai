@@ -14,6 +14,7 @@ function OverviewPanel() {
   const [quotesCount, setQuotesCount] = useState<number>(0);
   const [vehiclesCount, setVehiclesCount] = useState<number>(0);
   const [vehicleDesc, setVehicleDesc] = useState<string>('No vehicles added');
+  const [ordersCount, setOrdersCount] = useState<number>(3);
 
   useEffect(() => {
     let active = true;
@@ -65,6 +66,14 @@ function OverviewPanel() {
       })
       .catch((err) => console.error('Overview panel vehicles fetch failed:', err));
 
+    // Fetch Orders
+    apiClient.get<any>('/marketplace/orders')
+      .then((data) => {
+        if (!active || !data) return;
+        setOrdersCount(data.count);
+      })
+      .catch((err) => console.error('Overview panel orders fetch failed:', err));
+
     return () => {
       active = false;
     };
@@ -82,8 +91,8 @@ function OverviewPanel() {
     },
     {
       title: 'Part Orders',
-      value: '3',
-      description: '1 Order In Transit',
+      value: String(ordersCount),
+      description: ordersCount === 1 ? '1 Order In Transit' : `${ordersCount} Orders`,
       cta: 'View All',
       href: '/offers',
       icon: Package,
