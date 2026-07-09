@@ -2,14 +2,9 @@ import { test, mock } from 'node:test';
 import assert from 'node:assert';
 import { Pool } from 'pg';
 
-let dbQueryResults: any = { rows: [] };
-let lastQueryText = '';
-let lastQueryParams: any[] = [];
+let dbQueryResults: MockQueryResults = {};
 
-mock.method(Pool.prototype, 'query', async (text: string, params?: any[]) => {
-  lastQueryText = text;
-  lastQueryParams = params || [];
-
+mock.method(Pool.prototype, 'query', async (text: string) => {
   const lowerText = text.toLowerCase();
 
   if (lowerText.includes('select') && lowerText.includes('quotes')) {
@@ -23,9 +18,14 @@ mock.method(Pool.prototype, 'query', async (text: string, params?: any[]) => {
   return { rows: [] };
 });
 
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { quotesRouter } from './quotes.routes';
 import { generateAccessToken } from '../../services/jwt.service';
+
+interface MockQueryResults {
+  quotes?: Array<Record<string, unknown>>;
+  quote?: Record<string, unknown>;
+}
 
 const token = generateAccessToken({
   userId: 'test-user-uuid',
@@ -38,19 +38,54 @@ const app = express();
 app.use(express.json());
 app.use('/quotes', quotesRouter);
 
-function request(method: string, path: string, body?: any): Promise<{ status: number; body: any }> {
+interface QuoteListItem {
+  id: string;
+  garage: string;
+  price: string;
+  savings: string;
+  status: string;
+  details: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface QuoteDetailItem {
+  id: string;
+  garage: string;
+  price: string;
+  savings: string;
+  status: string;
+  details: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface QuoteListResponse { data: QuoteListItem[] }
+interface QuoteDetailResponse { data: QuoteDetailItem }
+interface QuoteEmptyResponse { data: null }
+type QuoteApiResponse = QuoteListResponse | QuoteDetailResponse | QuoteEmptyResponse;
+
+interface MockResponse {
+  statusCode: number;
+  headers: Record<string, string>;
+  setHeader(name: string, value: string): void;
+  status(code: number): MockResponse;
+  json(data: QuoteApiResponse): void;
+  send(data: QuoteApiResponse): void;
+  end(): void;
+}
+
+function request<T extends QuoteApiResponse = QuoteApiResponse>(method: string, path: string, body?: unknown): Promise<{ status: number; body: T }> {
   return new Promise((resolve) => {
-    const req: any = {
+    const req = {
       method,
       url: path,
-      headers: { 
+      headers: {
         'content-type': 'application/json',
         'authorization': `Bearer ${token}`
       },
       body,
-    };
+    } as Pick<Request, 'method' | 'url' | 'headers' | 'body'>;
 
-    const res: any = {
+    const res: MockResponse = {
       statusCode: 200,
       headers: {},
       setHeader(name: string, value: string) {
@@ -60,18 +95,18 @@ function request(method: string, path: string, body?: any): Promise<{ status: nu
         this.statusCode = code;
         return this;
       },
-      json(data: any) {
-        resolve({ status: this.statusCode, body: data });
+      json(data: QuoteApiResponse) {
+        resolve({ status: this.statusCode, body: data as T });
       },
-      send(data: any) {
-        resolve({ status: this.statusCode, body: data });
+      send(data: QuoteApiResponse) {
+        resolve({ status: this.statusCode, body: data as T });
       },
       end() {
-        resolve({ status: this.statusCode, body: null });
+        resolve({ status: this.statusCode, body: { data: null } as T });
       },
     };
 
-    (app as any).handle(req, res);
+    (app as unknown as { handle: (req: Request, res: Response) => void }).handle(req as Request, res as unknown as Response);
   });
 }
 
@@ -105,7 +140,7 @@ test('quotes routes - GET /quotes returns mapped quotes', async () => {
   ];
   dbQueryResults = { quotes: mockQuotesList };
 
-  const response = await request('GET', '/quotes');
+  const response = await request<QuoteListResponse>('GET', '/quotes');
 
   assert.strictEqual(response.status, 200);
   assert.strictEqual(response.body.data.length, 1);
@@ -143,7 +178,7 @@ test('quotes routes - GET /quotes/:id returns quote details', async () => {
     },
   };
 
-  const response = await request('GET', '/quotes/mock-quote-uuid-1');
+  const response = await request<QuoteDetailResponse>('GET', '/quotes/mock-quote-uuid-1');
 
   assert.strictEqual(response.status, 200);
   assert.strictEqual(response.body.data.id, 'mock-quote-uuid-1');

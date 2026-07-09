@@ -21,7 +21,7 @@ import {
   Wrench,
   XCircle,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { DashboardShell } from '@/components/home/dashboard-shell';
 import { TopNavbar } from '@/components/home/top-navbar';
 import { Card } from '@/components/common/card';
@@ -31,6 +31,7 @@ import {
 } from '@/components/quotes/quotes-shared';
 import { fetchQuotes } from '@/lib/quotes-api';
 import type { QuoteItem } from '@/components/quotes/quotes-shared';
+import { resultIssues } from '@/components/ai-diagnose/diagnose-flow-shared';
 import { cn } from '@/utils/cn';
 
 const DOLLAR = '$';
@@ -132,6 +133,22 @@ export function CompareQuotesPage({ ids }: { ids?: string }) {
     }
     return null;
   });
+
+  const searchParams = useSearchParams();
+  const issueIds = useMemo(
+    () =>
+      (searchParams?.get('issues') || quoteContextDefaultIssueIds.join(','))
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean),
+    [searchParams]
+  );
+  const requestedIssues = useMemo(
+    () => resultIssues.filter((issue) => issueIds.includes(issue.id)),
+    [issueIds]
+  );
+
+  const activeVehicle = selectedVehicle || quotes[0]?.vehicle;
 
   const priceRows = useMemo(() => {
     const quoteValuesParts: Record<string, string> = {};
@@ -816,33 +833,45 @@ export function CompareQuotesPage({ ids }: { ids?: string }) {
                 <div>
                   <div className={homeBodyClass}>Vehicle</div>
                   <div className="mt-2.5 ui-card-title">
-                    {selectedVehicle ? `${selectedVehicle.make} ${selectedVehicle.model} ${selectedVehicle.vin ? `(${selectedVehicle.vin.slice(-6)})` : ''}` : 'Honda City (TS07 AB 1234)'}
+                    {activeVehicle ? `${activeVehicle.make} ${activeVehicle.model} ${activeVehicle.vin ? `(${activeVehicle.vin.slice(-6)})` : ''}` : 'Honda City (TS07 AB 1234)'}
                   </div>
                   <div className="mt-2.5 flex flex-wrap items-center gap-2.5 text-[12px] text-[#5f7099]">
-                    <span>{selectedVehicle ? (selectedVehicle.vin ? 'VIN Verified' : 'Petrol') : 'Petrol'}</span>
+                    <span>{activeVehicle ? (activeVehicle.vin ? 'VIN Verified' : 'Petrol') : 'Petrol'}</span>
                     <span>{BULLET}</span>
-                    <span>{selectedVehicle ? selectedVehicle.year : '2018'}</span>
+                    <span>{activeVehicle ? activeVehicle.year : '2018'}</span>
                     <span>{BULLET}</span>
                     <span>
-                      {selectedVehicle && selectedVehicle.mileage !== undefined && selectedVehicle.mileage !== null
-                        ? `${selectedVehicle.mileage.toLocaleString()} mi`
+                      {activeVehicle && activeVehicle.mileage !== undefined && activeVehicle.mileage !== null
+                        ? `${activeVehicle.mileage.toLocaleString()} mi`
                         : '58,320 km'}
                     </span>
                   </div>
                 </div>
 
                 <div>
-                  <div className={homeBodyClass}>Issues Requested (2)</div>
+                  <div className={homeBodyClass}>Issues Requested ({requestedIssues.length})</div>
                   <div className="mt-3 space-y-2.5 text-[12px] text-[#17307a]">
-                    <div>{BULLET} &nbsp;Wheel Balancing Issue</div>
-                    <div>{BULLET} &nbsp;Wheel Alignment Issue</div>
+                    {requestedIssues.map((issue) => (
+                      <div key={issue.id}>
+                        {BULLET} &nbsp;{issue.title}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 <div className="border-t border-[#ebf0fb] pt-4">
                   <div className={homeBodyClass}>Request sent on</div>
                   <div className="mt-2.5 text-[12px] text-[#17307a]">
-                    20 May 2024, 10:30 AM
+                    {quotes[0]?.requestCreatedAt
+                      ? new Date(quotes[0].requestCreatedAt).toLocaleString('en-US', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true,
+                        })
+                      : '20 May 2024, 10:30 AM'}
                   </div>
                 </div>
               </div>

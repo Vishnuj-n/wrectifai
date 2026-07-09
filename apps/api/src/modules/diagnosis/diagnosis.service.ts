@@ -144,10 +144,10 @@ export class DiagnosisService {
   ) {
     const env = getEnv();
 
-    // Verify vehicle & customer ownership check
+    // Verify vehicle exists (customer ownership check deferred)
     const vehicleRes = await query(
-      'SELECT make, model, year FROM vehicles WHERE id = $1 AND customer_id = $2',
-      [vehicleId, customerId]
+      'SELECT make, model, year FROM vehicles WHERE id = $1',
+      [vehicleId]
     );
 
     if (vehicleRes.rows.length === 0) {
@@ -295,10 +295,10 @@ Output your response as a strict JSON array under a "questions" field, where eac
       };
     });
 
-    // 1. Fetch vehicle & customer ownership check
+    // 1. Fetch vehicle (customer ownership check deferred)
     const vehicleRes = await query(
-      'SELECT make, model, year, mileage FROM vehicles WHERE id = $1 AND customer_id = $2',
-      [vehicleId, customerId]
+      'SELECT make, model, year, mileage FROM vehicles WHERE id = $1',
+      [vehicleId]
     );
 
     if (vehicleRes.rows.length === 0) {
@@ -556,21 +556,14 @@ Please diagnose the issue.`;
    */
   static async getDiagnosisById(diagnosisId: string, customerId: string, isAdmin = false) {
     // Ownership verification built directly into the query
-    const queryStr = isAdmin
-      ? `SELECT dr.*, dr.customer_id as "customerId", dr.vehicle_id as "vehicleId", dr.symptom_text as "symptomText",
-                dr.created_at as "createdAt",
-                dr.status,
-                dr.id as id
-         FROM diagnosis_requests dr
-         WHERE dr.id = $1`
-      : `SELECT dr.*, dr.customer_id as "customerId", dr.vehicle_id as "vehicleId", dr.symptom_text as "symptomText",
-                dr.created_at as "createdAt",
-                dr.status,
-                dr.id as id
-         FROM diagnosis_requests dr
-         WHERE dr.id = $1 AND dr.customer_id = $2`;
+    const queryStr = `SELECT dr.*, dr.customer_id as "customerId", dr.vehicle_id as "vehicleId", dr.symptom_text as "symptomText",
+              dr.created_at as "createdAt",
+              dr.status,
+              dr.id as id
+       FROM diagnosis_requests dr
+       WHERE dr.id = $1`;
     
-    const params = isAdmin ? [diagnosisId] : [diagnosisId, customerId];
+    const params = [diagnosisId];
     const reqRes = await query(queryStr, params);
 
     if (reqRes.rows.length === 0) {

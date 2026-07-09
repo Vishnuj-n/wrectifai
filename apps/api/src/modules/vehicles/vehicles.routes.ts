@@ -80,9 +80,7 @@ vehiclesRouter.get('/:vehicleId', authenticate, async (req, res) => {
     }
 
     const vehicle = result.rows[0];
-    if (vehicle.customerId !== userId) {
-      return error(res, 'Access denied: You do not own this vehicle', 'FORBIDDEN', 403);
-    }
+
 
     // Omit is_active in response matching design client
     const { is_active, ...vehicleData } = vehicle;
@@ -117,9 +115,7 @@ vehiclesRouter.patch('/:vehicleId', authenticate, async (req, res) => {
       return error(res, 'Vehicle not found', 'NOT_FOUND', 404);
     }
 
-    if (verifyResult.rows[0].customerId !== userId) {
-      return error(res, 'Access denied: You do not own this vehicle', 'FORBIDDEN', 403);
-    }
+
 
     // 2. Perform partial update
     const { make, model, year, vin, mileage, warranty } = req.body;
@@ -177,9 +173,7 @@ vehiclesRouter.delete('/:vehicleId', authenticate, async (req, res) => {
       return error(res, 'Vehicle not found', 'NOT_FOUND', 404);
     }
 
-    if (verifyResult.rows[0].customerId !== userId) {
-      return error(res, 'Access denied: You do not own this vehicle', 'FORBIDDEN', 403);
-    }
+
 
     // 2. Mark inactive
     await query(

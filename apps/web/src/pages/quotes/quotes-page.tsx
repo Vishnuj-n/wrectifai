@@ -173,7 +173,7 @@ export function QuotesPage() {
               My Quotes
             </h1>
             <span className="rounded-full bg-[#dff4e7] px-2.5 py-1 text-[11px] font-medium text-[#18965c]">
-              3 New Quotes
+              {quotes.filter((q) => q.status === 'new').length} New {quotes.filter((q) => q.status === 'new').length === 1 ? 'Quote' : 'Quotes'}
             </span>
           </div>
           <p className="mt-2 ui-caption">
@@ -581,19 +581,19 @@ export function QuotesPage() {
                       }} 
                     />
                   </div>
-                  {selectedVehicle ? (
+                  {selectedVehicle || quotes[0]?.vehicle ? (
                     <div className="mt-2 flex flex-wrap items-center gap-2.5 text-[11px] text-[#5f7099]">
-                      {selectedVehicle.vin && (
+                      {(selectedVehicle || quotes[0]?.vehicle)?.vin && (
                         <>
-                          <span className="font-mono">{selectedVehicle.vin}</span>
+                          <span className="font-mono">{(selectedVehicle || quotes[0]?.vehicle)?.vin}</span>
                           <span>{BULLET}</span>
                         </>
                       )}
-                      <span>{selectedVehicle.year}</span>
-                      {selectedVehicle.mileage !== undefined && selectedVehicle.mileage !== null && (
+                      <span>{(selectedVehicle || quotes[0]?.vehicle)?.year}</span>
+                      {(selectedVehicle || quotes[0]?.vehicle)?.mileage !== undefined && (selectedVehicle || quotes[0]?.vehicle)?.mileage !== null && (
                         <>
                           <span>{BULLET}</span>
-                          <span>{selectedVehicle.mileage.toLocaleString()} miles</span>
+                          <span>{(selectedVehicle || quotes[0]?.vehicle)?.mileage?.toLocaleString()} miles</span>
                         </>
                       )}
                     </div>
@@ -624,7 +624,16 @@ export function QuotesPage() {
                 <div className="border-t border-[#edf2fb] pt-4">
                   <div className={homeBodyClass}>Request sent on</div>
                   <div className="mt-2 text-[12px] text-[#17307a]">
-                    20 May 2024, 10:30 AM
+                    {quotes[0]?.requestCreatedAt
+                      ? new Date(quotes[0].requestCreatedAt).toLocaleString('en-US', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true,
+                        })
+                      : '20 May 2024, 10:30 AM'}
                   </div>
                 </div>
               </div>

@@ -272,7 +272,7 @@ apps/web/src/
 
 ---
 
-### Sprint 4 — Garage Discovery & Deals Integration (Global Data)
+### Sprint 4 — Garage Discovery & Deals Integration (Global Data) [DONE]
 **Duration**: 3-4 days
 **Depends on**: Sprint 3
 **API Endpoints**: §4 + §9 of DATA_API.md

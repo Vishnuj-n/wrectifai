@@ -717,10 +717,37 @@ function FeaturedGarages({
   );
 }
 
+interface Deal {
+  title: string;
+  subtitle: string;
+  price: string;
+  strikePrice: string;
+  discount: string;
+  icon: React.ComponentType<{ className?: string }> | null;
+  textColor: string;
+  bgColor: string;
+  fadeColor: string;
+  image?: string;
+}
+
+interface PromoItem {
+  isCombo: boolean;
+  badge?: string;
+  title: string;
+  displayPrice: string;
+  strikePrice: string;
+  discountLabel: string;
+  icon: string;
+  accent?: string;
+  bgColor?: string;
+  cardTint?: string;
+  image?: string;
+}
+
 function SeasonalDeals({
   deals,
 }: {
-  deals: any[];
+  deals: Deal[];
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft] = useState(false);
@@ -936,8 +963,8 @@ function CareTips({
 export function MainContent() {
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [garagesList, setGaragesList] = useState<any[]>([]);
-  const [dealsList, setDealsList] = useState<any[]>([]);
+  const [garagesList, setGaragesList] = useState<Garage[]>([]);
+  const [dealsList, setDealsList] = useState<Deal[]>([]);
 
   useEffect(() => {
     const handleSearch = (event: Event) => {
@@ -951,7 +978,7 @@ export function MainContent() {
 
   useEffect(() => {
     let active = true;
-    apiClient.get<any[]>('/garages/search')
+    apiClient.get<Garage[]>('/garages/search')
       .then((data) => {
         if (active && data && data.length > 0) {
           setGaragesList(data);
@@ -967,7 +994,7 @@ export function MainContent() {
 
   useEffect(() => {
     let active = true;
-    apiClient.get<any[]>('/promos')
+    apiClient.get<PromoItem[]>('/promos')
       .then((data) => {
         if (active && data && data.length > 0) {
           const getIconComponent = (iconName: string) => {
@@ -982,8 +1009,8 @@ export function MainContent() {
           };
 
           const comboDeals = data
-            .filter((p: any) => p.isCombo)
-            .map((p: any) => ({
+            .filter((p: PromoItem) => p.isCombo)
+            .map((p: PromoItem) => ({
               title: p.badge || p.title,
               subtitle: p.title,
               price: p.displayPrice,

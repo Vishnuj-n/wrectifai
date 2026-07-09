@@ -9,9 +9,13 @@ quotesRouter.get('/', authenticate, async (req, res) => {
   try {
     const result = await query(
       `SELECT q.id, q.quote_request_id as "quoteRequestId", q.amount, q.currency, q.eta_days as "etaDays", q.status, q.created_at as "createdAt", q.details,
-              g.name as "garageName", g.rating_avg as "ratingAvg", g.rating_count as "ratingCount", g.pickup_drop_supported as "pickupDropSupported"
+              g.name as "garageName", g.rating_avg as "ratingAvg", g.rating_count as "ratingCount", g.pickup_drop_supported as "pickupDropSupported",
+              qr.created_at as "requestCreatedAt", qr.issue_summary as "requestIssueSummary",
+              v.make as "vehicleMake", v.model as "vehicleModel", v.year as "vehicleYear", v.vin as "vehicleVin", v.mileage as "vehicleMileage"
        FROM quotes q
        JOIN garages g ON q.garage_id = g.id
+       JOIN quote_requests qr ON q.quote_request_id = qr.id
+       LEFT JOIN vehicles v ON qr.vehicle_id = v.id
        ORDER BY q.created_at DESC`
     );
 
@@ -34,6 +38,15 @@ quotesRouter.get('/', authenticate, async (req, res) => {
         savings: `$${savingsNum.toLocaleString('en-US')}`,
         time: details.availability || '10 mins ago',
         tag: details.tag || undefined,
+        requestCreatedAt: row.requestCreatedAt,
+        requestIssueSummary: row.requestIssueSummary,
+        vehicle: row.vehicleMake ? {
+          make: row.vehicleMake,
+          model: row.vehicleModel,
+          year: row.vehicleYear,
+          vin: row.vehicleVin,
+          mileage: row.vehicleMileage
+        } : null,
         details: {
           parts: details.parts,
           labour: details.labour,
@@ -62,9 +75,13 @@ quotesRouter.get('/:quoteId', authenticate, async (req, res) => {
   try {
     const result = await query(
       `SELECT q.id, q.quote_request_id as "quoteRequestId", q.amount, q.currency, q.eta_days as "etaDays", q.status, q.created_at as "createdAt", q.details,
-              g.name as "garageName", g.rating_avg as "ratingAvg", g.rating_count as "ratingCount", g.pickup_drop_supported as "pickupDropSupported"
+              g.name as "garageName", g.rating_avg as "ratingAvg", g.rating_count as "ratingCount", g.pickup_drop_supported as "pickupDropSupported",
+              qr.created_at as "requestCreatedAt", qr.issue_summary as "requestIssueSummary",
+              v.make as "vehicleMake", v.model as "vehicleModel", v.year as "vehicleYear", v.vin as "vehicleVin", v.mileage as "vehicleMileage"
        FROM quotes q
        JOIN garages g ON q.garage_id = g.id
+       JOIN quote_requests qr ON q.quote_request_id = qr.id
+       LEFT JOIN vehicles v ON qr.vehicle_id = v.id
        WHERE q.id = $1`,
       [req.params.quoteId]
     );
@@ -92,6 +109,15 @@ quotesRouter.get('/:quoteId', authenticate, async (req, res) => {
       savings: `$${savingsNum.toLocaleString('en-US')}`,
       time: details.availability || '10 mins ago',
       tag: details.tag || undefined,
+      requestCreatedAt: row.requestCreatedAt,
+      requestIssueSummary: row.requestIssueSummary,
+      vehicle: row.vehicleMake ? {
+        make: row.vehicleMake,
+        model: row.vehicleModel,
+        year: row.vehicleYear,
+        vin: row.vehicleVin,
+        mileage: row.vehicleMileage
+      } : null,
       details: {
         parts: details.parts,
         labour: details.labour,
@@ -135,15 +161,45 @@ quotesRouter.post('/requests', authenticate, (req, res) => {
   );
 });
 
-quotesRouter.get('/requests/:requestId', authenticate, (req, res) => {
-  return success(res, {
-    id: req.params.requestId,
-    customerId: req.user?.userId,
-    vehicleId: 'v1',
-    issueSummary: 'Clunking noise from suspension',
-    status: 'open',
-    createdAt: new Date().toISOString(),
-  });
+quotesRouter.get('/requests/:requestId', authenticate, async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT qr.id, qr.customer_id as "customerId", qr.vehicle_id as "vehicleId", qr.issue_summary as "issueSummary", qr.status, qr.created_at as "createdAt",
+              v.make as "vehicleMake", v.model as "vehicleModel", v.year as "vehicleYear", v.vin as "vehicleVin", v.mileage as "vehicleMileage"
+       FROM quote_requests qr
+       LEFT JOIN vehicles v ON qr.vehicle_id = v.id
+       WHERE qr.id = $1`,
+      [req.params.requestId]
+    );
+
+    if (result.rows.length === 0) {
+      return error(res, 'Quote request not found', 'NOT_FOUND', 404);
+    }
+
+    const row = result.rows[0];
+    return success(res, {
+      id: row.id,
+      customerId: row.customerId,
+      vehicleId: row.vehicleId,
+      issueSummary: row.issueSummary,
+      status: row.status,
+      createdAt: row.createdAt,
+      vehicle: row.vehicleMake ? {
+        make: row.vehicleMake,
+        model: row.vehicleModel,
+        year: row.vehicleYear,
+        vin: row.vehicleVin,
+        mileage: row.vehicleMileage
+      } : null
+    });
+  } catch (err) {
+    return error(
+      res,
+      err instanceof Error ? err.message : 'Database query failed',
+      'DATABASE_ERROR',
+      500
+    );
+  }
 });
 
 quotesRouter.post('/requests/:requestId/quotes', authenticate, (req, res) => {
