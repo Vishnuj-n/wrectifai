@@ -80,14 +80,14 @@ function HoverComingSoon({
 }
 
 const moreCategoryItems = [
-  { label: 'Loans', icon: BadgeIndianRupee, image: '/assets/loans.png' },
-  { label: 'Used Cars', icon: Sticker, image: '/assets/Used_cars.png' },
-  { label: 'Electrical & Battery Systems', icon: BatteryCharging, image: '/assets/Electrical.png' },
-  { label: 'AC & Cooling Systems', icon: Snowflake, image: '/assets/new_ac.png' },
-  { label: 'Vehicle Protection & Safety', icon: ShieldCheck, image: '/assets/isurance.svg' },
-  { label: 'Documentation & Compliance', icon: FileText, image: '/assets/Documentation.png' },
-  { label: 'EV Services', icon: Zap, image: '/assets/ev.png' },
-  { label: 'Subscription & Bundles', icon: Gift, image: '/assets/subscription.png' },
+  { label: 'Loans', icon: BadgeIndianRupee, image: '/assets/loans.png', href: '/shop' },
+  { label: 'Used Cars', icon: Sticker, image: '/assets/Used_cars.png', href: '/shop' },
+  { label: 'Electrical & Battery Systems', icon: BatteryCharging, image: '/assets/Electrical.png', href: '/shop' },
+  { label: 'AC & Cooling Systems', icon: Snowflake, image: '/assets/new_ac.png', href: '/shop' },
+  { label: 'Vehicle Protection & Safety', icon: ShieldCheck, image: '/assets/isurance.svg', href: '/shop' },
+  { label: 'Documentation & Compliance', icon: FileText, image: '/assets/Documentation.png', href: '/shop' },
+  { label: 'EV Services', icon: Zap, image: '/assets/ev.png', href: '/shop' },
+  { label: 'Subscription & Bundles', icon: Gift, image: '/assets/subscription.png', href: '/shop' },
 ];
 
 function CategoriesModal({
@@ -144,29 +144,30 @@ function CategoriesModal({
               Top Categories
             </h3>
             <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-7">
-              {categoryItems.map(({ label, icon: Icon, image }) => (
-                <Card
-                  key={label}
-                  className="flex min-h-[86px] flex-col items-center justify-center gap-2 rounded-[12px] border-[#e8eefc] px-2 py-2.5 text-center shadow-none"
-                >
-                  {image ? (
-                    <Image 
-                      src={image} 
-                      alt={label}
-                      width={44}
-                      height={44}
-                      className="object-contain"
-                      style={{ width: '44px', height: 'auto' }}
-                    />
-                  ) : (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f7f9ff] text-[#173fcf]">
-                      <Icon className="h-5.5 w-5.5" strokeWidth={1.8} />
+              {categoryItems.map(({ label, icon: Icon, image, href }) => (
+                <Link key={label} href={href}>
+                  <Card
+                    className="flex min-h-[86px] flex-col items-center justify-center gap-2 rounded-[12px] border-[#e8eefc] px-2 py-2.5 text-center shadow-none transition-all duration-200 hover:shadow-[0_4px_12px_rgba(26,86,219,0.12)] hover:border-[#c0d0f0] cursor-pointer"
+                  >
+                    {image ? (
+                      <Image 
+                        src={image} 
+                        alt={label}
+                        width={44}
+                        height={44}
+                        className="object-contain"
+                        style={{ width: '44px', height: 'auto' }}
+                      />
+                    ) : (
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f7f9ff] text-[#173fcf]">
+                        <Icon className="h-5.5 w-5.5" strokeWidth={1.8} />
+                      </div>
+                    )}
+                    <div className="max-w-[82px] text-[10.5px] font-semibold leading-[1.25] text-[#17307a]">
+                      {label}
                     </div>
-                  )}
-                  <div className="max-w-[82px] text-[10.5px] font-semibold leading-[1.25] text-[#17307a]">
-                    {label}
-                  </div>
-                </Card>
+                  </Card>
+                </Link>
               ))}
             </div>
           </div>
@@ -176,36 +177,37 @@ function CategoriesModal({
               More Categories
             </h3>
             <div className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-              {moreCategoryItems.map(({ label, icon: Icon, image }) => (
-                <Card
-                  key={label}
-                  className="flex min-h-[54px] items-center gap-3 rounded-[12px] border-[#e8eefc] px-4 py-2 shadow-none"
-                >
-                  {image ? (
-                    <Image 
-                      src={image} 
-                      alt={label}
-                      width={36}
-                      height={36}
-                      className="object-contain"
-                      style={{ width: '36px', height: 'auto' }}
-                    />
-                  ) : (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f7f9ff] text-[#1a56db]">
-                      <Icon className="h-5 w-5 stroke-[1.8]" />
-                    </div>
-                  )}
-                  <div className="max-w-[124px] text-[10.5px] font-semibold leading-[1.35] text-[#17307a]">
-                    {label === 'Vehicle Protection & Safety' ? (
-                      <>
-                        <span className="block whitespace-nowrap">Vehicle Protection</span>
-                        <span className="block">&amp; Safety</span>
-                      </>
+              {moreCategoryItems.map(({ label, icon: Icon, image, href }) => (
+                <Link key={label} href={href}>
+                  <Card
+                    className="flex min-h-[54px] items-center gap-3 rounded-[12px] border-[#e8eefc] px-4 py-2 shadow-none transition-all duration-200 hover:shadow-[0_4px_12px_rgba(26,86,219,0.12)] hover:border-[#c0d0f0] cursor-pointer"
+                  >
+                    {image ? (
+                      <Image 
+                        src={image} 
+                        alt={label}
+                        width={36}
+                        height={36}
+                        className="object-contain"
+                        style={{ width: '36px', height: 'auto' }}
+                      />
                     ) : (
-                      label
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f7f9ff] text-[#1a56db]">
+                        <Icon className="h-5 w-5 stroke-[1.8]" />
+                      </div>
                     )}
-                  </div>
-                </Card>
+                    <div className="max-w-[124px] text-[10.5px] font-semibold leading-[1.35] text-[#17307a]">
+                      {label === 'Vehicle Protection & Safety' ? (
+                        <>
+                          <span className="block whitespace-nowrap">Vehicle Protection</span>
+                          <span className="block">&amp; Safety</span>
+                        </>
+                      ) : (
+                        label
+                      )}
+                    </div>
+                  </Card>
+                </Link>
               ))}
             </div>
           </div>
@@ -426,27 +428,29 @@ function CategoryGrid({
       </div>
       <div className="overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="grid grid-cols-7 gap-3 min-w-[840px]">
-          {items.map(({ label, icon: Icon, image }) => (
+          {items.map(({ label, icon: Icon, image, href }) => (
             <HoverComingSoon key={label}>
-              <Card className="flex h-[110px] w-full cursor-default flex-col items-center justify-center gap-2 rounded-[12px] px-2 py-3 text-center shadow-[0_6px_16px_rgba(20,44,112,0.04)] border-[#edf2fd]">
-                {image ? (
-                  <Image 
-                    src={image} 
-                    alt={label}
-                    width={64}
-                    height={64}
-                    className="object-contain"
-                    style={{ width: '64px', height: 'auto' }}
-                  />
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f4f8ff] text-[#173fcf]">
-                    <Icon className="h-6 w-6" strokeWidth={1.8} />
+              <Link href={href}>
+                <Card className="flex h-[110px] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-[12px] px-2 py-3 text-center shadow-[0_6px_16px_rgba(20,44,112,0.04)] border-[#edf2fd] transition-all duration-200 hover:shadow-[0_4px_12px_rgba(26,86,219,0.12)] hover:border-[#c0d0f0]">
+                  {image ? (
+                    <Image 
+                      src={image} 
+                      alt={label}
+                      width={64}
+                      height={64}
+                      className="object-contain"
+                      style={{ width: '64px', height: 'auto' }}
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f4f8ff] text-[#173fcf]">
+                      <Icon className="h-6 w-6" strokeWidth={1.8} />
+                    </div>
+                  )}
+                  <div className="max-w-full text-[11.5px] font-semibold leading-[1.3] text-[#17307a] px-1">
+                    {label}
                   </div>
-                )}
-                <div className="max-w-full text-[11.5px] font-semibold leading-[1.3] text-[#17307a] px-1">
-                  {label}
-                </div>
-              </Card>
+                </Card>
+              </Link>
             </HoverComingSoon>
           ))}
         </div>

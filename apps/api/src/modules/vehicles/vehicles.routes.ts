@@ -5,20 +5,15 @@ import { query } from '../../config/database';
 
 export const vehiclesRouter = Router();
 
-// GET /vehicles — list customer's active vehicles
+// GET /vehicles — list all active vehicles
 vehiclesRouter.get('/', authenticate, async (req, res) => {
   try {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return error(res, 'User ID missing from authentication token', 'UNAUTHORIZED', 401);
-    }
-
     const result = await query(
       `SELECT id, customer_id as "customerId", make, model, year, vin, mileage, warranty, created_at as "createdAt", updated_at as "updatedAt"
        FROM vehicles
-       WHERE customer_id = $1 AND is_active = true
+       WHERE is_active = true
        ORDER BY created_at DESC`,
-      [userId]
+      []
     );
 
     return success(res, result.rows, 200);

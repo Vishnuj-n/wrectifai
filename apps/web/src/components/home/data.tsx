@@ -61,13 +61,13 @@ export const navItems: NavItem[] = [
 ];
 
 export const categoryItems = [
-  { label: 'Repair Services', icon: Wrench, href: '#garages', image: '/assets/repair-services.png' },
-  { label: 'Maintenance', icon: Fuel, href: '#maintenance', image: '/assets/maintenance.svg' },
-  { label: 'Parts & Components', icon: Settings, href: '#offers', image: '/assets/Parts and components.png' },
-  { label: 'Tyres & Wheels', icon: Disc3, href: '#garages', image: '/assets/tyres_and_wheels.png' },
-  { label: 'Car Care & Detailing', icon: Sparkles, href: '#tips', image: '/assets/car-care.svg' },
-  { label: 'Insurance', icon: ShieldCheck, href: '#offers', image: '/assets/isurance.svg' },
-  { label: 'Accessories & Upgrades', icon: CarFront, href: '#offers', image: '/assets/Accessories.png' },
+  { label: 'Repair Services', icon: Wrench, href: '/shop', image: '/assets/repair-services.png' },
+  { label: 'Maintenance', icon: Fuel, href: '/shop', image: '/assets/maintenance.svg' },
+  { label: 'Parts & Components', icon: Settings, href: '/shop', image: '/assets/Parts and components.png' },
+  { label: 'Tyres & Wheels', icon: Disc3, href: '/shop', image: '/assets/tyres_and_wheels.png' },
+  { label: 'Car Care & Detailing', icon: Sparkles, href: '/shop', image: '/assets/car-care.svg' },
+  { label: 'Insurance', icon: ShieldCheck, href: '/shop', image: '/assets/isurance.svg' },
+  { label: 'Accessories & Upgrades', icon: CarFront, href: '/shop', image: '/assets/Accessories.png' },
 ];
 
 export const maintenanceItems = [

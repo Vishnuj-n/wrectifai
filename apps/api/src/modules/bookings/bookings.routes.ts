@@ -5,10 +5,9 @@ import { query } from '../../config/database';
 
 export const bookingsRouter = Router();
 
-// GET /bookings — list all bookings (shared globally for Sprint 6)
+// GET /bookings — list all bookings globally
 bookingsRouter.get('/', authenticate, async (req, res) => {
   try {
-    const customerId = req.user?.userId;
     const result = await query(
       `SELECT 
         b.id,
@@ -31,9 +30,8 @@ bookingsRouter.get('/', authenticate, async (req, res) => {
        FROM bookings b
        JOIN garages g ON b.garage_id = g.id
        JOIN vehicles v ON b.vehicle_id = v.id
-       WHERE b.customer_id = $1
        ORDER BY b.scheduled_at DESC`,
-      [customerId]
+      []
     );
 
     const formatted = result.rows.map((row) => ({

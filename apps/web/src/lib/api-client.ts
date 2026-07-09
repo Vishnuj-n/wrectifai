@@ -29,6 +29,13 @@ export const responseInterceptors: ResponseInterceptor[] = [];
 
 let refreshPromise: Promise<string> | null = null;
 
+// Reset refresh state on logout so re-login starts fresh
+if (typeof window !== 'undefined') {
+  window.addEventListener('auth-logout', () => {
+    refreshPromise = null;
+  });
+}
+
 export async function apiClient<T = unknown>(path: string, options: RequestOptions = {}): Promise<T> {
   const baseUrl = getBaseUrl();
   let url = path.startsWith('http') ? path : `${baseUrl}${path}`;
@@ -76,7 +83,7 @@ export async function apiClient<T = unknown>(path: string, options: RequestOptio
   // 4. Handle 401 response and attempt token refresh
   if (response.status === 401 && !config._retry && !path.includes('/auth/refresh') && !path.includes('/auth/login')) {
     config._retry = true;
- 
+
     if (typeof window !== 'undefined') {
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
@@ -95,6 +102,7 @@ export async function apiClient<T = unknown>(path: string, options: RequestOptio
 
               const refreshJson = await refreshRes.json();
               const newAccessToken = refreshJson.data?.accessToken;
+              const newRefreshToken = refreshJson.data?.refreshToken;
 
               if (!newAccessToken) {
                 throw new Error('No access token in refresh response');
@@ -102,16 +110,18 @@ export async function apiClient<T = unknown>(path: string, options: RequestOptio
 
               localStorage.setItem('accessToken', newAccessToken);
               localStorage.setItem('token', newAccessToken);
+              if (newRefreshToken) {
+                localStorage.setItem('refreshToken', newRefreshToken);
+              }
               return newAccessToken;
             } catch (_refreshErr) {
               localStorage.removeItem('accessToken');
               localStorage.removeItem('token');
               localStorage.removeItem('refreshToken');
               localStorage.removeItem('user');
+              refreshPromise = null;
               window.dispatchEvent(new CustomEvent('auth-logout'));
               throw new ApiError('Session expired. Please log in again.', 401, 'UNAUTHORIZED_EXPIRED');
-            } finally {
-              refreshPromise = null;
             }
           })();
         }
