@@ -8,11 +8,13 @@ export interface Garage {
   rating: number;
   reviews: number;
   location: string;
-  distanceKm: number;
+  distance?: string;
+  price?: string;
   responseMins: number;
   chips: string[];
   facade?: string;
   tone?: string;
+  artwork?: string;
   verified: boolean;
   image?: string;
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ChevronDown, CalendarDays, Package, FileText, Car } from 'lucide-react';
 import Image from 'next/image';
 import { Card } from '@/components/common/card';
-import { emergencyItems, promoItems } from '@/components/home/data';
+import { emergencyItems } from '@/components/home/data';
 import { cn } from '@/utils/cn';
 import { apiClient } from '@/lib/api-client';
 import { fetchBookings } from '@/lib/bookings-api';
@@ -216,7 +216,17 @@ function OfferCard({
   fill,
   icon: Icon,
   image,
-}: Omit<(typeof promoItems)[number], 'href'>) {
+}: {
+  eyebrow: string;
+  title: string;
+  price: string;
+  strikePrice?: string;
+  discount: string;
+  accent: string;
+  fill: string;
+  icon: any;
+  image?: string;
+}) {
   const isGreen = accent.includes('238453');
   const isRed = accent.includes('ff3b30');
   const isPurple = accent.includes('805ad5');
@@ -313,18 +323,6 @@ function OffersPanel() {
     };
   }, []);
 
-  const displayPromos = promos.length > 0 ? promos : promoItems.map(p => ({
-    eyebrow: p.eyebrow,
-    title: p.title,
-    price: p.price,
-    strikePrice: p.strikePrice,
-    discount: p.discount,
-    accent: p.accent,
-    fill: p.fill,
-    icon: p.icon,
-    image: p.image,
-  }));
-
   return (
     <Card id="offers" className="p-4 border-[#f0f4ff] bg-white">
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -336,7 +334,7 @@ function OffersPanel() {
         </span>
       </div>
       <div className="space-y-4">
-        {displayPromos.map((promo: any) => (
+        {promos.map((promo: any) => (
           <OfferCard key={promo.eyebrow} {...promo} />
         ))}
       </div>

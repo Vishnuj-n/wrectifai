@@ -30,15 +30,11 @@ export function PageLoader({ imageSources = [] }: PageLoaderProps) {
     }
 
     if (allCached) {
-      // If all images are cached, fade out immediately and destroy the loader
-      const fadeTimer = requestAnimationFrame(() => {
+      const frame = requestAnimationFrame(() => {
         setIsFadeOut(true);
-        const destroyTimer = setTimeout(() => {
-          setIsDestroyed(true);
-        }, 500);
-        return () => clearTimeout(destroyTimer);
       });
-      return () => cancelAnimationFrame(fadeTimer);
+
+      return () => cancelAnimationFrame(frame);
     }
 
     let isMounted = true;
@@ -54,7 +50,8 @@ export function PageLoader({ imageSources = [] }: PageLoaderProps) {
           return 100;
         }
 
-        const target = totalImages > 0 ? Math.round((loadedCount / totalImages) * 100) : 100;
+        const target =
+          totalImages > 0 ? Math.round((loadedCount / totalImages) * 100) : 100;
 
         if (prev < target) {
           return prev + Math.min(4, target - prev);
@@ -132,7 +129,7 @@ export function PageLoader({ imageSources = [] }: PageLoaderProps) {
             className="object-contain"
           />
         </div>
-        
+
         <div className="w-[180px] sm:w-[210px] md:w-[240px] h-[5px] rounded-full bg-[#d2e2fc] overflow-hidden relative">
           <div
             className="h-full rounded-full bg-[#4d82f3] transition-all duration-300 ease-out"

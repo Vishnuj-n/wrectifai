@@ -30,9 +30,8 @@ import { Input } from '@/components/common/input';
 import {
   careTips,
   categoryItems,
-  garages,
   maintenanceItems,
-  seasonalDeals,
+  type Garage,
 } from '@/components/home/data';
 import { apiClient } from '@/lib/api-client';
 import Link from 'next/link';
@@ -515,7 +514,7 @@ function GarageCard({
   distance,
   price,
   image,
-}: Omit<(typeof garages)[number], 'href' | 'tone' | 'artwork'>) {
+}: Omit<Garage, 'href'>) {
   // Map semantic badge to styling colors and gradients in the frontend design system
   const getBadgeStyle = (badgeText: string) => {
     switch (badgeText) {
@@ -616,7 +615,7 @@ function scrollRow(container: HTMLDivElement | null, amount: number) {
 function FeaturedGarages({
   garagesList,
 }: {
-  garagesList: typeof garages;
+  garagesList: Garage[];
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -937,8 +936,8 @@ function CareTips({
 export function MainContent() {
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [garagesList, setGaragesList] = useState<any[]>(garages);
-  const [dealsList, setDealsList] = useState<any[]>(seasonalDeals);
+  const [garagesList, setGaragesList] = useState<any[]>([]);
+  const [dealsList, setDealsList] = useState<any[]>([]);
 
   useEffect(() => {
     const handleSearch = (event: Event) => {
