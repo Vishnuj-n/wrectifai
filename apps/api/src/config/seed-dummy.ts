@@ -29,6 +29,7 @@ async function seed() {
         specializations: ['Engine', 'Brakes'],
         rating_avg: 4.6,
         rating_count: 128,
+        response_mins: 30,
       },
       {
         id: '00000000-0000-0000-0000-000000000004',
@@ -37,6 +38,7 @@ async function seed() {
         specializations: ['Maintenance', 'Tyres'],
         rating_avg: 4.5,
         rating_count: 96,
+        response_mins: 40,
       },
       {
         id: '00000000-0000-0000-0000-000000000005',
@@ -45,16 +47,17 @@ async function seed() {
         specializations: ['Brakes', 'Suspension'],
         rating_avg: 4.4,
         rating_count: 110,
+        response_mins: 45,
       },
     ];
 
     for (const g of garagesToSeed) {
       await query(
-        `INSERT INTO garages (id, owner_user_id, name, address, specializations, approval_status, rating_avg, rating_count)
-         VALUES ($1, $2, $3, $4, $5, 'approved', $6, $7)
+        `INSERT INTO garages (id, owner_user_id, name, address, specializations, approval_status, rating_avg, rating_count, response_mins)
+         VALUES ($1, $2, $3, $4, $5, 'approved', $6, $7, $8)
          ON CONFLICT (id) DO UPDATE 
-         SET name = EXCLUDED.name, address = EXCLUDED.address, specializations = EXCLUDED.specializations, rating_avg = EXCLUDED.rating_avg, rating_count = EXCLUDED.rating_count`,
-        [g.id, ownerId, g.name, g.address, g.specializations, g.rating_avg, g.rating_count]
+         SET name = EXCLUDED.name, address = EXCLUDED.address, specializations = EXCLUDED.specializations, rating_avg = EXCLUDED.rating_avg, rating_count = EXCLUDED.rating_count, response_mins = EXCLUDED.response_mins`,
+        [g.id, ownerId, g.name, g.address, g.specializations, g.rating_avg, g.rating_count, g.response_mins]
       );
       console.log(`Seeded garage: ${g.name}`);
     }

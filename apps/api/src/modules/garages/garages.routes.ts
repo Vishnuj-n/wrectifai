@@ -18,6 +18,7 @@ function mapGarageDbRow(g: any) {
     image: g.image || null,
     chips: g.specializations || [],
     verified: g.approval_status === 'approved',
+    responseMins: g.responseMins !== null && g.responseMins !== undefined ? Number(g.responseMins) : 30,
   };
 }
 
@@ -27,7 +28,7 @@ garagesRouter.get('/search', async (req, res) => {
       `SELECT id, name, address, specializations, approval_status, 
               rating_avg as "ratingAvg", rating_count as "ratingCount",
               starting_price as "startingPrice", distance_km as "distanceKm",
-              badge, image
+              badge, image, response_mins as "responseMins"
        FROM garages
        WHERE approval_status = 'approved'`
     );
@@ -50,7 +51,7 @@ garagesRouter.get('/:id', async (req, res) => {
       `SELECT id, name, address, specializations, approval_status, 
               rating_avg as "ratingAvg", rating_count as "ratingCount",
               starting_price as "startingPrice", distance_km as "distanceKm",
-              badge, image
+              badge, image, response_mins as "responseMins"
        FROM garages
        WHERE id = $1`,
       [req.params.id]

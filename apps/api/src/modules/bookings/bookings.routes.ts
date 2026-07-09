@@ -8,6 +8,7 @@ export const bookingsRouter = Router();
 // GET /bookings — list all bookings (shared globally for Sprint 6)
 bookingsRouter.get('/', authenticate, async (req, res) => {
   try {
+    const customerId = req.user?.userId;
     const result = await query(
       `SELECT 
         b.id,
@@ -30,7 +31,9 @@ bookingsRouter.get('/', authenticate, async (req, res) => {
        FROM bookings b
        JOIN garages g ON b.garage_id = g.id
        JOIN vehicles v ON b.vehicle_id = v.id
-       ORDER BY b.scheduled_at DESC`
+       WHERE b.customer_id = $1
+       ORDER BY b.scheduled_at DESC`,
+      [customerId]
     );
 
     const formatted = result.rows.map((row) => ({
@@ -110,8 +113,9 @@ async function createBookingInternal(req: any, res: any, data: {
   quoteId?: string | null;
   currency?: string;
 }) {
-  const customerId = req.user?.userId || '00000000-0000-0000-0000-000000000001';
-  let { garageId, vehicleId, scheduledAt, totalAmount, bookingType, quoteId, currency } = data;
+  const customerId = req.user?.userId;
+  let { garageId } = data;
+  const { vehicleId, scheduledAt, totalAmount, bookingType, quoteId, currency } = data;
 
   if (!vehicleId || !scheduledAt || !totalAmount || !bookingType) {
     return error(res, 'Missing required booking fields', 'BAD_REQUEST', 400);

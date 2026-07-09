@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Disc3,
   Gauge,
   Home,
   Percent,
