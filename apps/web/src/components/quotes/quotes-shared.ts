@@ -15,6 +15,15 @@ export type QuoteItem = {
   time: string;
   tag?: string;
   details?: any;
+  requestCreatedAt?: string;
+  requestIssueSummary?: string;
+  vehicle?: {
+    make: string;
+    model: string;
+    year: number;
+    vin?: string;
+    mileage?: number;
+  } | null;
 };
 
 const DOLLAR = '$';

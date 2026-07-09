@@ -191,46 +191,120 @@ interface Vehicle {
   mileage?: number;
 }
 
-export function RequestAentPage({ issues }: { issues?: string }) {
+import { getQuoteRequest } from '@/lib/quotes-api';
+import { getDiagnosis } from '@/lib/diagnosis-api';
+
+export function RequestAentPage({ issues, requestId }: { issues?: string; requestId?: string }) {
   const router = useRouter();
   const pageRootRef = useRef<HTMLDivElement>(null);
-  const [selectedVehicle] = useState<Vehicle | null>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('wrectifai_selected_vehicle');
-      if (stored) {
-        try {
-          return JSON.parse(stored) as Vehicle;
-        } catch (e) {
-          console.error(e);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [selectedIssues, setSelectedIssues] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        if (!requestId) {
+          const vehicleStr = typeof window !== 'undefined' ? localStorage.getItem('wrectifai_selected_vehicle') : null;
+          const parsedVehicle = vehicleStr ? JSON.parse(vehicleStr) : null;
+          setSelectedVehicle(parsedVehicle);
+          
+          const selectedIssueIds = (issues || 'wheel-balance,wheel-alignment')
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean);
+
+          let allIssues = [...resultIssues];
+          if (typeof window !== 'undefined') {
+            const storedCustom = localStorage.getItem('wrectifai_custom_issues');
+            if (storedCustom) {
+              try {
+                const customIssues = JSON.parse(storedCustom);
+                allIssues = [...allIssues, ...customIssues];
+              } catch (e) {
+                console.error('Failed to parse custom issues:', e);
+              }
+            }
+          }
+          const filtered = allIssues.filter((issue) => selectedIssueIds.includes(issue.id));
+          setSelectedIssues(filtered);
+          return;
         }
+
+        const qr = await getQuoteRequest(requestId);
+        if (qr) {
+          setSelectedVehicle(qr.vehicle ? { id: qr.vehicleId, ...qr.vehicle } : null);
+
+          if (qr.diagnosisRequestId) {
+            try {
+              const diag = await getDiagnosis(qr.diagnosisRequestId);
+              if (diag && diag.result && diag.result.issues) {
+                const getBadgeForIssue = (name: string, overallRisk?: string, index?: number) => {
+                  if (index === 0 && overallRisk) {
+                    if (overallRisk === 'low') return { badge: 'Low Risk', badgeClass: 'text-[#2e7d32] bg-[#edf7ed]' };
+                    if (overallRisk === 'medium') return { badge: 'Caution', badgeClass: 'text-[#e27622] bg-[#fdf5ed]' };
+                    return { badge: 'Critical', badgeClass: 'text-[#ea3838] bg-[#fef1f1]' };
+                  }
+                  const nameLower = name.toLowerCase();
+                  if (nameLower.includes('brake') || nameLower.includes('steering') || nameLower.includes('suspension') || nameLower.includes('airbag')) {
+                    return { badge: 'Critical', badgeClass: 'text-[#ea3838] bg-[#fef1f1]' };
+                  }
+                  if (nameLower.includes('filter') || nameLower.includes('wiper') || nameLower.includes('bulb')) {
+                    return { badge: 'Low Risk', badgeClass: 'text-[#2e7d32] bg-[#edf7ed]' };
+                  }
+                  return { badge: 'Caution', badgeClass: 'text-[#e27622] bg-[#fdf5ed]' };
+                };
+
+                const mapped = diag.result.issues.map((issue: any, index: number) => {
+                  const match = issue.confidence || 85;
+                  const { badge, badgeClass } = getBadgeForIssue(issue.name || issue.title, diag.result.riskLevel, index);
+                  return {
+                    id: `db_issue_${index}`,
+                    title: issue.name || issue.title,
+                    badge,
+                    badgeClass,
+                    description: `Diagnosed issue: ${issue.name || issue.title}. Requires parts: ${issue.requiredParts?.join(', ') || 'None specified'}.`,
+                    match,
+                    imageSrc: '/assets/mega car.png'
+                  };
+                });
+                setSelectedIssues(mapped);
+                return;
+              }
+            } catch (err) {
+              console.error('Failed to fetch linked diagnosis:', err);
+            }
+          }
+
+          if (qr.issueSummary) {
+            const summaryIssues = qr.issueSummary.split(',').map((name, index) => {
+              const found = resultIssues.find(r => r.title.toLowerCase() === name.trim().toLowerCase());
+              if (found) {
+                return found;
+              }
+              return {
+                id: `summary_issue_${index}`,
+                title: name.trim(),
+                badge: 'Caution',
+                badgeClass: 'text-[#e27622] bg-[#fdf5ed]',
+                description: `Requested issue: ${name.trim()}`,
+                match: 85,
+                imageSrc: '/assets/mega car.png'
+              };
+            });
+            setSelectedIssues(summaryIssues);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load quote request details:', err);
+      } finally {
+        setIsLoading(false);
       }
     }
-    return null;
-  });
 
+    loadData();
+  }, [requestId, issues]);
 
-  const selectedIssueIds = (issues || 'wheel-balance,wheel-alignment')
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-  const getSelectedIssues = () => {
-    let allIssues = [...resultIssues];
-    if (typeof window !== 'undefined') {
-      const storedCustom = localStorage.getItem('wrectifai_custom_issues');
-      if (storedCustom) {
-        try {
-          const customIssues = JSON.parse(storedCustom);
-          allIssues = [...allIssues, ...customIssues];
-        } catch (e) {
-          console.error('Failed to parse custom issues:', e);
-        }
-      }
-    }
-    return allIssues.filter((issue) => selectedIssueIds.includes(issue.id));
-  };
-
-  const selectedIssues = getSelectedIssues();
   const featuredGarages = garages.slice(0, 4);
 
   useEffect(() => {
@@ -474,9 +548,7 @@ export function RequestAentPage({ issues }: { issues?: string }) {
                         router.push(
                           `/garages?garage=${encodeURIComponent(
                             garage.name
-                          )}&source=request-aent&issues=${selectedIssueIds.join(
-                            ','
-                          )}`
+                          )}&source=request-aent&issues=${selectedIssues.map((i) => i.id).join(',')}`
                         )
                       }
                       className="ui-link inline-flex h-[34px] min-w-[84px] items-center justify-center rounded-[10px] border border-[#b9caff] px-3 transition-colors hover:bg-[#f7faff]"

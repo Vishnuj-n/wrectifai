@@ -151,18 +151,30 @@ export function QuotesPage() {
   const selectedQuoteCount = selectedQuoteIds.length;
   const canCompare = selectedQuoteCount >= 2;
   const selectedLimitReached = selectedQuoteCount >= 3;
-  const issueIds = useMemo(
-    () =>
-      (searchParams?.get('issues') || quoteContextDefaultIssueIds.join(','))
-        .split(',')
-        .map((item) => item.trim())
-        .filter(Boolean),
-    [searchParams]
-  );
-  const requestedIssues = useMemo(
-    () => resultIssues.filter((issue) => issueIds.includes(issue.id)),
-    [issueIds]
-  );
+  const requestedIssues = useMemo(() => {
+    const issuesFromQuery = searchParams?.get('issues');
+    if (issuesFromQuery) {
+      const ids = issuesFromQuery.split(',').map((item) => item.trim()).filter(Boolean);
+      return resultIssues.filter((issue) => ids.includes(issue.id));
+    }
+    const dbSummary = quotes[0]?.requestIssueSummary;
+    if (dbSummary) {
+      return dbSummary.split(',').map((name, index) => {
+        const found = resultIssues.find((r) => r.title.toLowerCase() === name.trim().toLowerCase());
+        if (found) return found;
+        return {
+          id: `db_summary_${index}`,
+          title: name.trim(),
+          badge: 'Caution',
+          badgeClass: 'text-[#e27622] bg-[#fdf5ed]',
+          description: `Requested issue: ${name.trim()}`,
+          match: 85,
+          imageSrc: '/assets/mega car.png',
+        };
+      });
+    }
+    return resultIssues.filter((issue) => quoteContextDefaultIssueIds.includes(issue.id));
+  }, [searchParams, quotes]);
 
   return (
     <DashboardShell header={<TopNavbar />}>
@@ -437,7 +449,7 @@ export function QuotesPage() {
                                 router.push(
                                   `/garages?source=quotes&quote=${
                                     quote.id
-                                  }&issues=${issueIds.join(',')}`
+                                  }&issues=${requestedIssues.map((i) => i.id).join(',')}`
                                 );
                               }
                             }}

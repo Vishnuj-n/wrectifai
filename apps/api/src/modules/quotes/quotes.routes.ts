@@ -141,24 +141,44 @@ quotesRouter.get('/:quoteId', authenticate, async (req, res) => {
   }
 });
 
-quotesRouter.post('/requests', authenticate, (req, res) => {
-  const { vehicleId, issueSummary } = req.body;
-  if (!vehicleId || !issueSummary) {
-    return error(res, 'Vehicle ID and Issue Summary are required', 'BAD_REQUEST', 400);
-  }
+quotesRouter.post('/requests', authenticate, async (req, res) => {
+  try {
+    const { vehicleId, issueSummary, diagnosisRequestId, preferredDate } = req.body;
+    if (!vehicleId || !issueSummary) {
+      return error(res, 'Vehicle ID and Issue Summary are required', 'BAD_REQUEST', 400);
+    }
 
-  return success(
-    res,
-    {
-      id: 'qr_1',
-      customerId: req.user?.userId,
-      vehicleId,
-      issueSummary,
-      status: 'open',
-      createdAt: new Date().toISOString(),
-    },
-    201
-  );
+    const customerId = req.user?.userId;
+    if (!customerId) {
+      return error(res, 'Authentication failed: no customer ID found', 'UNAUTHORIZED', 401);
+    }
+
+    // Verify vehicle exists
+    const vehicleRes = await query(
+      'SELECT id FROM vehicles WHERE id = $1',
+      [vehicleId]
+    );
+    if (vehicleRes.rows.length === 0) {
+      return error(res, 'Vehicle not found', 'BAD_REQUEST', 400);
+    }
+
+    const result = await query(
+      `INSERT INTO quote_requests (customer_id, vehicle_id, diagnosis_request_id, issue_summary, preferred_date, status)
+       VALUES ($1, $2, $3, $4, $5, 'open')
+       RETURNING id, customer_id as "customerId", vehicle_id as "vehicleId", diagnosis_request_id as "diagnosisRequestId", issue_summary as "issueSummary", preferred_date as "preferredDate", status, created_at as "createdAt"`,
+      [customerId, vehicleId, diagnosisRequestId || null, issueSummary, preferredDate || null]
+    );
+
+    return success(res, result.rows[0], 201);
+  } catch (err: any) {
+    console.error('Quote request creation failed:', err);
+    return error(
+      res,
+      err instanceof Error ? err.message : 'Failed to create quote request',
+      'DATABASE_ERROR',
+      500
+    );
+  }
 });
 
 quotesRouter.get('/requests/:requestId', authenticate, async (req, res) => {

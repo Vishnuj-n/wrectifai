@@ -27,7 +27,17 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
   const [errorText, setErrorText] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const hasAutoSelected = useRef(false);
-  const hasFetched = useRef(false);
+
+  const onChangeRef = useRef(onChange);
+  const valueRef = useRef(value);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
 
   const fetchVehicles = useCallback(async (active: { current: boolean }) => {
     setLoading(true);
@@ -38,7 +48,8 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
 
       setVehicles(data || []);
 
-      if (!hasAutoSelected.current && data && data.length > 0 && !value && typeof window !== 'undefined') {
+      const currentValue = valueRef.current;
+      if (!hasAutoSelected.current && data && data.length > 0 && !currentValue && typeof window !== 'undefined') {
         hasAutoSelected.current = true;
         const storedStr = localStorage.getItem('wrectifai_selected_vehicle');
         let selected = false;
@@ -47,7 +58,7 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
             const stored = JSON.parse(storedStr) as Vehicle;
             const found = data.find((v: Vehicle) => v.id === stored.id);
             if (found) {
-              onChange(found.id, found);
+              onChangeRef.current(found.id, found);
               selected = true;
             }
           } catch (e) {
@@ -55,7 +66,7 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
           }
         }
         if (!selected && data[0]) {
-          onChange(data[0].id, data[0]);
+          onChangeRef.current(data[0].id, data[0]);
           localStorage.setItem('wrectifai_selected_vehicle', JSON.stringify(data[0]));
         }
       }
@@ -68,15 +79,10 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
         setLoading(false);
       }
     }
-  }, [value, onChange]);
+  }, []);
 
   useEffect(() => {
-    // Each effect invocation owns its own `active` object.
-    // The cleanup only sets THIS invocation's flag to false,
-    // so a concurrent fetch from a prior run (e.g. React StrictMode)
-    // cannot corrupt the current one's state updates.
     const active = { current: true };
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchVehicles(active);
     return () => {
       active.current = false;

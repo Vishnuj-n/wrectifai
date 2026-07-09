@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, CarFront, Check } from 'lucide-react';
 import { DashboardShell } from '@/components/home/dashboard-shell';
@@ -10,6 +10,8 @@ import { TopNavbar } from '@/components/home/top-navbar';
 import { Card } from '@/components/common/card';
 import { ResultTrustFooter, resultIssues } from '@/components/ai-diagnose/diagnose-flow-shared';
 import { cn } from '@/utils/cn';
+
+import { createQuoteRequest } from '@/lib/quotes-api';
 
 interface Vehicle {
   id: string;
@@ -20,10 +22,11 @@ interface Vehicle {
   mileage?: number;
 }
 
-export function FindingQuotesPage({ issues }: { issues?: string }) {
+export function FindingQuotesPage({ issues, diagnosisRequestId }: { issues?: string; diagnosisRequestId?: string }) {
   const pageRootRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
+  const [requestId, setRequestId] = useState<string | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('wrectifai_selected_vehicle');
@@ -39,12 +42,14 @@ export function FindingQuotesPage({ issues }: { issues?: string }) {
   });
 
 
-  const selectedIssueIds = (issues || 'wheel-balance,wheel-alignment')
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
+  const selectedIssueIds = useMemo(() => {
+    return (issues || 'wheel-balance,wheel-alignment')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }, [issues]);
 
-  const getChosenIssues = () => {
+  const chosenIssues = useMemo(() => {
     let allIssues = [...resultIssues];
     if (typeof window !== 'undefined') {
       const storedCustom = localStorage.getItem('wrectifai_custom_issues');
@@ -58,9 +63,37 @@ export function FindingQuotesPage({ issues }: { issues?: string }) {
       }
     }
     return allIssues.filter((issue) => selectedIssueIds.includes(issue.id));
-  };
+  }, [selectedIssueIds]);
 
-  const chosenIssues = getChosenIssues();
+  const hasSubmitted = useRef(false);
+
+  useEffect(() => {
+    if (hasSubmitted.current) return;
+    let active = true;
+    async function submitRequest() {
+      try {
+        hasSubmitted.current = true;
+        const vehicleId = selectedVehicle?.id || 'v1';
+        const issueSummary = chosenIssues.map((i) => i.title).join(', ');
+        const response = await createQuoteRequest({
+          vehicleId,
+          issueSummary,
+          diagnosisRequestId,
+        });
+        if (active) {
+          setRequestId(response.id);
+        }
+      } catch (err) {
+        console.error('Failed to create quote request:', err);
+        hasSubmitted.current = false;
+        // Fallback to a mock string or retry logic if desired, but here we just log
+      }
+    }
+    submitRequest();
+    return () => {
+      active = false;
+    };
+  }, [selectedVehicle?.id, diagnosisRequestId, chosenIssues]);
 
   useEffect(() => {
     if (currentStep < 4) {
@@ -68,10 +101,10 @@ export function FindingQuotesPage({ issues }: { issues?: string }) {
         setCurrentStep((prev) => prev + 1);
       }, 1000);
       return () => clearTimeout(timer);
-    } else {
-      router.push(`/request-aent?issues=${selectedIssueIds.join(',')}`);
+    } else if (requestId) {
+      router.push(`/request-aent?requestId=${requestId}`);
     }
-  }, [currentStep, router, selectedIssueIds]);
+  }, [currentStep, router, requestId]);
 
   useEffect(() => {
     const pageScroller = (() => {

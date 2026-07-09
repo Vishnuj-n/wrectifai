@@ -92,22 +92,30 @@ import { cn } from '@/utils/cn';
 import { VehicleSelector } from '@/components/common/vehicle-selector';
 import { submitDiagnosis, type DiagnosisResponse } from '../../lib/diagnosis-api';
 
-function mapLlmIssueToDiagnosticResult(llmIssue: LlmIssue, index: number): DiagnosticIssueResult {
+function getBadgeForIssue(name: string, overallRisk?: string, index?: number) {
+  if (index === 0 && overallRisk) {
+    if (overallRisk === 'low') return { badge: 'Low Risk', badgeClass: 'text-[#2e7d32] bg-[#edf7ed]' };
+    if (overallRisk === 'medium') return { badge: 'Caution', badgeClass: 'text-[#e27622] bg-[#fdf5ed]' };
+    return { badge: 'Critical', badgeClass: 'text-[#ea3838] bg-[#fef1f1]' };
+  }
+  const nameLower = name.toLowerCase();
+  if (nameLower.includes('brake') || nameLower.includes('steering') || nameLower.includes('suspension') || nameLower.includes('airbag')) {
+    return { badge: 'Critical', badgeClass: 'text-[#ea3838] bg-[#fef1f1]' };
+  }
+  if (nameLower.includes('filter') || nameLower.includes('wiper') || nameLower.includes('bulb')) {
+    return { badge: 'Low Risk', badgeClass: 'text-[#2e7d32] bg-[#edf7ed]' };
+  }
+  return { badge: 'Caution', badgeClass: 'text-[#e27622] bg-[#fdf5ed]' };
+}
+
+function mapLlmIssueToDiagnosticResult(llmIssue: LlmIssue, index: number, overallRisk?: string): DiagnosticIssueResult {
   const match = llmIssue.confidence;
   const priceRange = llmIssue.estimatedPriceRange;
   const estimatedCost = `$${priceRange.min} - $${priceRange.max}`;
   const id = `llm_issue_${index}`;
   const title = llmIssue.name;
   
-  let badge = 'Caution';
-  let badgeClass = 'text-[#e27622] bg-[#fdf5ed]';
-  if (match >= 80) {
-    badge = 'Critical';
-    badgeClass = 'text-[#ea3838] bg-[#fef1f1]';
-  } else if (match <= 50) {
-    badge = 'Low Risk';
-    badgeClass = 'text-[#2e7d32] bg-[#edf7ed]';
-  }
+  const { badge, badgeClass } = getBadgeForIssue(title, overallRisk, index);
 
   return {
     id,
@@ -517,6 +525,22 @@ function getResultSummaryItems(
   const topIssue = issues[0];
   const secondaryIssues = issues.slice(1);
 
+  let pill = 'High Priority';
+  let pillClass = 'bg-[#ffe9ec] text-[#ff5a63]';
+
+  if (topIssue) {
+    if (topIssue.badge === 'Low Risk') {
+      pill = 'Low Priority';
+      pillClass = 'bg-[#e8f8eb] text-[#25a24a]';
+    } else if (topIssue.badge === 'Caution') {
+      pill = 'Medium Priority';
+      pillClass = 'bg-[#fff5e8] text-[#f39b20]';
+    } else if (topIssue.badge === 'Critical') {
+      pill = 'High Priority';
+      pillClass = 'bg-[#ffe9ec] text-[#ff5a63]';
+    }
+  }
+
   return [
     {
       title: 'Top Concern',
@@ -524,8 +548,8 @@ function getResultSummaryItems(
       body:
         topIssue?.description ??
         'Your answers suggest a primary issue, but a garage inspection is still recommended.',
-      pill: 'High Priority',
-      pillClass: 'bg-[#ffe9ec] text-[#ff5a63]',
+      pill,
+      pillClass,
       icon: CircleAlert,
       iconClass: 'bg-[#fff1f1] text-[#ff5d67]',
     },
@@ -1794,7 +1818,7 @@ export function AIDiagnosePage() {
           
           if (response.result && response.result.issues) {
             const mapped = response.result.issues.map((issue: LlmIssue, index: number) => 
-              mapLlmIssueToDiagnosticResult(issue, index)
+              mapLlmIssueToDiagnosticResult(issue, index, response.result.riskLevel)
             );
             setCustomResultIssues(mapped);
             setSelectedIssues(mapped.map((m) => m.id));
@@ -2144,7 +2168,7 @@ export function AIDiagnosePage() {
             onToggleIssue={toggleSelectedIssue}
             onEditIssue={resetDiagnoseFlow}
             onRequestQuotes={() =>
-              router.push(`/finding-quotes?issues=${selectedIssues.join(',')}`)
+              router.push(`/finding-quotes?issues=${selectedIssues.join(',')}${apiResult?.id ? `&diagnosisRequestId=${apiResult.id}` : ''}`)
             }
             selectedVehicle={selectedVehicle}
             nextSteps={nextSteps}
