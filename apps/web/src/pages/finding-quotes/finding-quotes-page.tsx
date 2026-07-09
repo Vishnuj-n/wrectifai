@@ -27,20 +27,31 @@ export function FindingQuotesPage({ issues, diagnosisRequestId }: { issues?: str
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [requestId, setRequestId] = useState<string | null>(null);
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(() => {
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [customIssues, setCustomIssues] = useState<any[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('wrectifai_selected_vehicle');
       if (stored) {
         try {
-          return JSON.parse(stored) as Vehicle;
+          setSelectedVehicle(JSON.parse(stored) as Vehicle);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      const storedCustom = localStorage.getItem('wrectifai_custom_issues');
+      if (storedCustom) {
+        try {
+          setCustomIssues(JSON.parse(storedCustom) as any[]);
         } catch (e) {
           console.error(e);
         }
       }
     }
-    return null;
-  });
-
+    setIsMounted(true);
+  }, []);
 
   const selectedIssueIds = useMemo(() => {
     return (issues || 'wheel-balance,wheel-alignment')
@@ -50,24 +61,14 @@ export function FindingQuotesPage({ issues, diagnosisRequestId }: { issues?: str
   }, [issues]);
 
   const chosenIssues = useMemo(() => {
-    let allIssues = [...resultIssues];
-    if (typeof window !== 'undefined') {
-      const storedCustom = localStorage.getItem('wrectifai_custom_issues');
-      if (storedCustom) {
-        try {
-          const customIssues = JSON.parse(storedCustom);
-          allIssues = [...allIssues, ...customIssues];
-        } catch (e) {
-          console.error('Failed to parse custom issues:', e);
-        }
-      }
-    }
+    const allIssues = [...resultIssues, ...customIssues];
     return allIssues.filter((issue) => selectedIssueIds.includes(issue.id));
-  }, [selectedIssueIds]);
+  }, [selectedIssueIds, customIssues]);
 
   const hasSubmitted = useRef(false);
 
   useEffect(() => {
+    if (!isMounted) return;
     if (hasSubmitted.current) return;
     let active = true;
     async function submitRequest() {
@@ -93,7 +94,7 @@ export function FindingQuotesPage({ issues, diagnosisRequestId }: { issues?: str
     return () => {
       active = false;
     };
-  }, [selectedVehicle?.id, diagnosisRequestId, chosenIssues]);
+  }, [isMounted, selectedVehicle?.id, diagnosisRequestId, chosenIssues]);
 
   useEffect(() => {
     if (currentStep < 4) {
