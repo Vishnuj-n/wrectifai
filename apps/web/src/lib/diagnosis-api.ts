@@ -57,3 +57,89 @@ export async function submitDiagnosis(payload: SubmitDiagnosisPayload): Promise<
 export async function getDiagnosis(id: string): Promise<DiagnosisResponse> {
   return apiClient.get(`/diagnosis/${id}`);
 }
+
+// Diagnose Config Types
+export interface IssueQuestion {
+  id: string;
+  label: string;
+  question: string;
+  options: string[];
+}
+
+export interface DiagnosticIssueResult {
+  id: string;
+  title: string;
+  badge: string;
+  badgeClass: string;
+  description: string;
+  match: number;
+  risks: string[];
+  estimatedCost: string;
+  imageSrc: string;
+}
+
+export interface IssueCategoryConfig {
+  id: string;
+  label: string;
+  summary: string;
+  summaryMeaning: string;
+  keywords: string[];
+  questions: IssueQuestion[];
+  possibleIssues: DiagnosticIssueResult[];
+}
+
+export interface ResultSummaryItem {
+  title: string;
+  heading: string;
+  body: string;
+  pill: string;
+  pillClass: string;
+  icon: string;
+  iconClass: string;
+}
+
+export interface NextStep {
+  step: string;
+  title: string;
+  body: string;
+  meta: string;
+}
+
+export interface TrustItem {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+}
+
+export interface DiagnoseConfig {
+  categories: IssueCategoryConfig[];
+  resultSummaries: ResultSummaryItem[];
+  nextSteps: NextStep[];
+  trustItems: TrustItem[];
+}
+
+// Diagnose Config API Functions
+export async function getDiagnoseCategories(): Promise<IssueCategoryConfig[]> {
+  return apiClient.get('/diagnose/config/categories');
+}
+
+export async function getDiagnoseCategory(id: string): Promise<IssueCategoryConfig> {
+  return apiClient.get(`/diagnose/config/categories/${id}`);
+}
+
+export async function getDiagnoseResultSummaries(): Promise<ResultSummaryItem[]> {
+  return apiClient.get('/diagnose/config/result-summaries');
+}
+
+export async function getDiagnoseNextSteps(): Promise<NextStep[]> {
+  return apiClient.get('/diagnose/config/next-steps');
+}
+
+export async function getDiagnoseTrustItems(): Promise<TrustItem[]> {
+  return apiClient.get('/diagnose/config/trust-items');
+}
+
+export async function getDiagnoseConfig(): Promise<DiagnoseConfig> {
+  return apiClient.get('/diagnose/config/all');
+}

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { success, error } from '../../utils/response';
 import { authenticate, requireRole } from '../../middleware/auth';
 import { DiagnosisService } from './diagnosis.service';
+import { query } from '../../config/database';
 
 export const diagnosisRouter = Router();
 
@@ -20,6 +21,12 @@ diagnosisRouter.post('/', authenticate, requireRole(['user', 'garage', 'vendor',
     const customerId = req.user?.userId;
     if (!customerId) {
       return error(res, 'Authentication failed: no customer ID found', 'UNAUTHORIZED', 401);
+    }
+
+    // Verify user exists in the database to prevent foreign key constraint violations (e.g. from stale token sessions after DB resets)
+    const userCheck = await query('SELECT id FROM users WHERE id = $1', [customerId]);
+    if (userCheck.rows.length === 0) {
+      return error(res, 'User session is invalid or user does not exist. Please log in again.', 'UNAUTHORIZED', 401);
     }
 
     if (stage === 'questions') {
