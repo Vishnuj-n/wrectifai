@@ -30,7 +30,7 @@ garagesRouter.get('/search', async (req, res) => {
               starting_price as "startingPrice", distance_km as "distanceKm",
               badge, image, response_mins as "responseMins"
        FROM garages
-       WHERE approval_status = 'approved'`
+       WHERE approval_status IN ('approved', 'pending')`
     );
 
     const mapped = result.rows.map(mapGarageDbRow);

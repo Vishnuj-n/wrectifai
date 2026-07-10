@@ -82,7 +82,7 @@ export const issueCategories: IssueCategoryConfig[] = [
         match: 88,
         risks: ['Engine wear', 'Overheating', 'Internal damage'],
         estimatedCost: 'Rs. 1,500 - Rs. 4,000',
-        imageSrc: '/assets/engine_oil.png',
+        imageSrc: '/assets/Engine_oil.png',
       },
       {
         id: 'belt-tensioner',
@@ -93,7 +93,7 @@ export const issueCategories: IssueCategoryConfig[] = [
         match: 71,
         risks: ['Accessory failure', 'Battery not charging', 'Breakdown risk'],
         estimatedCost: 'Rs. 2,000 - Rs. 6,500',
-        imageSrc: '/assets/alternator.png',
+        imageSrc: '/assets/Electrical.png',
       },
       {
         id: 'timing-component',

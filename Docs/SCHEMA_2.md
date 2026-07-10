@@ -26,16 +26,15 @@ PostgreSQL 15+ | UUID primary keys | JSONB for flexible objects | `TIMESTAMPTZ` 
 
 ### `users`
 
-| Column | Type | Constraints | Notes |
-|--------|------|-------------|-------|
-| `id` | `UUID` | PK, DEFAULT `uuid_generate_v4()` | |
-| `email` | `VARCHAR(255)` | UNIQUE | Email auth |
-| `mobile_number` | `VARCHAR(20)` | UNIQUE | Phone auth |
-| `password_hash` | `VARCHAR(255)` | | Password auth |
-| `name` | `VARCHAR(255)` | NOT NULL | Display name |
-| `status` | `VARCHAR(50)` | NOT NULL, CHECK (`active`, `suspended`, `pendingVerification`) | |
-| `created_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | |
-| `updated_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | Auto-updated via trigger |
+| Column          | Type           | Constraints                                                    | Notes                    |
+| --------------- | -------------- | -------------------------------------------------------------- | ------------------------ |
+| `id`            | `UUID`         | PK, DEFAULT `uuid_generate_v4()`                               |                          |
+| `email`         | `VARCHAR(255)` | UNIQUE                                                         | Email auth               |
+| `mobile_number` | `VARCHAR(20)`  | UNIQUE                                                         | Phone auth               |
+| `name`          | `VARCHAR(255)` | NOT NULL                                                       | Display name             |
+| `status`        | `VARCHAR(50)`  | NOT NULL, CHECK (`active`, `suspended`, `pendingVerification`) |                          |
+| `created_at`    | `TIMESTAMPTZ`  | NOT NULL, DEFAULT NOW()                                        |                          |
+| `updated_at`    | `TIMESTAMPTZ`  | NOT NULL, DEFAULT NOW()                                        | Auto-updated via trigger |
 
 **Indexes**: `status`, `created_at`
 
@@ -43,13 +42,13 @@ PostgreSQL 15+ | UUID primary keys | JSONB for flexible objects | `TIMESTAMPTZ` 
 
 ### `roles`
 
-| Column | Type | Constraints | Notes |
-|--------|------|-------------|-------|
-| `id` | `UUID` | PK, DEFAULT `uuid_generate_v4()` | |
-| `code` | `VARCHAR(50)` | NOT NULL, UNIQUE, CHECK (`customer`, `garage`, `vendor`, `admin`) | |
-| `name` | `VARCHAR(100)` | NOT NULL | Human readable |
-| `created_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | |
-| `updated_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | Auto-updated via trigger |
+| Column       | Type           | Constraints                                                       | Notes                    |
+| ------------ | -------------- | ----------------------------------------------------------------- | ------------------------ |
+| `id`         | `UUID`         | PK, DEFAULT `uuid_generate_v4()`                                  |                          |
+| `code`       | `VARCHAR(50)`  | NOT NULL, UNIQUE, CHECK (`customer`, `garage`, `vendor`, `admin`) |                          |
+| `name`       | `VARCHAR(100)` | NOT NULL                                                          | Human readable           |
+| `created_at` | `TIMESTAMPTZ`  | NOT NULL, DEFAULT NOW()                                           |                          |
+| `updated_at` | `TIMESTAMPTZ`  | NOT NULL, DEFAULT NOW()                                           | Auto-updated via trigger |
 
 **Seed**: 4 roles inserted by `001_initial_schema.sql`
 
@@ -74,19 +73,19 @@ PostgreSQL 15+ | UUID primary keys | JSONB for flexible objects | `TIMESTAMPTZ` 
 
 ### `vehicles`
 
-| Column | Type | Constraints | Notes |
-|--------|------|-------------|-------|
-| `id` | `UUID` | PK, DEFAULT `uuid_generate_v4()` | |
-| `customer_id` | `UUID` | NOT NULL, FK → `users(id)` ON DELETE CASCADE | |
-| `make` | `VARCHAR(100)` | NOT NULL | e.g. Honda |
-| `model` | `VARCHAR(100)` | NOT NULL | e.g. City |
-| `year` | `INTEGER` | NOT NULL | |
-| `vin` | `VARCHAR(17)` | UNIQUE | Optional, 17-char VIN |
-| `mileage` | `INTEGER` | | Odometer reading |
-| `warranty` | `JSONB` | | `{ provider, policyNo, expiry }` |
-| `is_active` | `BOOLEAN` | NOT NULL, DEFAULT true | Soft delete (added in migration 003) |
-| `created_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | |
-| `updated_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | Auto-updated via trigger |
+| Column        | Type           | Constraints                                  | Notes                                |
+| ------------- | -------------- | -------------------------------------------- | ------------------------------------ |
+| `id`          | `UUID`         | PK, DEFAULT `uuid_generate_v4()`             |                                      |
+| `customer_id` | `UUID`         | NOT NULL, FK → `users(id)` ON DELETE CASCADE |                                      |
+| `make`        | `VARCHAR(100)` | NOT NULL                                     | e.g. Honda                           |
+| `model`       | `VARCHAR(100)` | NOT NULL                                     | e.g. City                            |
+| `year`        | `INTEGER`      | NOT NULL                                     |                                      |
+| `vin`         | `VARCHAR(17)`  | UNIQUE                                       | Optional, 17-char VIN                |
+| `mileage`     | `INTEGER`      |                                              | Odometer reading                     |
+| `warranty`    | `JSONB`        |                                              | `{ provider, policyNo, expiry }`     |
+| `is_active`   | `BOOLEAN`      | NOT NULL, DEFAULT true                       | Soft delete (added in migration 003) |
+| `created_at`  | `TIMESTAMPTZ`  | NOT NULL, DEFAULT NOW()                      |                                      |
+| `updated_at`  | `TIMESTAMPTZ`  | NOT NULL, DEFAULT NOW()                      | Auto-updated via trigger             |
 
 **Indexes**: `customer_id`, `created_at`, `is_active`
 
@@ -485,33 +484,33 @@ Knowledge base of common vehicle issues for diagnosis matching.
 
 ### `promos`
 
-| Column | Type | Constraints | Notes |
-|--------|------|-------------|-------|
-| `id` | `VARCHAR(100)` | PK | String ID, not UUID |
-| `badge` | `VARCHAR(255)` | | Badge label |
-| `badge_color` | `VARCHAR(100)` | | Tailwind color class |
-| `icon` | `VARCHAR(100)` | | Icon name |
-| `title` | `VARCHAR(255)` | NOT NULL | |
-| `bullets` | `TEXT[]` | | Feature bullets |
-| `display_price` | `VARCHAR(100)` | NOT NULL | Formatted price string |
-| `numeric_price` | `NUMERIC(12,2)` | NOT NULL | Sortable price value |
-| `strike_price` | `VARCHAR(100)` | | Original price string |
-| `strike_price_line_through` | `BOOLEAN` | DEFAULT true | |
-| `discount_label` | `VARCHAR(100)` | | e.g. "33% OFF" |
-| `discount_percent` | `INTEGER` | | |
-| `valid_till` | `TIMESTAMPTZ` | | |
-| `used_count` | `VARCHAR(100)` | | Formatted count string |
-| `used_count_value` | `INTEGER` | DEFAULT 0 | Sortable count value |
-| `image` | `TEXT` | | Image path or URL |
-| `image_class_name` | `TEXT` | | Tailwind classes |
-| `card_tint` | `TEXT` | | Card background gradient |
-| `bg_color` | `VARCHAR(100)` | | Background color |
-| `image_glow` | `TEXT` | | Radial gradient glow |
-| `accent` | `VARCHAR(100)` | | Accent text color |
-| `categories` | `TEXT[]` | | e.g. Car Care, Service, Combo Deals |
-| `is_combo` | `BOOLEAN` | DEFAULT false | Combo package flag |
-| `relevance` | `INTEGER` | DEFAULT 0 | Sort order weight |
-| `created_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | |
+| Column                      | Type            | Constraints             | Notes                               |
+| --------------------------- | --------------- | ----------------------- | ----------------------------------- |
+| `id`                        | `VARCHAR(100)`  | PK                      | String ID, not UUID                 |
+| `badge`                     | `VARCHAR(255)`  |                         | Badge label                         |
+| `badge_color`               | `VARCHAR(100)`  |                         | Tailwind color class                |
+| `icon`                      | `VARCHAR(100)`  |                         | Icon name                           |
+| `title`                     | `VARCHAR(255)`  | NOT NULL                |                                     |
+| `bullets`                   | `TEXT[]`        |                         | Feature bullets                     |
+| `display_price`             | `VARCHAR(100)`  | NOT NULL                | Formatted price string              |
+| `numeric_price`             | `NUMERIC(12,2)` | NOT NULL                | Sortable price value                |
+| `strike_price`              | `VARCHAR(100)`  |                         | Original price string               |
+| `strike_price_line_through` | `BOOLEAN`       | DEFAULT true            |                                     |
+| `discount_label`            | `VARCHAR(100)`  |                         | e.g. "33% OFF"                      |
+| `discount_percent`          | `INTEGER`       |                         |                                     |
+| `valid_till`                | `TIMESTAMPTZ`   |                         |                                     |
+| `used_count`                | `VARCHAR(100)`  |                         | Formatted count string              |
+| `used_count_value`          | `INTEGER`       | DEFAULT 0               | Sortable count value                |
+| `image`                     | `TEXT`          |                         | Image path or URL                   |
+| `image_class_name`          | `TEXT`          |                         | Tailwind classes                    |
+| `card_tint`                 | `TEXT`          |                         | Card background gradient            |
+| `bg_color`                  | `VARCHAR(100)`  |                         | Background color                    |
+| `image_glow`                | `TEXT`          |                         | Radial gradient glow                |
+| `accent`                    | `VARCHAR(100)`  |                         | Accent text color                   |
+| `categories`                | `TEXT[]`        |                         | e.g. Car Care, Service, Combo Deals |
+| `is_combo`                  | `BOOLEAN`       | DEFAULT false           | Combo package flag                  |
+| `relevance`                 | `INTEGER`       | DEFAULT 0               | Sort order weight                   |
+| `created_at`                | `TIMESTAMPTZ`   | NOT NULL, DEFAULT NOW() |                                     |
 
 **Seed**: 8 promo rows (summer/monsoon/winter/festival combos, wash, brake, AC offers)
 
@@ -521,13 +520,13 @@ Knowledge base of common vehicle issues for diagnosis matching.
 
 ### `refresh_tokens`
 
-| Column | Type | Constraints | Notes |
-|--------|------|-------------|-------|
-| `id` | `UUID` | PK, DEFAULT `uuid_generate_v4()` | |
-| `user_id` | `UUID` | NOT NULL, FK → `users(id)` ON DELETE CASCADE | |
-| `token_hash` | `VARCHAR(255)` | NOT NULL, UNIQUE | Hashed refresh token |
-| `expires_at` | `TIMESTAMPTZ` | NOT NULL | |
-| `created_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | |
+| Column       | Type           | Constraints                                  | Notes                |
+| ------------ | -------------- | -------------------------------------------- | -------------------- |
+| `id`         | `UUID`         | PK, DEFAULT `uuid_generate_v4()`             |                      |
+| `user_id`    | `UUID`         | NOT NULL, FK → `users(id)` ON DELETE CASCADE |                      |
+| `token_hash` | `VARCHAR(255)` | NOT NULL, UNIQUE                             | Hashed refresh token |
+| `expires_at` | `TIMESTAMPTZ`  | NOT NULL                                     |                      |
+| `created_at` | `TIMESTAMPTZ`  | NOT NULL, DEFAULT NOW()                      |                      |
 
 **Indexes**: `user_id`
 

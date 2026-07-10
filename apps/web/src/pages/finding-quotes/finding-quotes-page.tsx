@@ -12,6 +12,7 @@ import { ResultTrustFooter, resultIssues } from '@/components/ai-diagnose/diagno
 import { cn } from '@/utils/cn';
 
 import { createQuoteRequest } from '@/lib/quotes-api';
+import { getDiagnosis } from '@/lib/diagnosis-api';
 
 interface Vehicle {
   id: string;
@@ -32,26 +33,75 @@ export function FindingQuotesPage({ issues, diagnosisRequestId }: { issues?: str
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('wrectifai_selected_vehicle');
-      if (stored) {
-        try {
-          setSelectedVehicle(JSON.parse(stored) as Vehicle);
-        } catch (e) {
-          console.error(e);
+    async function loadData() {
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('wrectifai_selected_vehicle');
+        if (stored) {
+          try {
+            setSelectedVehicle(JSON.parse(stored) as Vehicle);
+          } catch (e) {
+            console.error(e);
+          }
         }
       }
-      const storedCustom = localStorage.getItem('wrectifai_custom_issues');
-      if (storedCustom) {
+
+      if (diagnosisRequestId) {
         try {
-          setCustomIssues(JSON.parse(storedCustom) as any[]);
-        } catch (e) {
-          console.error(e);
+          const diag = await getDiagnosis(diagnosisRequestId);
+          if (diag && diag.result && diag.result.issues) {
+            const getBadgeForIssue = (name: string, overallRisk?: string, index?: number) => {
+              if (index === 0 && overallRisk) {
+                if (overallRisk === 'low') return { badge: 'Low Risk', badgeClass: 'text-[#2e7d32] bg-[#edf7ed]' };
+                if (overallRisk === 'medium') return { badge: 'Caution', badgeClass: 'text-[#e27622] bg-[#fdf5ed]' };
+                return { badge: 'Critical', badgeClass: 'text-[#ea3838] bg-[#fef1f1]' };
+              }
+              const nameLower = name.toLowerCase();
+              if (nameLower.includes('brake') || nameLower.includes('steering') || nameLower.includes('suspension') || nameLower.includes('airbag')) {
+                return { badge: 'Critical', badgeClass: 'text-[#ea3838] bg-[#fef1f1]' };
+              }
+              if (nameLower.includes('filter') || nameLower.includes('wiper') || nameLower.includes('bulb')) {
+                return { badge: 'Low Risk', badgeClass: 'text-[#2e7d32] bg-[#edf7ed]' };
+              }
+              return { badge: 'Caution', badgeClass: 'text-[#e27622] bg-[#fdf5ed]' };
+            };
+
+            const mapped = diag.result.issues.map((issue: any, index: number) => {
+              const match = issue.confidence || 85;
+              const { badge, badgeClass } = getBadgeForIssue(issue.name || issue.title, diag.result.riskLevel, index);
+              return {
+                id: `llm_issue_${index}`,
+                title: issue.name || issue.title,
+                badge,
+                badgeClass,
+                description: `Diagnosed issue: ${issue.name || issue.title}. Requires parts: ${issue.requiredParts?.join(', ') || 'None specified'}.`,
+                match,
+                imageSrc: '/assets/mega car.png'
+              };
+            });
+            setCustomIssues(mapped);
+            setIsMounted(true);
+            return;
+          }
+        } catch (err) {
+          console.error('Failed to load diagnosis from DB, falling back to localStorage:', err);
         }
       }
+
+      if (typeof window !== 'undefined') {
+        const storedCustom = localStorage.getItem('wrectifai_custom_issues');
+        if (storedCustom) {
+          try {
+            setCustomIssues(JSON.parse(storedCustom) as any[]);
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }
+      setIsMounted(true);
     }
-    setIsMounted(true);
-  }, []);
+
+    loadData();
+  }, [diagnosisRequestId]);
 
   const selectedIssueIds = useMemo(() => {
     return (issues || 'wheel-balance,wheel-alignment')
@@ -68,6 +118,7 @@ export function FindingQuotesPage({ issues, diagnosisRequestId }: { issues?: str
   const hasSubmitted = useRef(false);
 
   useEffect(() => {
+    console.log('[FindingQuotes] Mount effect ran. isMounted:', isMounted, 'hasSubmitted:', hasSubmitted.current);
     if (!isMounted) return;
     if (hasSubmitted.current) return;
     let active = true;
@@ -76,34 +127,47 @@ export function FindingQuotesPage({ issues, diagnosisRequestId }: { issues?: str
         hasSubmitted.current = true;
         const vehicleId = selectedVehicle?.id || 'v1';
         const issueSummary = chosenIssues.map((i) => i.title).join(', ');
+        console.log('[FindingQuotes] Submitting quote request payload:', { vehicleId, issueSummary, diagnosisRequestId });
         const response = await createQuoteRequest({
           vehicleId,
           issueSummary,
           diagnosisRequestId,
         });
+        console.log('[FindingQuotes] Received quote request response:', response);
         if (active) {
+          console.log('[FindingQuotes] Setting requestId to:', response.id);
           setRequestId(response.id);
+        } else {
+          console.log('[FindingQuotes] API completed but effect was no longer active.');
         }
       } catch (err) {
-        console.error('Failed to create quote request:', err);
+        console.error('[FindingQuotes] Failed to create quote request:', err);
         hasSubmitted.current = false;
-        // Fallback to a mock string or retry logic if desired, but here we just log
       }
     }
     submitRequest();
     return () => {
+      console.log('[FindingQuotes] Submit effect cleanup. Setting active = false');
       active = false;
     };
   }, [isMounted, selectedVehicle?.id, diagnosisRequestId, chosenIssues]);
 
   useEffect(() => {
+    console.log('[FindingQuotes] Redirect check effect. currentStep:', currentStep, 'requestId:', requestId);
     if (currentStep < 4) {
       const timer = setTimeout(() => {
+        console.log('[FindingQuotes] Step incrementing from:', currentStep);
         setCurrentStep((prev) => prev + 1);
       }, 1000);
-      return () => clearTimeout(timer);
+      return () => {
+        console.log('[FindingQuotes] Clearing step timer for step:', currentStep);
+        clearTimeout(timer);
+      };
     } else if (requestId) {
+      console.log('[FindingQuotes] Redirect condition met! Pushing to request-aent with requestId:', requestId);
       router.push(`/request-aent?requestId=${requestId}`);
+    } else {
+      console.log('[FindingQuotes] Steps complete but requestId is null.');
     }
   }, [currentStep, router, requestId]);
 
