@@ -41,3 +41,8 @@ export async function createQuoteRequest(payload: CreateQuoteRequestPayload): Pr
 export async function getQuoteRequest(id: string): Promise<QuoteRequestResponse> {
   return apiClient.get(`/quotes/requests/${id}`);
 }
+
+export async function fetchQuoteRequests(): Promise<QuoteRequestResponse[]> {
+  return apiClient.get('/quotes/requests');
+}
+

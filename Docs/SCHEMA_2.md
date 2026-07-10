@@ -202,12 +202,17 @@ Knowledge base of common vehicle issues for diagnosis matching.
 | `approval_status` | `VARCHAR(50)` | NOT NULL, CHECK (`pending`, `approved`, `rejected`, `suspended`) | |
 | `rating_avg` | `NUMERIC(3,2)` | | Denormalized average |
 | `rating_count` | `INTEGER` | DEFAULT 0 | Denormalized count |
+| `starting_price` | `VARCHAR(100)` | | UI display, e.g. "Starting ₹499" |
+| `distance_km` | `VARCHAR(100)` | | UI display, e.g. "3.1 km" |
+| `badge` | `VARCHAR(100)` | | e.g. "Most Trusted", "Top Rated" |
+| `image` | `TEXT` | | Garage image path or URL |
+| `response_mins` | `INTEGER` | DEFAULT 30 | Avg response time in minutes |
 | `created_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | |
 | `updated_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | Auto-updated via trigger |
 
 **Indexes**: `owner_user_id`, `approval_status`, GIN on `specializations`
 **Note**: No 2dsphere or GiST index on `location`. Nearby search requires spatial index.
-**Seed**: 8 garages across Hyderabad (migrations 006, 007)
+**Seed**: 12 garages across Hyderabad (migrations 006, 007, 012)
 
 ---
 
@@ -484,33 +489,24 @@ Knowledge base of common vehicle issues for diagnosis matching.
 
 ### `promos`
 
-| Column                      | Type            | Constraints             | Notes                               |
-| --------------------------- | --------------- | ----------------------- | ----------------------------------- |
-| `id`                        | `VARCHAR(100)`  | PK                      | String ID, not UUID                 |
-| `badge`                     | `VARCHAR(255)`  |                         | Badge label                         |
-| `badge_color`               | `VARCHAR(100)`  |                         | Tailwind color class                |
-| `icon`                      | `VARCHAR(100)`  |                         | Icon name                           |
-| `title`                     | `VARCHAR(255)`  | NOT NULL                |                                     |
-| `bullets`                   | `TEXT[]`        |                         | Feature bullets                     |
-| `display_price`             | `VARCHAR(100)`  | NOT NULL                | Formatted price string              |
-| `numeric_price`             | `NUMERIC(12,2)` | NOT NULL                | Sortable price value                |
-| `strike_price`              | `VARCHAR(100)`  |                         | Original price string               |
-| `strike_price_line_through` | `BOOLEAN`       | DEFAULT true            |                                     |
-| `discount_label`            | `VARCHAR(100)`  |                         | e.g. "33% OFF"                      |
-| `discount_percent`          | `INTEGER`       |                         |                                     |
-| `valid_till`                | `TIMESTAMPTZ`   |                         |                                     |
-| `used_count`                | `VARCHAR(100)`  |                         | Formatted count string              |
-| `used_count_value`          | `INTEGER`       | DEFAULT 0               | Sortable count value                |
-| `image`                     | `TEXT`          |                         | Image path or URL                   |
-| `image_class_name`          | `TEXT`          |                         | Tailwind classes                    |
-| `card_tint`                 | `TEXT`          |                         | Card background gradient            |
-| `bg_color`                  | `VARCHAR(100)`  |                         | Background color                    |
-| `image_glow`                | `TEXT`          |                         | Radial gradient glow                |
-| `accent`                    | `VARCHAR(100)`  |                         | Accent text color                   |
-| `categories`                | `TEXT[]`        |                         | e.g. Car Care, Service, Combo Deals |
-| `is_combo`                  | `BOOLEAN`       | DEFAULT false           | Combo package flag                  |
-| `relevance`                 | `INTEGER`       | DEFAULT 0               | Sort order weight                   |
-| `created_at`                | `TIMESTAMPTZ`   | NOT NULL, DEFAULT NOW() |                                     |
+| Column           | Type            | Constraints                                           | Notes                          |
+| ---------------- | --------------- | ----------------------------------------------------- | ------------------------------ |
+| `id`             | `VARCHAR(100)`  | PK                                                    | String ID, not UUID            |
+| `badge`          | `VARCHAR(255)`  |                                                       | Badge label                    |
+| `icon`           | `VARCHAR(100)`  |                                                       | Icon name                      |
+| `title`          | `VARCHAR(255)`  | NOT NULL                                              |                                |
+| `bullets`        | `TEXT[]`        |                                                       | Feature bullets                |
+| `numeric_price`  | `NUMERIC(12,2)` | NOT NULL                                              | Sortable price value           |
+| `strike_price`   | `NUMERIC(12,2)` |                                                       | Original price                 |
+| `discount_percent` | `INTEGER`     |                                                       |                                |
+| `valid_till`     | `TIMESTAMPTZ`   |                                                       |                                |
+| `used_count_value` | `INTEGER`     | DEFAULT 0                                             | Sortable count value           |
+| `image`          | `TEXT`          |                                                       | Image path or URL              |
+| `categories`     | `TEXT[]`        |                                                       | e.g. Car Care, Service         |
+| `is_combo`       | `BOOLEAN`       | DEFAULT false                                         | Combo package flag             |
+| `relevance`      | `INTEGER`       | DEFAULT 0                                             | Sort order weight              |
+| `theme_preset`   | `VARCHAR(50)`   | NOT NULL, DEFAULT 'blue', CHECK (`orange`, `green`, `blue`, `purple`, `red`) | UI theme |
+| `created_at`     | `TIMESTAMPTZ`   | NOT NULL, DEFAULT NOW()                               |                                |
 
 **Seed**: 8 promo rows (summer/monsoon/winter/festival combos, wash, brake, AC offers)
 
@@ -532,7 +528,116 @@ Knowledge base of common vehicle issues for diagnosis matching.
 
 ---
 
-## 10. Global Index Notes
+## 10. Diagnose UI Config *(added in migration 013)*
+
+Static UI configuration tables migrated from hardcoded frontend values.
+
+### `diagnose_issue_categories`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | `VARCHAR(100)` | PK | e.g. `engine_noise`, `ac_not_cooling` |
+| `label` | `VARCHAR(255)` | NOT NULL | Display name |
+| `summary` | `TEXT` | NOT NULL | Short description |
+| `summary_meaning` | `TEXT` | NOT NULL | Explanation of why it matters |
+| `keywords` | `TEXT[]` | NOT NULL, DEFAULT '{}' | Search terms for matching |
+| `sort_order` | `INTEGER` | NOT NULL, DEFAULT 0 | |
+| `created_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | |
+
+**Seed**: 6 categories (engine_noise, ac_not_cooling, brake_vibration, low_pickup, starting_issue, steering_suspension)
+
+---
+
+### `diagnose_questions`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | `VARCHAR(100)` | PK | |
+| `category_id` | `VARCHAR(100)` | NOT NULL, FK → `diagnose_issue_categories(id)` ON DELETE CASCADE | |
+| `label` | `VARCHAR(255)` | NOT NULL | Short label for UI |
+| `question` | `TEXT` | NOT NULL | Full question text |
+| `options` | `TEXT[]` | NOT NULL, DEFAULT '{}' | Answer options |
+| `sort_order` | `INTEGER` | NOT NULL, DEFAULT 0 | |
+| `created_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | |
+
+**Indexes**: `category_id`
+**Seed**: 24 questions (4 per category)
+
+---
+
+### `diagnose_possible_issues`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | `VARCHAR(100)` | PK | |
+| `category_id` | `VARCHAR(100)` | NOT NULL, FK → `diagnose_issue_categories(id)` ON DELETE CASCADE | |
+| `title` | `VARCHAR(255)` | NOT NULL | |
+| `badge` | `VARCHAR(100)` | NOT NULL | e.g. "High Match", "Low Match" |
+| `badge_class` | `VARCHAR(255)` | NOT NULL | Tailwind classes |
+| `description` | `TEXT` | NOT NULL | |
+| `match_score` | `INTEGER` | NOT NULL, CHECK (0–100) | |
+| `risks` | `TEXT[]` | NOT NULL, DEFAULT '{}' | |
+| `estimated_cost` | `VARCHAR(100)` | NOT NULL | Formatted cost string |
+| `image_src` | `TEXT` | NOT NULL | Image path |
+| `sort_order` | `INTEGER` | NOT NULL, DEFAULT 0 | |
+| `created_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | |
+
+**Indexes**: `category_id`
+**Seed**: 18 issues (3 per category)
+
+---
+
+### `diagnose_result_summaries`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | `VARCHAR(100)` | PK | |
+| `title` | `VARCHAR(255)` | NOT NULL | |
+| `heading` | `TEXT` | NOT NULL | |
+| `body` | `TEXT` | NOT NULL, DEFAULT '' | |
+| `pill` | `VARCHAR(100)` | NOT NULL | Label badge |
+| `pill_class` | `VARCHAR(255)` | NOT NULL | Tailwind classes |
+| `icon` | `VARCHAR(100)` | NOT NULL | Lucide icon name |
+| `icon_class` | `VARCHAR(255)` | NOT NULL | Tailwind classes |
+| `sort_order` | `INTEGER` | NOT NULL, DEFAULT 0 | |
+| `created_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | |
+
+**Seed**: 3 rows (top concern, other issues, what this means)
+
+---
+
+### `diagnose_next_steps`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | `VARCHAR(100)` | PK | |
+| `step_number` | `VARCHAR(10)` | NOT NULL | e.g. "01" |
+| `title` | `VARCHAR(255)` | NOT NULL | |
+| `body` | `TEXT` | NOT NULL | |
+| `meta` | `VARCHAR(255)` | NOT NULL | e.g. "Within 30 mins" |
+| `sort_order` | `INTEGER` | NOT NULL, DEFAULT 0 | |
+| `created_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | |
+
+**Seed**: 4 steps (Get Quotes → Compare → Book → Service)
+
+---
+
+### `diagnose_trust_items`
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | `VARCHAR(100)` | PK | |
+| `title` | `VARCHAR(255)` | NOT NULL | |
+| `description` | `TEXT` | NOT NULL | |
+| `icon` | `VARCHAR(100)` | NOT NULL | Lucide icon name |
+| `sort_order` | `INTEGER` | NOT NULL, DEFAULT 0 | |
+| `created_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | |
+
+**Seed**: 4 items (100% Free, Trusted Garages, Best Price, Secure)
+
+---
+
+## 11. Global Index Notes
 
 | Index | Type | Purpose |
 |-------|------|---------|
@@ -544,20 +649,22 @@ Knowledge base of common vehicle issues for diagnosis matching.
 | `inventory.product_id` | UNIQUE | One inventory row per product |
 | `payments.provider_intent_id` | UNIQUE | Idempotent payment tracking |
 | `orders.order_number` | UNIQUE | Order number uniqueness |
+| `diagnose_questions.category_id` | B-tree | FK lookup for questions by category |
+| `diagnose_possible_issues.category_id` | B-tree | FK lookup for issues by category |
 
 ---
 
-## 11. Triggers
+## 12. Triggers
 
 `update_updated_at_column()` auto-sets `updated_at = NOW()` on UPDATE for:
 
 `users`, `roles`, `user_roles`, `vehicles`, `garages`, `bookings`, `products`, `inventory`, `carts`, `orders`, `payments`
 
-**Not triggered on** (no `updated_at` column or no trigger defined): `vehicle_service_history`, `diagnosis_requests`, `diagnosis_media`, `diagnosis_results`, `garage_documents`, `garage_slots`, `quote_requests`, `quotes`, `sellers`, `reviews`, `garage_badges`, `notifications`, `refresh_tokens`, `known_issues`, `promos`
+**Not triggered on** (no `updated_at` column or no trigger defined): `vehicle_service_history`, `diagnosis_requests`, `diagnosis_media`, `diagnosis_results`, `garage_documents`, `garage_slots`, `quote_requests`, `quotes`, `sellers`, `reviews`, `garage_badges`, `notifications`, `refresh_tokens`, `known_issues`, `promos`, `diagnose_issue_categories`, `diagnose_questions`, `diagnose_possible_issues`, `diagnose_result_summaries`, `diagnose_next_steps`, `diagnose_trust_items`
 
 ---
 
-## 12. Seeded Data Summary
+## 13. Seeded Data Summary
 
 | Migration | What's Seeded |
 |-----------|---------------|
@@ -567,3 +674,9 @@ Knowledge base of common vehicle issues for diagnosis matching.
 | `006` | 1 garage owner user, 7 garages, 8 promos |
 | `007` | 1 garage, 1 quote request, 8 quotes with detail breakdowns |
 | `008` | 2 bookings (1 instant/confirmed, 1 quoteBased/completed) |
+| `009` | Garages: added `starting_price`, `distance_km`, `badge`, `tone`, `artwork`, `image` columns + seed data |
+| `010` | Garages: dropped `tone` and `artwork` columns |
+| `011` | Garages: added `response_mins` column (DEFAULT 30) + per-garage response times |
+| `012` | 12 garages with full metadata (distance, response time, badges, images) — replaces earlier 7+1 seed |
+| `013` | 6 diagnose UI config tables: `diagnose_issue_categories`, `diagnose_questions`, `diagnose_possible_issues`, `diagnose_result_summaries`, `diagnose_next_steps`, `diagnose_trust_items` |
+| `014` | Diagnose UI config: 6 categories, 24 questions, 18 possible issues, 3 summaries, 4 next steps, 4 trust items |

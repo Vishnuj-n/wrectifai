@@ -586,36 +586,69 @@ function GaragesContent() {
     (v) => v !== 'all'
   ).length;
 
-  const quoteContext = useMemo(() => {
-    const source = searchParams?.get('source');
-    const quoteId = searchParams?.get('quote');
+  const [quoteContext, setQuoteContext] = useState<any | null>(null);
+  const source = searchParams?.get('source');
+  const quoteId = searchParams?.get('quote');
 
+  useEffect(() => {
     if (source !== 'quotes' || !quoteId) {
-      return null;
+      setQuoteContext(null);
+      return;
     }
 
-    const quote = quotes.find((item) => item.id === quoteId);
-    const garageFromQuote = quote
-      ? garagesList.find((item) => item.name === quote.garage)
-      : null;
-    const issueIds = (searchParams?.get('issues') || '')
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean);
-    const issues = resultIssues.filter((issue) => issueIds.includes(issue.id));
+    let active = true;
+    apiClient.get<any>(`/quotes/${quoteId}`)
+      .then((quote) => {
+        if (!active || !quote) return;
+        const garageFromQuote = garagesList.find((item) => item.name === quote.garage);
+        const issueIds = (searchParams?.get('issues') || '')
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean);
+        const issues = resultIssues.filter((issue) => issueIds.includes(issue.id));
 
-    if (!quote || !garageFromQuote) {
-      return null;
-    }
+        if (garageFromQuote) {
+          setQuoteContext({
+            garage: garageFromQuote,
+            quote,
+            issues,
+            issueIds,
+            aiEstimateRange: aiEstimatedQuoteRange,
+          });
+        } else {
+          const fallbackGarage: Garage = {
+            id: quote.garageId || '',
+            badge: 'Top Rated',
+            badgeTone: 'bg-[#1a56db]',
+            name: quote.garage,
+            rating: Number(quote.rating) || 4.5,
+            reviews: Number(quote.reviews) || 12,
+            location: 'Hyderabad',
+            distanceKm: parseFloat(quote.distance) || 3.0,
+            responseMins: 30,
+            chips: ['General Service'],
+            facade: quote.garage.split(' ').slice(0, 2).join(' '),
+            tone: getGarageTone(quote.garage),
+            verified: true,
+            image: quote.image
+          };
+          setQuoteContext({
+            garage: fallbackGarage,
+            quote,
+            issues,
+            issueIds,
+            aiEstimateRange: aiEstimatedQuoteRange,
+          });
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch quote details dynamically:', err);
+      });
 
-    return {
-      garage: garageFromQuote,
-      quote,
-      issues,
-      issueIds,
-      aiEstimateRange: aiEstimatedQuoteRange,
+    return () => {
+      active = false;
     };
-  }, [searchParams, garagesList, quotes]);
+  }, [source, quoteId, garagesList, searchParams]);
 
   const garageFromQuery = useMemo(() => {
     const garageName = searchParams?.get('garage');

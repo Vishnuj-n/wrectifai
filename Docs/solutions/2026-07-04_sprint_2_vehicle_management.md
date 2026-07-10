@@ -9,7 +9,10 @@
 ## 1. Database Migration & Schema
 
 Applied migrations to both development and test PostgreSQL containers:
-- [003_add_vehicle_soft_delete.sql](file:///c:/Users/vishn/PROJECT/wrectifai/db/migrations/003_add_vehicle_soft_delete.sql) adds the `is_active` boolean column.
+- [001_initial_schema.sql](file:///c:/Users/vishn/PROJECT/wrectifai/db/migrations/001_initial_schema.sql) establishes the base `garages` table with core columns (`name`, `address`, `location`, `specializations`, `certifications`, `pickup_drop_supported`, `approval_status`, `rating_avg`, `rating_count`).
+- [009_update_garages_rich_meta.sql](file:///c:/Users/vishn/PROJECT/wrectifai/db/migrations/009_update_garages_rich_meta.sql) adds five rich-display columns to `garages`: `starting_price`, `distance_km`, `tone`, `artwork`, and `image`. Seeds initial badge assignments for QuickPit (mostTrusted), SpeedFix (topRated), AutoWorks (budgetFriendly), and Metro Auto Bay (topRated).
+- [012_add_missing_garages.sql](file:///c:/Users/vishn/PROJECT/wrectifai/db/migrations/012_add_missing_garages.sql) introduces the `response_mins` column, upserts all 12 hardcoded garages with complete metadata (including distance, response time, and per-garage images), and re-seeds badge assignments — final state: QuickPit (budgetFriendly), SpeedFix (mostTrusted), AutoWorks (topRated), Metro Auto Bay (topRated), Prime Service Point (mostTrusted).
+- [003_add_vehicle_soft_delete.sql](file:///c:/Users/vishn/PROJECT/wrectifai/db/migrations/003_add_vehicle_soft_delete.sql) adds the `is_active` boolean column to vehicles.
 - Updated schema documentation in [schema.md](file:///c:/Users/vishn/PROJECT/wrectifai/Docs/schema.md).
 
 ---

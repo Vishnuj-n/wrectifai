@@ -12,36 +12,36 @@ import { cn } from '@/utils/cn';
 
 const garages = [
   {
-    name: 'Express Auto Care',
-    image: '/assets/repair-services.png',
-    rating: 4.8,
-    reviews: 120,
-    distance: '1.2 miles',
+    name: 'SpeedFix Auto Care',
+    image: '/assets/garage_1_1778071156220.png',
+    rating: 4.6,
+    reviews: 128,
+    distance: '2.2 km',
     badge: 'Top Rated',
   },
   {
-    name: 'Precision Motors',
-    image: '/assets/repair-services.png',
-    rating: 4.6,
-    reviews: 85,
-    distance: '2.4 miles',
-    badge: 'Budget Friendly',
+    name: 'QuickPit Service Center',
+    image: '/assets/garage_2_1778071173295.png',
+    rating: 4.5,
+    reviews: 96,
+    distance: '3.1 km',
+    badge: 'Most Trusted',
   },
   {
-    name: 'Green EV Specialist',
-    image: '/assets/repair-services.png',
-    rating: 4.9,
-    reviews: 45,
-    distance: '3.1 miles',
-    badge: 'EV Specialist',
+    name: 'AutoWorks Garage',
+    image: '/assets/garage_3_1778071191282.png',
+    rating: 4.4,
+    reviews: 110,
+    distance: '4.5 km',
+    badge: 'Best Value',
   },
   {
-    name: 'Elite Performance Garage',
-    image: '/assets/repair-services.png',
-    rating: 4.7,
-    reviews: 95,
-    distance: '4.0 miles',
-    badge: 'Verified',
+    name: 'Five Star Automotive',
+    image: '/assets/garage_4_1778071611328.png',
+    rating: 4.3,
+    reviews: 78,
+    distance: '5.2 km',
+    badge: 'Trusted partner',
   },
 ];
 
@@ -376,8 +376,8 @@ export function RequestAentPage({ issues, requestId }: { issues?: string; reques
           </div>
         </Card>
 
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.32fr)_minmax(0,0.68fr)]">
-          <div className="space-y-5">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.32fr)_minmax(0,0.68fr)] items-stretch">
+          <div className="flex flex-col gap-5">
             <Card className="rounded-[18px] border-[#e6ecfb] bg-white px-4 py-4 shadow-[0_8px_24px_rgba(37,73,153,0.04)]">
               <div className="flex items-center gap-3">
                 <h3 className={homeSectionHeadingClass}>Your Vehicle</h3>
@@ -430,7 +430,7 @@ export function RequestAentPage({ issues, requestId }: { issues?: string; reques
               </div>
             </Card>
 
-            <Card className="rounded-[18px] border-[#e6ecfb] bg-white px-4 py-4 shadow-[0_8px_24px_rgba(37,73,153,0.04)]">
+            <Card className="flex-1 rounded-[18px] border-[#e6ecfb] bg-white px-4 py-4 shadow-[0_8px_24px_rgba(37,73,153,0.04)]">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <h3 className={homeSectionHeadingClass}>

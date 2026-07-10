@@ -2,6 +2,7 @@ export type QuoteStatus = 'new' | 'viewed' | 'expired' | 'open';
 
 export type QuoteItem = {
   id: string;
+  quoteRequestId?: string;
   status: QuoteStatus;
   garage: string;
   image: string;

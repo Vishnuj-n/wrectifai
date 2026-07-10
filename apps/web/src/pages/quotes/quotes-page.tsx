@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   ChevronDown,
   CircleHelp,
+  Clock,
   FileText,
   Gauge,
   Lock,
@@ -25,7 +26,7 @@ import {
   aiEstimatedQuoteRange,
   quoteContextDefaultIssueIds,
 } from '@/components/quotes/quotes-shared';
-import { fetchQuotes } from '@/lib/quotes-api';
+import { fetchQuotes, fetchQuoteRequests, type QuoteRequestResponse } from '@/lib/quotes-api';
 import type { QuoteItem } from '@/components/quotes/quotes-shared';
 import { resultIssues } from '@/components/ai-diagnose/diagnose-flow-shared';
 import { cn } from '@/utils/cn';
@@ -73,20 +74,25 @@ export function QuotesPage() {
   const [activeTab, setActiveTab] = useState<QuoteTabKey>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [quotes, setQuotes] = useState<QuoteItem[]>([]);
+  const [quoteRequests, setQuoteRequests] = useState<QuoteRequestResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadQuotes() {
+    async function loadData() {
       try {
-        const data = await fetchQuotes();
-        setQuotes(data);
+        const [quotesData, requestsData] = await Promise.all([
+          fetchQuotes(),
+          fetchQuoteRequests(),
+        ]);
+        setQuotes(quotesData);
+        setQuoteRequests(requestsData);
       } catch (err) {
-        console.error('Failed to fetch quotes:', err);
+        console.error('Failed to fetch data:', err);
       } finally {
         setLoading(false);
       }
     }
-    loadQuotes();
+    loadData();
   }, []);
 
   useEffect(() => {
@@ -103,36 +109,46 @@ export function QuotesPage() {
     pageScroller?.scrollTo({ top: 0, behavior: 'auto' });
   }, []);
 
+  const latestRequestForVehicle = useMemo(() => {
+    if (!selectedVehicleId) return null;
+    return quoteRequests.find((req) => req.vehicleId === selectedVehicleId);
+  }, [quoteRequests, selectedVehicleId]);
+
+  const vehicleQuotes = useMemo(() => {
+    if (!selectedVehicleId || !latestRequestForVehicle) return [];
+    return quotes.filter((quote) => quote.quoteRequestId === latestRequestForVehicle.id);
+  }, [quotes, selectedVehicleId, latestRequestForVehicle]);
+
   const quoteTabs = useMemo(
     () => [
-      { key: 'all' as const, label: `All Quotes (${quotes.length})` },
+      { key: 'all' as const, label: `All Quotes (${vehicleQuotes.length})` },
       {
         key: 'new' as const,
         label: `New (${
-          quotes.filter((quote) => quote.status === 'new').length
+          vehicleQuotes.filter((quote) => quote.status === 'new').length
         })`,
       },
       {
         key: 'viewed' as const,
         label: `Viewed (${
-          quotes.filter((quote) => quote.status === 'viewed').length
+          vehicleQuotes.filter((quote) => quote.status === 'viewed').length
         })`,
       },
       {
         key: 'expired' as const,
         label: `Expired (${
-          quotes.filter((quote) => quote.status === 'expired').length
+          vehicleQuotes.filter((quote) => quote.status === 'expired').length
         })`,
       },
     ],
-    [quotes]
+    [vehicleQuotes]
   );
 
   const filteredQuotes = useMemo(() => {
     return activeTab === 'all'
-      ? quotes
-      : quotes.filter((quote) => quote.status === activeTab);
-  }, [quotes, activeTab]);
+      ? vehicleQuotes
+      : vehicleQuotes.filter((quote) => quote.status === activeTab);
+  }, [vehicleQuotes, activeTab]);
 
   const totalPages = Math.max(
     1,
@@ -157,7 +173,7 @@ export function QuotesPage() {
       const ids = issuesFromQuery.split(',').map((item) => item.trim()).filter(Boolean);
       return resultIssues.filter((issue) => ids.includes(issue.id));
     }
-    const dbSummary = quotes[0]?.requestIssueSummary;
+    const dbSummary = latestRequestForVehicle?.issueSummary;
     if (dbSummary) {
       return dbSummary.split(',').map((name, index) => {
         const found = resultIssues.find((r) => r.title.toLowerCase() === name.trim().toLowerCase());
@@ -174,7 +190,7 @@ export function QuotesPage() {
       });
     }
     return resultIssues.filter((issue) => quoteContextDefaultIssueIds.includes(issue.id));
-  }, [searchParams, quotes]);
+  }, [searchParams, latestRequestForVehicle]);
 
   return (
     <DashboardShell header={<TopNavbar />}>
@@ -185,7 +201,7 @@ export function QuotesPage() {
               My Quotes
             </h1>
             <span className="rounded-full bg-[#dff4e7] px-2.5 py-1 text-[11px] font-medium text-[#18965c]">
-              {quotes.filter((q) => q.status === 'new').length} New {quotes.filter((q) => q.status === 'new').length === 1 ? 'Quote' : 'Quotes'}
+              {vehicleQuotes.filter((q) => q.status === 'new').length} New {vehicleQuotes.filter((q) => q.status === 'new').length === 1 ? 'Quote' : 'Quotes'}
             </span>
           </div>
           <p className="mt-2 ui-caption">
@@ -318,11 +334,31 @@ export function QuotesPage() {
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-16 bg-white border border-[#e6ecfb] rounded-[18px]">
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#1a56db] border-t-transparent"></div>
-                  <p className="mt-4 text-[13px] font-medium text-[#5f7099]">Loading quotes from trusted garages...</p>
+                  <p className="mt-4 text-[13px] font-medium text-[#5f7099]">Loading quotes...</p>
+                </div>
+              ) : !latestRequestForVehicle ? (
+                <div className="flex flex-col items-center justify-center py-16 bg-white border border-[#e6ecfb] rounded-[18px] px-6 text-center">
+                  <p className="text-[14px] font-semibold text-[#17307a]">No Requests Found</p>
+                  <p className="mt-2 text-[12px] text-[#5f7099] max-w-md">No quote requests found for this vehicle. Try running an AI Diagnosis first to request quotes.</p>
+                  <button
+                    type="button"
+                    onClick={() => router.push('/ai-diagnose')}
+                    className="mt-5 inline-flex h-[36px] items-center justify-center rounded-[10px] bg-[#1a56db] px-5 text-[12px] font-semibold text-white shadow-[0_10px_20px_rgba(26,86,219,0.15)]"
+                  >
+                    Start AI Diagnosis
+                  </button>
+                </div>
+              ) : vehicleQuotes.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 bg-white border border-[#e6ecfb] rounded-[18px] px-6 text-center">
+                  <div className="h-10 w-10 rounded-full bg-[#e8f7ee] flex items-center justify-center text-[#1a945a] animate-pulse">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <p className="mt-4 text-[14px] font-semibold text-[#17307a]">Waiting for Quotes</p>
+                  <p className="mt-2 text-[12px] text-[#5f7099] max-w-md">Your request has been submitted to garages. We will notify you as soon as they submit their quotes (usually takes 5-10 minutes).</p>
                 </div>
               ) : paginatedQuotes.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 bg-white border border-[#e6ecfb] rounded-[18px]">
-                  <p className="text-[13px] font-medium text-[#5f7099]">No quotes available at this time.</p>
+                  <p className="text-[13px] font-medium text-[#5f7099]">No quotes match the selected status filter.</p>
                 </div>
               ) : (
                 paginatedQuotes.map((quote) => (
@@ -593,19 +629,19 @@ export function QuotesPage() {
                       }} 
                     />
                   </div>
-                  {selectedVehicle || quotes[0]?.vehicle ? (
+                  {selectedVehicle || latestRequestForVehicle?.vehicle ? (
                     <div className="mt-2 flex flex-wrap items-center gap-2.5 text-[11px] text-[#5f7099]">
-                      {(selectedVehicle || quotes[0]?.vehicle)?.vin && (
+                      {(selectedVehicle || latestRequestForVehicle?.vehicle)?.vin && (
                         <>
-                          <span className="font-mono">{(selectedVehicle || quotes[0]?.vehicle)?.vin}</span>
+                          <span className="font-mono">{(selectedVehicle || latestRequestForVehicle?.vehicle)?.vin}</span>
                           <span>{BULLET}</span>
                         </>
                       )}
-                      <span>{(selectedVehicle || quotes[0]?.vehicle)?.year}</span>
-                      {(selectedVehicle || quotes[0]?.vehicle)?.mileage !== undefined && (selectedVehicle || quotes[0]?.vehicle)?.mileage !== null && (
+                      <span>{(selectedVehicle || latestRequestForVehicle?.vehicle)?.year}</span>
+                      {(selectedVehicle || latestRequestForVehicle?.vehicle)?.mileage !== undefined && (selectedVehicle || latestRequestForVehicle?.vehicle)?.mileage !== null && (
                         <>
                           <span>{BULLET}</span>
-                          <span>{(selectedVehicle || quotes[0]?.vehicle)?.mileage?.toLocaleString()} miles</span>
+                          <span>{(selectedVehicle || latestRequestForVehicle?.vehicle)?.mileage?.toLocaleString()} miles</span>
                         </>
                       )}
                     </div>
@@ -636,8 +672,8 @@ export function QuotesPage() {
                 <div className="border-t border-[#edf2fb] pt-4">
                   <div className={homeBodyClass}>Request sent on</div>
                   <div className="mt-2 text-[12px] text-[#17307a]">
-                    {quotes[0]?.requestCreatedAt
-                      ? new Date(quotes[0].requestCreatedAt).toLocaleString('en-US', {
+                    {latestRequestForVehicle?.createdAt
+                      ? new Date(latestRequestForVehicle.createdAt).toLocaleString('en-US', {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric',
@@ -645,7 +681,7 @@ export function QuotesPage() {
                           minute: '2-digit',
                           hour12: true,
                         })
-                      : '20 May 2024, 10:30 AM'}
+                      : 'No active request'}
                   </div>
                 </div>
               </div>

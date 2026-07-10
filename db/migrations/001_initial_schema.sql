@@ -364,7 +364,7 @@ CREATE INDEX idx_reviews_is_verified ON reviews(is_verified);
 CREATE TABLE garage_badges (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     garage_id UUID NOT NULL REFERENCES garages(id) ON DELETE CASCADE,
-    badge_key VARCHAR(50) NOT NULL CHECK (badge_key IN ('topRated', 'budgetFriendly', 'evSpecialist')),
+    badge_key VARCHAR(50) NOT NULL CHECK (badge_key IN ('topRated', 'budgetFriendly', 'evSpecialist', 'mostTrusted')),
     active BOOLEAN NOT NULL DEFAULT true,
     awarded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

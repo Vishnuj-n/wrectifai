@@ -116,12 +116,19 @@ export function FindingQuotesPage({ issues, diagnosisRequestId }: { issues?: str
   }, [selectedIssueIds, customIssues]);
 
   const hasSubmitted = useRef(false);
+  const isUnmounted = useRef(false);
+
+  useEffect(() => {
+    isUnmounted.current = false;
+    return () => {
+      isUnmounted.current = true;
+    };
+  }, []);
 
   useEffect(() => {
     console.log('[FindingQuotes] Mount effect ran. isMounted:', isMounted, 'hasSubmitted:', hasSubmitted.current);
     if (!isMounted) return;
     if (hasSubmitted.current) return;
-    let active = true;
     async function submitRequest() {
       try {
         hasSubmitted.current = true;
@@ -134,11 +141,11 @@ export function FindingQuotesPage({ issues, diagnosisRequestId }: { issues?: str
           diagnosisRequestId,
         });
         console.log('[FindingQuotes] Received quote request response:', response);
-        if (active) {
+        if (!isUnmounted.current) {
           console.log('[FindingQuotes] Setting requestId to:', response.id);
           setRequestId(response.id);
         } else {
-          console.log('[FindingQuotes] API completed but effect was no longer active.');
+          console.log('[FindingQuotes] API completed but page was unmounted.');
         }
       } catch (err) {
         console.error('[FindingQuotes] Failed to create quote request:', err);
@@ -146,10 +153,6 @@ export function FindingQuotesPage({ issues, diagnosisRequestId }: { issues?: str
       }
     }
     submitRequest();
-    return () => {
-      console.log('[FindingQuotes] Submit effect cleanup. Setting active = false');
-      active = false;
-    };
   }, [isMounted, selectedVehicle?.id, diagnosisRequestId, chosenIssues]);
 
   useEffect(() => {

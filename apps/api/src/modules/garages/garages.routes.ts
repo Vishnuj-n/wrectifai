@@ -5,6 +5,13 @@ import { query } from '../../config/database';
 
 export const garagesRouter = Router();
 
+const badgeMap: Record<string, string> = {
+  topRated: 'Top Rated',
+  budgetFriendly: 'Best Value',
+  mostTrusted: 'Most Trusted',
+  evSpecialist: 'EV Specialist'
+};
+
 function mapGarageDbRow(g: any) {
   return {
     id: g.id,
@@ -14,7 +21,7 @@ function mapGarageDbRow(g: any) {
     reviews: Number(g.ratingCount || 0),
     distance: g.distanceKm || null,
     price: g.startingPrice || null,
-    badge: g.badge || null,
+    badge: g.badge ? (badgeMap[g.badge] || g.badge) : null,
     image: g.image || null,
     chips: g.specializations || [],
     verified: g.approval_status === 'approved',
@@ -25,12 +32,13 @@ function mapGarageDbRow(g: any) {
 garagesRouter.get('/search', async (req, res) => {
   try {
     const result = await query(
-      `SELECT id, name, address, specializations, approval_status, 
-              rating_avg as "ratingAvg", rating_count as "ratingCount",
-              starting_price as "startingPrice", distance_km as "distanceKm",
-              badge, image, response_mins as "responseMins"
-       FROM garages
-       WHERE approval_status IN ('approved', 'pending')`
+      `SELECT g.id, g.name, g.address, g.specializations, g.approval_status, 
+              g.rating_avg as "ratingAvg", g.rating_count as "ratingCount",
+              g.starting_price as "startingPrice", g.distance_km as "distanceKm",
+              g.image, g.response_mins as "responseMins",
+              (SELECT badge_key FROM garage_badges gb WHERE gb.garage_id = g.id AND gb.active = true LIMIT 1) as badge
+       FROM garages g
+       WHERE g.approval_status IN ('approved', 'pending')`
     );
 
     const mapped = result.rows.map(mapGarageDbRow);
@@ -48,12 +56,13 @@ garagesRouter.get('/search', async (req, res) => {
 garagesRouter.get('/:id', async (req, res) => {
   try {
     const result = await query(
-      `SELECT id, name, address, specializations, approval_status, 
-              rating_avg as "ratingAvg", rating_count as "ratingCount",
-              starting_price as "startingPrice", distance_km as "distanceKm",
-              badge, image, response_mins as "responseMins"
-       FROM garages
-       WHERE id = $1`,
+      `SELECT g.id, g.name, g.address, g.specializations, g.approval_status, 
+              g.rating_avg as "ratingAvg", g.rating_count as "ratingCount",
+              g.starting_price as "startingPrice", g.distance_km as "distanceKm",
+              g.image, g.response_mins as "responseMins",
+              (SELECT badge_key FROM garage_badges gb WHERE gb.garage_id = g.id AND gb.active = true LIMIT 1) as badge
+       FROM garages g
+       WHERE g.id = $1`,
       [req.params.id]
     );
     if (result.rows.length === 0) {

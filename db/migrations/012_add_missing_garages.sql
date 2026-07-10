@@ -12,7 +12,6 @@ INSERT INTO garages (
     rating_count, 
     distance_km, 
     response_mins, 
-    badge, 
     image
 ) VALUES
 -- 1. QuickPit Service Center
@@ -27,7 +26,6 @@ INSERT INTO garages (
     96,
     '3.1 km',
     40,
-    'Best Value',
     '/assets/garage_1_1778071156220.png'
 ),
 -- 2. SpeedFix Auto Care
@@ -42,7 +40,6 @@ INSERT INTO garages (
     128,
     '2.2 km',
     30,
-    'Most Trusted',
     '/assets/garage_2_1778071173295.png'
 ),
 -- 3. AutoWorks Garage
@@ -57,7 +54,6 @@ INSERT INTO garages (
     110,
     '4.2 km',
     45,
-    'Top Rated',
     '/assets/garage_3_1778071191282.png'
 ),
 -- 4. Five Star Automotive
@@ -72,7 +68,6 @@ INSERT INTO garages (
     78,
     '5.2 km',
     50,
-    '',
     '/assets/garage_4_1778071611328.png'
 ),
 -- 5. Royal Motor Service
@@ -87,7 +82,6 @@ INSERT INTO garages (
     64,
     '3.8 km',
     35,
-    '',
     '/assets/garage_5_1778071628253.png'
 ),
 -- 6. PitStop Car Care
@@ -102,7 +96,6 @@ INSERT INTO garages (
     58,
     '4.9 km',
     40,
-    '',
     '/assets/garage_1_1778071156220.png'
 ),
 -- 7. Galaxy Auto Garage
@@ -117,7 +110,6 @@ INSERT INTO garages (
     92,
     '3.6 km',
     55,
-    '',
     '/assets/garage_2_1778071173295.png'
 ),
 -- 8. TorquePlus Service Hub
@@ -132,7 +124,6 @@ INSERT INTO garages (
     71,
     '6.1 km',
     60,
-    '',
     '/assets/garage_3_1778071191282.png'
 ),
 -- 9. Metro Auto Bay
@@ -147,7 +138,6 @@ INSERT INTO garages (
     142,
     '2.8 km',
     25,
-    'Top Rated',
     '/assets/garage_4_1778071611328.png'
 ),
 -- 10. Urban Garage Works
@@ -162,7 +152,6 @@ INSERT INTO garages (
     53,
     '5.8 km',
     55,
-    '',
     '/assets/garage_5_1778071628253.png'
 ),
 -- 11. Prime Service Point
@@ -177,7 +166,6 @@ INSERT INTO garages (
     119,
     '4.4 km',
     35,
-    'Most Trusted',
     '/assets/garage_1_1778071156220.png'
 ),
 -- 12. CarNest Workshop
@@ -192,7 +180,6 @@ INSERT INTO garages (
     61,
     '6.4 km',
     48,
-    '',
     '/assets/garage_2_1778071173295.png'
 )
 ON CONFLICT (id) DO UPDATE SET
@@ -205,5 +192,20 @@ ON CONFLICT (id) DO UPDATE SET
     rating_count = EXCLUDED.rating_count,
     distance_km = EXCLUDED.distance_km,
     response_mins = EXCLUDED.response_mins,
-    badge = EXCLUDED.badge,
     image = EXCLUDED.image;
+
+-- Seed/Update garage badges
+DELETE FROM garage_badges WHERE garage_id IN (
+    '00000000-0000-0000-0000-000000000011',
+    '00000000-0000-0000-0000-000000000012',
+    '00000000-0000-0000-0000-000000000013',
+    '00000000-0000-0000-0000-000000000015',
+    '00000000-0000-0000-0000-000000000018'
+);
+
+INSERT INTO garage_badges (garage_id, badge_key, active) VALUES
+('00000000-0000-0000-0000-000000000011', 'budgetFriendly', true), -- QuickPit (Best Value)
+('00000000-0000-0000-0000-000000000012', 'mostTrusted', true),    -- SpeedFix (Most Trusted)
+('00000000-0000-0000-0000-000000000013', 'topRated', true),      -- AutoWorks (Top Rated)
+('00000000-0000-0000-0000-000000000015', 'topRated', true),      -- Metro Auto Bay (Top Rated)
+('00000000-0000-0000-0000-000000000018', 'mostTrusted', true);    -- Prime Service Point (Most Trusted)
