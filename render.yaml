@@ -55,8 +55,9 @@ services:
       - key: AUDIO_MODEL
         value: whisper-large-v3-turbo
 
-  - type: static
+  - type: web
     name: wrectifai-web
+    runtime: static
     buildCommand: pnpm install --frozen-lockfile && pnpm --filter web build
     staticPublishPath: apps/web/out
 
