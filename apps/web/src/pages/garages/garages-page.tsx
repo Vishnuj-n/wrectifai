@@ -592,7 +592,9 @@ function GaragesContent() {
 
   useEffect(() => {
     if (source !== 'quotes' || !quoteId) {
-      setQuoteContext(null);
+      Promise.resolve().then(() => {
+        setQuoteContext((prev: any) => (prev !== null ? null : prev));
+      });
       return;
     }
 

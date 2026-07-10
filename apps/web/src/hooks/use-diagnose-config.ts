@@ -12,7 +12,7 @@ import {
 
 // Simple in-memory cache
 let cachedConfig: DiagnoseConfig | null = null;
-let cacheTimestamp: number = 0;
+let cacheTimestamp = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 interface UseDiagnoseConfigReturn {
@@ -55,7 +55,15 @@ export function useDiagnoseConfig(): UseDiagnoseConfigReturn {
   }, []);
 
   useEffect(() => {
-    fetchConfig();
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) {
+        fetchConfig();
+      }
+    });
+    return () => {
+      active = false;
+    };
   }, [fetchConfig]);
 
   return {
@@ -83,8 +91,10 @@ export function useDiagnoseCategory(categoryId: string | null): UseDiagnoseCateg
 
   useEffect(() => {
     if (!categoryId) {
-      setCategory(null);
-      setLoading(false);
+      Promise.resolve().then(() => {
+        setCategory((prev) => (prev !== null ? null : prev));
+        setLoading((prev) => (prev !== false ? false : prev));
+      });
       return;
     }
 

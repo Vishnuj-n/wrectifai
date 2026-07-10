@@ -40,6 +40,9 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
   }, [value]);
 
   const fetchVehicles = useCallback(async (active: { current: boolean }) => {
+    await Promise.resolve();
+    if (!active.current) return;
+
     setLoading(true);
     setErrorText(null);
     try {
@@ -83,7 +86,11 @@ export function VehicleSelector({ value, onChange, className = '', error }: Vehi
 
   useEffect(() => {
     const active = { current: true };
-    fetchVehicles(active);
+    Promise.resolve().then(() => {
+      if (active.current) {
+        fetchVehicles(active);
+      }
+    });
     return () => {
       active.current = false;
     };

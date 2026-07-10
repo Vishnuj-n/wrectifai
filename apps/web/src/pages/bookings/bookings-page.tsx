@@ -19,6 +19,7 @@ export function BookingsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('all');
 
   const loadBookings = async () => {
+    await Promise.resolve();
     setLoading(true);
     setErrorText(null);
     try {
@@ -32,7 +33,15 @@ export function BookingsPage() {
   };
 
   useEffect(() => {
-    loadBookings();
+    let active = true;
+    Promise.resolve().then(() => {
+      if (active) {
+        loadBookings();
+      }
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleCancelBooking = async (id: string) => {
