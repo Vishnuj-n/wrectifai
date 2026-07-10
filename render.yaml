@@ -30,7 +30,6 @@ services:
         generateValue: true
 
       - key: WEB_ORIGINS
-        sync: false
         value: https://wrectifai-web.onrender.com
 
       - key: LLM_PROVIDER
@@ -41,7 +40,6 @@ services:
 
       - key: GROQ_API_KEY
         sync: false
-        value: ""
 
       - key: IMAGE_LLM_PROVIDER
         value: groq
@@ -72,4 +70,3 @@ services:
 
       - key: NEXT_PUBLIC_GOOGLE_CLIENT_ID
         sync: false
-        value: ""
