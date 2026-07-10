@@ -7,6 +7,7 @@ import { cn } from '@/utils/cn';
 import { apiClient } from '@/lib/api-client';
 import { fetchBookings } from '@/lib/bookings-api';
 import { fetchQuotes } from '@/lib/quotes-api';
+import { getPromoTheme } from '@/utils/promo-theme';
 
 function OverviewPanel() {
   const [bookingsCount, setBookingsCount] = useState<number>(0);
@@ -212,8 +213,7 @@ function OfferCard({
   price,
   strikePrice,
   discount,
-  accent,
-  fill,
+  themePreset,
   icon: Icon,
   image,
 }: {
@@ -222,15 +222,15 @@ function OfferCard({
   price: string;
   strikePrice?: string;
   discount: string;
-  accent: string;
-  fill: string;
+  themePreset: string;
   icon: any;
   image?: string;
 }) {
-  const isGreen = accent.includes('238453');
-  const isRed = accent.includes('ff3b30');
-  const isPurple = accent.includes('805ad5');
-  const cardColor = fill.match(/from-\[(#[a-fA-F0-9]+)\]/)?.[1] || '#ffffff';
+  const theme = getPromoTheme(themePreset);
+  const isGreen = themePreset === 'green';
+  const isRed = themePreset === 'red';
+  const isPurple = themePreset === 'purple';
+  const cardColor = theme.bgColor;
   
   return (
     <Card 
@@ -239,11 +239,11 @@ function OfferCard({
     >
       <div className="grid min-h-[138px] grid-cols-[1.18fr_0.82fr] items-center">
         <div className="p-4 pr-0">
-          <p className={cn('text-[11px] font-bold uppercase tracking-[0.02em]', accent)}>{eyebrow}</p>
+          <p className={cn('text-[11px] font-bold uppercase tracking-[0.02em]', theme.accentClass)}>{eyebrow}</p>
           <p className="mt-2 text-[12px] font-semibold leading-6 text-[#17307a]">{title}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className={cn('text-[11px] font-bold', accent)}>Starting</span>
-            <span className={cn('text-[14.5px] font-bold leading-none', accent)}>{price}</span>
+            <span className={cn('text-[11px] font-bold', theme.accentClass)}>Starting</span>
+            <span className={cn('text-[14.5px] font-bold leading-none', theme.accentClass)}>{price}</span>
             <span className="text-[10.5px] font-medium text-[#8a96b8] line-through">{strikePrice}</span>
           </div>
         </div>
@@ -302,11 +302,10 @@ function OffersPanel() {
             .map((p: any) => ({
               eyebrow: p.badge,
               title: p.title,
-              price: p.displayPrice,
-              strikePrice: p.strikePrice,
-              discount: p.discountLabel,
-              accent: p.accent || 'text-[#1a56db]',
-              fill: p.cardTint || 'from-[#eff5ff] to-[#fafcff]',
+              price: `$${Number(p.numericPrice).toLocaleString('en-US')}`,
+              strikePrice: p.strikePrice ? `$${Number(p.strikePrice).toLocaleString('en-US')}` : undefined,
+              discount: p.discountPercent ? `${p.discountPercent}% OFF` : '',
+              themePreset: p.themePreset,
               icon: p.icon,
               image: p.image,
             }));

@@ -22,28 +22,19 @@ export interface Garage {
 export interface Promo {
   id: string;
   badge: string;
-  badgeColor: string;
   icon: string;
   title: string;
   bullets: string[];
-  displayPrice: string;
   numericPrice: number;
-  strikePrice?: string;
-  strikePriceLineThrough?: boolean;
-  discountLabel?: string;
+  strikePrice?: number;
   discountPercent: number;
   validTill: string;
-  usedCount: string;
   usedCountValue: number;
   image: string;
-  imageClassName: string;
-  cardTint: string;
-  bgColor: string;
-  imageGlow: string;
-  accent: string;
   categories: string[];
   isCombo: boolean;
   relevance: number;
+  themePreset: string;
 }
 
 export async function fetchGarages(): Promise<Garage[]> {
