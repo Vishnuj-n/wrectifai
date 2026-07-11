@@ -32,6 +32,9 @@ services:
       - key: WEB_ORIGINS
         value: https://wrectifai-web.onrender.com
 
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+
       - key: LLM_PROVIDER
         value: groq
 
@@ -67,8 +70,8 @@ services:
       - key: NODE_ENV
         value: production
 
-      - key: NEXT_PUBLIC_API_BASE_URL
-        value: https://wrectifai-api.onrender.com/api
+      - key: NEXT_PUBLIC_API_URL
+        value: https://wrectifai-api.onrender.com/api/v1
 
       - key: NEXT_PUBLIC_GOOGLE_CLIENT_ID
         sync: false
