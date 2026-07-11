@@ -1,8 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { z } from 'zod';
-import { generateObject, generateText } from 'ai';
-import { createOpenAI } from '@ai-sdk/openai';
 import { getDbPool, query } from '../../config/database';
 import { getEnv } from '../../config/env';
 import { KnowledgeService, type RetrievedIssue } from './knowledge.service';
@@ -94,6 +92,8 @@ export class DiagnosisService {
   }
 
   static async analyzeImage(base64Image: string): Promise<string> {
+    const { generateText } = await import('ai');
+    const { createOpenAI } = await import('@ai-sdk/openai');
     const env = getEnv();
     const apiKey = env.imageLlmProvider === 'groq' ? env.groqApiKey : env.openaiApiKey;
     const baseURL = env.imageLlmProvider === 'groq' ? 'https://api.groq.com/openai/v1' : undefined;
@@ -176,6 +176,8 @@ export class DiagnosisService {
     }
 
     // Call LLM to generate targeted questions based on database matches
+    const { generateObject } = await import('ai');
+    const { createOpenAI } = await import('@ai-sdk/openai');
     let aiProvider;
     if (env.llmProvider === 'groq') {
       if (!env.groqApiKey) {
@@ -366,6 +368,8 @@ Output your response as a strict JSON array under a "questions" field, where eac
       };
     } else {
       // 3. Call LLM (Vercel AI SDK OpenAI or Groq)
+      const { generateObject } = await import('ai');
+      const { createOpenAI } = await import('@ai-sdk/openai');
       let aiProvider;
       if (env.llmProvider === 'groq') {
         if (!env.groqApiKey) {
