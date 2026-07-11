@@ -459,7 +459,7 @@ Knowledge base of common vehicle issues for diagnosis matching.
 |--------|------|-------------|-------|
 | `id` | `UUID` | PK, DEFAULT `uuid_generate_v4()` | |
 | `garage_id` | `UUID` | NOT NULL, FK → `garages(id)` ON DELETE CASCADE | |
-| `badge_key` | `VARCHAR(50)` | NOT NULL, CHECK (`topRated`, `budgetFriendly`, `evSpecialist`) | |
+| `badge_key` | `VARCHAR(50)` | NOT NULL, CHECK (`topRated`, `budgetFriendly`, `evSpecialist`, `mostTrusted`) | |
 | `active` | `BOOLEAN` | NOT NULL, DEFAULT true | |
 | `awarded_at` | `TIMESTAMPTZ` | NOT NULL, DEFAULT NOW() | |
 
