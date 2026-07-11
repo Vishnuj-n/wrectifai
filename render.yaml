@@ -9,7 +9,7 @@ services:
     name: wrectifai-api
     runtime: node
     plan: free
-    buildCommand: pnpm install --frozen-lockfile && npx nx build api
+    buildCommand: pnpm install --frozen-lockfile && npx nx build api && node db/migrate.js
     startCommand: node dist/api/main.js
     envVars:
       - key: NODE_VERSION
@@ -55,16 +55,18 @@ services:
 
   - type: web
     name: wrectifai-web
-    runtime: static
+    runtime: node
+    plan: free
     buildCommand: pnpm install --frozen-lockfile && pnpm --filter web build
-    staticPublishPath: apps/web/out
-
-    routes:
-      - type: rewrite
-        source: /**
-        destination: /index.html
+    startCommand: pnpm --filter web start
 
     envVars:
+      - key: NODE_VERSION
+        value: 22.11.0
+
+      - key: NODE_ENV
+        value: production
+
       - key: NEXT_PUBLIC_API_BASE_URL
         value: https://wrectifai-api.onrender.com/api
 
