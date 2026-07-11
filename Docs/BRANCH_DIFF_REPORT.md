@@ -197,7 +197,6 @@ All list/read endpoints now return **global (unscoped) data** instead of filteri
 | `Docs/TESTING.md` | Testing guide |
 | `Docs/RENDER.md` | Render deployment guide |
 | `Docs/migration-vs-schema-report.md` | Migration analysis |
-| `Docs/solutions/` | 12 sprint-specific solution docs |
 
 ---
 
